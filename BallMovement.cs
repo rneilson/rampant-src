@@ -7,10 +7,12 @@ public class BallMovement : MonoBehaviour {
 	public float dragNoInput;
 	public float dragInput;
 
+	private AudioSource myAudioSource;
 	public AudioClip bulletSound1;
 	public AudioClip bulletSound2;
 	public AudioClip bulletSound3;
 	
+	private Rigidbody myRigidbody;
 	public Rigidbody bullet;
 	public GameObject deathThroes;
 	public GameObject powerUp;
@@ -29,7 +31,11 @@ public class BallMovement : MonoBehaviour {
 	
 	// Use this for initialization
 	void Start () {
-		rigidbody.drag=dragNoInput;
+		// Unity 5 API changes
+		myAudioSource = GetComponent<AudioSource>();
+		myRigidbody = GetComponent<Rigidbody>();
+
+		myRigidbody.drag=dragNoInput;
 		controller = GameObject.FindGameObjectWithTag("GameController");
 		//scorer = controller.GetComponent<Scorer>();
 	}
@@ -42,7 +48,7 @@ public class BallMovement : MonoBehaviour {
 
 		Rigidbody bulletClone = (Rigidbody) Instantiate(bullet, firePos, transform.rotation);
 		bulletClone.AddForce(fireDir * speed);
-		audio.PlayOneShot(fireSound);
+		myAudioSource.PlayOneShot(fireSound);
 	}
 	
 	Vector3 RotateFortyFive (Vector3 vec, float dir) {
@@ -68,13 +74,13 @@ public class BallMovement : MonoBehaviour {
 		
 		if(dx == 0 && dz == 0) {
 			// Drag enabled
-			rigidbody.drag = dragNoInput;
+			myRigidbody.drag = dragNoInput;
 		}
 		else {
 			// Drag enabled, but slower
-			rigidbody.drag = dragInput;
+			myRigidbody.drag = dragInput;
 			// Give the ball a push
-			rigidbody.AddForce(ndx, 0, ndz);
+			myRigidbody.AddForce(ndx, 0, ndz);
 
 		}
 		
@@ -183,7 +189,7 @@ public class BallMovement : MonoBehaviour {
 		// Push enemies in outer radius
 		enemies = Physics.OverlapSphere(transform.position, 4.0f, mask);
 		for (int i=0; i<enemies.Length; i++) {
-			enemies[i].rigidbody.AddExplosionForce(500f, transform.position, 0f);
+			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(500f, transform.position, 0f);
 		}
 
 		/* for (int i = 0; i < enemies.Length; i++) {

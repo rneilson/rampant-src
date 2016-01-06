@@ -13,6 +13,9 @@ public class Scorer : MonoBehaviour {
 	private GameObject playerCurrent;
 	private bool isPaused = false;
 	private int totalSpawned;
+
+	// Unity 5 API changes
+	private AudioSource myAudioSource;
 	
 	public int kills;
 	public int level;
@@ -38,6 +41,7 @@ public class Scorer : MonoBehaviour {
 		respawnCountdown = 2;
 		totalSpawned = 0;
 		subtitleText.text = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nPause: start button/escape key";
+		myAudioSource = GetComponent<AudioSource>();
 	}
 	
 	// Update is called once per frame
@@ -127,7 +131,7 @@ public class Scorer : MonoBehaviour {
 		enemies = Physics.OverlapSphere(pos, pushRadius, mask);
 		//Debug.Log(enemies.Length);
 		for (int i=0; i<enemies.Length; i++) {
-			enemies[i].rigidbody.AddExplosionForce(500f, pos, 0);
+			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(500f, pos, 0);
 		}
 	}
 	
@@ -139,7 +143,7 @@ public class Scorer : MonoBehaviour {
 		// Spawn effect in center
 		Vector3 spawnPos = new Vector3 (0, 1, 0);
 		Destroy(Instantiate(spawnEffect, spawnPos, Quaternion.Euler(-90, 0, 0)), 1f);
-		audio.PlayOneShot(spawnSound);
+		myAudioSource.PlayOneShot(spawnSound);
 		
 		// Bomb enemies near spawn point
 		spawnBomb(spawnPos, 2.0f, 5.0f);

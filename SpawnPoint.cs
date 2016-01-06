@@ -22,8 +22,8 @@ public class SpawnPoint : MonoBehaviour {
 	}
 	
 	void FixedUpdate () {
-		if (Time.fixedTime >= spawnTime && spawned == false) {
-			collider.enabled = false;
+		if (spawned == false && Time.fixedTime >= spawnTime) {
+			GetComponent<Collider>().enabled = false;
 			Instantiate(enemyType, transform.position, transform.rotation);
 			if (postTime > 0)
 				Destroy(gameObject, postTime);

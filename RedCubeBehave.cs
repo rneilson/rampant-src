@@ -10,15 +10,23 @@ public class RedCubeBehave : MonoBehaviour {
 	private Vector3 bearing;
 	private bool dead;
 	private bool loud;
+
+	// Unity 5 API changes
+	//private AudioSource myAudioSource;
+	private Rigidbody myRigidbody;
 	
 	public GameObject burster;
 	public GameObject bursterQuiet;
 
 	// Use this for initialization
 	void Start () {
+		// Unity 5 API changes
+		//myAudioSource = GetComponent<AudioSource>();
+		myRigidbody = GetComponent<Rigidbody>();
+
 		target = GameObject.FindGameObjectWithTag("Player");
 		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
-		rigidbody.drag = drag;
+		myRigidbody.drag = drag;
 		dead = false;
 		loud = false;
 	}
@@ -33,7 +41,7 @@ public class RedCubeBehave : MonoBehaviour {
 	void FixedUpdate () {
 		if (target) {
 			bearing = target.transform.position - transform.position;
-			rigidbody.AddForce(bearing.normalized * speed);
+			myRigidbody.AddForce(bearing.normalized * speed);
 		}
 	}
 	
