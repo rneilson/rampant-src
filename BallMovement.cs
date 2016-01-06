@@ -70,10 +70,20 @@ public class BallMovement : MonoBehaviour {
 	void FixedUpdate () {
 		float dx=Input.GetAxis("Horizontal");
 		float dz=Input.GetAxis("Vertical");
-		float normalFactor = Mathf.Sqrt(dx*dx + dz*dz); //Normalize!
-		//float normalFactor = 1;
-		float ndx = dx/normalFactor*movementScale*Mathf.Abs(dx);
-		float ndz = dz/normalFactor*movementScale*Mathf.Abs(dz);
+		float ndx = 0.0f;
+		float ndz = 0.0f;
+		float normalFactor = Mathf.Sqrt(dx*dx + dz*dz); 
+
+		//Normalize if input vector length > 1.0, keep within unit circle
+		if(normalFactor > 1.0f) {
+			ndx = (dx/normalFactor)*movementScale;
+			ndz = (dz/normalFactor)*movementScale;
+		}
+		//Otherwise use input vector as-is
+		else {
+			ndx = dx*movementScale;
+			ndz = dz*movementScale;
+		}
 		
 		if(dx == 0 && dz == 0) {
 			// Drag enabled
