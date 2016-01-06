@@ -29,7 +29,7 @@ public class BallMovement : MonoBehaviour {
 	private GameObject controller;
 	//private Scorer scorer;
 
-	const float fireDist = 0.20f;
+	const float fireDist = 0.16f;
 	
 	// Use this for initialization
 	void Start () {
@@ -51,7 +51,7 @@ public class BallMovement : MonoBehaviour {
 		//Rigidbody bulletClone = (Rigidbody) Instantiate(bullet, firePos, transform.rotation);
 		Rigidbody bulletClone = Instantiate(bullet, firePos, transform.rotation) as Rigidbody;
 		bulletClone.AddForce(fireDir * speed);
-		myAudioSource.PlayOneShot(fireSound);
+		myAudioSource.PlayOneShot(fireSound, 1.0f);
 	}
 	
 	Vector3 RotateFortyFive (Vector3 vec, float dir) {

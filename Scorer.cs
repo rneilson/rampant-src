@@ -143,7 +143,7 @@ public class Scorer : MonoBehaviour {
 		// Spawn effect in center
 		Vector3 spawnPos = new Vector3 (0, 1, 0);
 		Destroy(Instantiate(spawnEffect, spawnPos, Quaternion.Euler(-90, 0, 0)), 1f);
-		myAudioSource.PlayOneShot(spawnSound);
+		myAudioSource.PlayOneShot(spawnSound, 1.0f);
 		
 		// Bomb enemies near spawn point
 		spawnBomb(spawnPos, 2.0f, 5.0f);
