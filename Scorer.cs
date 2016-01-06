@@ -9,7 +9,7 @@ public class Scorer : MonoBehaviour {
 	private TextMesh subtitleText;
 	private Component[] spawners;
 	private float respawnCountdown;
-	private bool respawn;
+	//private bool respawn;
 	private GameObject playerCurrent;
 	private bool isPaused = false;
 	private int totalSpawned;
@@ -21,6 +21,7 @@ public class Scorer : MonoBehaviour {
 	public int level;
 	public int maxKills;
 	public int totalDeaths;
+	public bool respawn;
 
 	public GameObject playerType;
 	public GameObject spawnEffect;
@@ -88,9 +89,13 @@ public class Scorer : MonoBehaviour {
 		int modKills = kills % 50;
 		//Debug.Log("Kills: " + kills.ToString() + ", spawned: " + totalSpawned.ToString());
 		if (kills >= 50) {
-			if ((modKills == 40) || (modKills == 45)) {
+			if (modKills == 40) {
 				if (playerCurrent != null)
-					playerCurrent.SendMessage("PowerUp");
+					playerCurrent.SendMessage("BombMinusTwo");
+			}
+			else if (modKills == 45) {
+				if (playerCurrent != null)
+					playerCurrent.SendMessage("BombMinusOne");
 			}
 			else if (modKills == 0) {
 				if (playerCurrent != null)

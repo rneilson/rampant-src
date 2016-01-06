@@ -11,6 +11,8 @@ public class BallMovement : MonoBehaviour {
 	public AudioClip bulletSound1;
 	public AudioClip bulletSound2;
 	public AudioClip bulletSound3;
+	public float bMinusTwoPitch;
+	public float bMinusOnePitch;
 	
 	private Rigidbody myRigidbody;
 	public Rigidbody bullet;
@@ -181,6 +183,22 @@ public class BallMovement : MonoBehaviour {
 		Destroy(powerUpEffect, 1.0f);
 	}
 	
+	void BombMinusTwo () {
+		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
+		GameObject powerUpEffect = Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
+		powerUpEffect.transform.parent = transform;
+		powerUpEffect.GetComponent<AudioSource>().pitch = bMinusTwoPitch;
+		Destroy(powerUpEffect, 1.0f);
+	}
+
+	void BombMinusOne () {
+		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
+		GameObject powerUpEffect = Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
+		powerUpEffect.transform.parent = transform;
+		powerUpEffect.GetComponent<AudioSource>().pitch = bMinusOnePitch;
+		Destroy(powerUpEffect, 1.0f);
+	}
+
 	void PowerUpBoom () {
 		//Old bomb code
 		/* GameObject[] enemies;
