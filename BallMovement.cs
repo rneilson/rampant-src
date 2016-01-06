@@ -28,6 +28,8 @@ public class BallMovement : MonoBehaviour {
 
 	private GameObject controller;
 	//private Scorer scorer;
+
+	const float fireDist = 0.20f;
 	
 	// Use this for initialization
 	void Start () {
@@ -46,7 +48,8 @@ public class BallMovement : MonoBehaviour {
 		//Vector3 dir = new Vector3(dirx, 0, dirz).normalized;
 		//Vector3 firePos = transform.position + (new Vector3(alternating*dirz, 0, alternating*dirx*-1f).normalized * 0.15f);
 
-		Rigidbody bulletClone = (Rigidbody) Instantiate(bullet, firePos, transform.rotation);
+		//Rigidbody bulletClone = (Rigidbody) Instantiate(bullet, firePos, transform.rotation);
+		Rigidbody bulletClone = Instantiate(bullet, firePos, transform.rotation) as Rigidbody;
 		bulletClone.AddForce(fireDir * speed);
 		myAudioSource.PlayOneShot(fireSound);
 	}
@@ -94,19 +97,19 @@ public class BallMovement : MonoBehaviour {
 			
 			if (fireMode == 1) {
 				if (fireCycle == 0) {
-					firePosCurrent = transform.position + (fireDirCurrent * 0.15f);
+					firePosCurrent = transform.position + (fireDirCurrent * fireDist);
 					FireBullet(firePosCurrent, fireDirCurrent, 5f, bulletSound1);
 				}
 			}
 			else if (fireMode == 2) {
 				if (fireCycle == 0) {
 					//firePosCurrent = transform.position + (new Vector3(dzr, 0, -1f*dxr).normalized * 0.15f);
-					firePosCurrent  = transform.position + (RotateFortyFive(fireDirCurrent, 1.0f) * 0.15f);
+					firePosCurrent  = transform.position + (RotateFortyFive(fireDirCurrent, 1.0f) * fireDist);
 					FireBullet(firePosCurrent, fireDirCurrent, 5f, bulletSound2);
 				}
 				else if (fireCycle == 3) {
 					//firePosCurrent = transform.position + (new Vector3(-1f*dzr, 0, dxr).normalized * 0.15f);
-					firePosCurrent  = transform.position + (RotateFortyFive(fireDirCurrent, -1.0f) * 0.15f);
+					firePosCurrent  = transform.position + (RotateFortyFive(fireDirCurrent, -1.0f) * fireDist);
 					FireBullet(firePosCurrent, fireDirCurrent, 5f, bulletSound3);
 				}
 			}
