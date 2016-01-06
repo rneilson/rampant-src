@@ -85,10 +85,17 @@ public class Scorer : MonoBehaviour {
 	
 	public void AddKill () {
 		kills++;
+		int modKills = kills % 50;
 		//Debug.Log("Kills: " + kills.ToString() + ", spawned: " + totalSpawned.ToString());
-		if ((kills % 50) == 0) {
-			if (playerCurrent != null)
-				playerCurrent.SendMessage("FireFaster");
+		if (kills >= 50) {
+			if ((modKills == 40) || (modKills == 45)) {
+				if (playerCurrent != null)
+					playerCurrent.SendMessage("PowerUp");
+			}
+			else if (modKills == 0) {
+				if (playerCurrent != null)
+					playerCurrent.SendMessage("FireFaster");
+			}
 		}
 	}
 	
