@@ -5,8 +5,8 @@ public class RedCubeBehave : MonoBehaviour {
 	
 	private GameObject target;
 	private Scorer scorer;
-	private float speed = 10f;
-	private float drag = 4f;
+	//private float speed = 10f;
+	//private float drag = 4f;
 	private Vector3 bearing;
 	private bool dead;
 	private bool loud;
@@ -15,6 +15,9 @@ public class RedCubeBehave : MonoBehaviour {
 	//private AudioSource myAudioSource;
 	private Rigidbody myRigidbody;
 	
+
+	public float speed;
+	public float drag;
 	public GameObject burster;
 	public GameObject bursterQuiet;
 
