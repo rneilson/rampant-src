@@ -175,7 +175,10 @@ public class BallMovement : MonoBehaviour {
 	}
 	
 	void PowerUp () {
-		Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
+		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
+		GameObject powerUpEffect = Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
+		powerUpEffect.transform.parent = transform;
+		Destroy(powerUpEffect, 1.0f);
 	}
 	
 	void PowerUpBoom () {

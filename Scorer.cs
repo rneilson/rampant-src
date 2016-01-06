@@ -42,6 +42,8 @@ public class Scorer : MonoBehaviour {
 		totalSpawned = 0;
 		subtitleText.text = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nPause: start button/escape key";
 		myAudioSource = GetComponent<AudioSource>();
+		Cursor.visible = false;
+		//Cursor.lockState = CursorLockMode.Locked;
 	}
 	
 	// Update is called once per frame
