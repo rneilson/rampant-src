@@ -52,8 +52,6 @@ public class Scorer : MonoBehaviour {
 		titleText.text = "A Plain Shooter";
 		subtitleText.text = "Press start button/ESC to begin\n" + instructions;
 		myAudioSource = GetComponent<AudioSource>();
-		Cursor.visible = false;
-		//Cursor.lockState = CursorLockMode.Locked;
 	}
 	
 	// Update is called once per frame
@@ -62,16 +60,10 @@ public class Scorer : MonoBehaviour {
 		// if (Input.GetKeyDown(KeyCode.Escape)) {
 		if (Input.GetButtonDown("Pause")) {
 			if (isPaused) {
-				isPaused = false;
-				Time.timeScale = 1;
-				titleText.text = "";
-				subtitleText.text = "";
+				UnPauseGame();
 			}
 			else {
-				isPaused = true;
-				Time.timeScale = 0;
-				titleText.text = "Paused";
-				subtitleText.text = instructions;
+				PauseGame();
 			}
 		}
 		
@@ -196,5 +188,23 @@ public class Scorer : MonoBehaviour {
 			spawners[i].SendMessage("NewTargets");
 		}
 	}
+
+	void PauseGame () {
+		isPaused = true;
+		Time.timeScale = 0;
+		titleText.text = "Paused";
+		subtitleText.text = instructions;
+		Cursor.visible = true;
+		Cursor.lockState = CursorLockMode.None;
+	}
 		
+	void UnPauseGame () {
+		isPaused = false;
+		Time.timeScale = 1;
+		titleText.text = "";
+		subtitleText.text = "";
+		Cursor.visible = false;
+		Cursor.lockState = CursorLockMode.Confined;
+	}
+
 }
