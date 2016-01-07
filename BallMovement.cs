@@ -142,18 +142,9 @@ public class BallMovement : MonoBehaviour {
 			} */
 			
 			fireCycle++;
-			if (fireCycle > 5)
+			if (fireCycle > 5){
 				fireCycle = 0;
-				
-			// Old fire delay code
-			/* if (delayPortion == 0) {
-				// Fire!
-				FireBullet(dxr, dzr, 5f);
-				delayPortion = fireDelay;
 			}
-			else {
-				delayPortion--;
-			} */
 		}
 		
 		// Debug guitext
@@ -198,10 +189,6 @@ public class BallMovement : MonoBehaviour {
 	}
 
 	void PowerUpBoom () {
-		//Old bomb code
-		/* GameObject[] enemies;
-		enemies = GameObject.FindGameObjectsWithTag("Enemy"); */
-
 		// Spawn effect
 		Destroy(Instantiate(powerUpBoom, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
 		
@@ -214,8 +201,6 @@ public class BallMovement : MonoBehaviour {
 			for (int i=0; i<enemies.Length; i++) {
 				enemies[i].SendMessage("Die", false);
 			}
-			//scorer.AddKills(enemies.Length);
-			//controller.audio.PlayOneShot(boomKillSound);
 		}
 		
 		// Push enemies in outer radius
@@ -223,15 +208,6 @@ public class BallMovement : MonoBehaviour {
 		for (int i=0; i<enemies.Length; i++) {
 			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(500f, transform.position, 0f);
 		}
-
-		/* for (int i = 0; i < enemies.Length; i++) {
-			var enemy = enemies[i];
-				
-			if ((enemy.transform.position - transform.position).magnitude < 4.0f) {
-				enemy.rigidbody.AddExplosionForce(1000f, transform.position, 4.0f);
-				//enemy.SendMessage("BlowUp", true);
-			}
-		} */
 	}
 	
 	void OnCollisionEnter (Collision collision) {

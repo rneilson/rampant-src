@@ -4,6 +4,8 @@ using System.Collections;
 public class Scorer : MonoBehaviour {
 	
 	private TextMesh scoreKills;
+	private TextMesh scoreHigh;
+	private TextMesh scoreDeaths;
 	private TextMesh scoreLevel;
 	private TextMesh titleText;
 	private TextMesh subtitleText;
@@ -31,6 +33,8 @@ public class Scorer : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		scoreKills = GameObject.Find("Display-kills").GetComponent<TextMesh>();
+		scoreHigh = GameObject.Find("Display-high").GetComponent<TextMesh>();
+		scoreDeaths = GameObject.Find("Display-deaths").GetComponent<TextMesh>();
 		scoreLevel = GameObject.Find("Display-level").GetComponent<TextMesh>();
 		titleText = GameObject.Find("TitleText").GetComponent<TextMesh>();
 		subtitleText = GameObject.Find("SubtitleText").GetComponent<TextMesh>();
@@ -51,8 +55,6 @@ public class Scorer : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		scoreKills.text = "Kills: " + kills.ToString();
-		scoreLevel.text = "Wave: " + level.ToString();
 		
 		// if (Input.GetKeyDown(KeyCode.Escape)) {
 		if (Input.GetButtonDown("Pause")) {
@@ -87,32 +89,39 @@ public class Scorer : MonoBehaviour {
 	}
 	
 	public void AddKill () {
-		kills++;
-		int modKills = kills % 50;
-		//Debug.Log("Kills: " + kills.ToString() + ", spawned: " + totalSpawned.ToString());
-		if (kills >= 50) {
-			if (modKills == 40) {
-				if (playerCurrent != null)
-					playerCurrent.SendMessage("BombMinusTwo");
+		if(respawn == false){
+			kills++;
+			scoreKills.text = "Kills: " + kills.ToString();
+
+			// Update high score
+			if (kills > maxKills) {
+				maxKills = kills;
+				scoreHigh.text = "High: " + maxKills.ToString();
 			}
-			else if (modKills == 45) {
-				if (playerCurrent != null)
-					playerCurrent.SendMessage("BombMinusOne");
-			}
-			else if (modKills == 0) {
-				if (playerCurrent != null)
-					playerCurrent.SendMessage("FireFaster");
+
+			// Check for weapon upgrade, or bomb, or bomb-minus warning
+			int modKills = kills % 50;
+			//Debug.Log("Kills: " + kills.ToString() + ", spawned: " + totalSpawned.ToString());
+			if (kills >= 50) {
+				if (modKills == 40) {
+					if (playerCurrent != null)
+						playerCurrent.SendMessage("BombMinusTwo");
+				}
+				else if (modKills == 45) {
+					if (playerCurrent != null)
+						playerCurrent.SendMessage("BombMinusOne");
+				}
+				else if (modKills == 0) {
+					if (playerCurrent != null)
+						playerCurrent.SendMessage("FireFaster");
+				}
 			}
 		}
 	}
 	
-	public void AddKills (int killed) {
-		kills += killed;
-		//Debug.Log("Kills: " + kills.ToString() + ", killed: " + killed.ToString() + ", spawned: " + totalSpawned.ToString());
-	}
-	
 	public void AddLevel () {
 		level++;
+		scoreLevel.text = "Wave: " + level.ToString();
 	}
 	
 	public void AddSpawns (int spawns) {
@@ -122,8 +131,7 @@ public class Scorer : MonoBehaviour {
 	void PlayerDied () {
 		respawn = true;
 		totalDeaths++;
-		if (kills > maxKills)
-			maxKills = kills;
+		scoreDeaths.text = "Deaths: " + totalDeaths.ToString();
 		titleText.text = kills.ToString() + " kills";
 		subtitleText.text = "Total deaths: " + totalDeaths.ToString() + "\nMost kills: " + maxKills.ToString();
 		for (int i =  0; i<spawners.Length; i++) {
@@ -175,8 +183,9 @@ public class Scorer : MonoBehaviour {
 			}
 		} */
 		
-		// Spawn player
+		// Spawn player, reset kills
 		kills = 0;
+		scoreKills.text = "Kills: " + kills.ToString();
 		playerCurrent = (GameObject) Instantiate(playerType, spawnPos, Quaternion.Euler(0, 0, 0));
 		for (int i =  0; i<spawners.Length; i++) {
 			spawners[i].SendMessage("NewTargets");
