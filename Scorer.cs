@@ -24,14 +24,17 @@ public class Scorer : MonoBehaviour {
 	public int level;
 	public int maxKills;
 	public int totalDeaths;
+	public float respawnTime;
 	public bool respawn;
 
 	public GameObject playerType;
 	public GameObject spawnEffect;
 	public AudioClip spawnSound;
+	public CameraMovement cameraFollower;
 
 	// Use this for initialization
 	void Start () {
+		cameraFollower = GameObject.Find("Camera").GetComponent<CameraMovement>();
 		scoreKills = GameObject.Find("Display-kills").GetComponent<TextMesh>();
 		scoreHigh = GameObject.Find("Display-high").GetComponent<TextMesh>();
 		scoreDeaths = GameObject.Find("Display-deaths").GetComponent<TextMesh>();
@@ -77,7 +80,7 @@ public class Scorer : MonoBehaviour {
 				respawnCountdown -= Time.deltaTime;
 			}
 			if (respawnCountdown <= 0f) {
-				respawnCountdown = 1f;
+				respawnCountdown = respawnTime;
 				respawn = false;
 				NewPlayer();
 			}
@@ -187,6 +190,7 @@ public class Scorer : MonoBehaviour {
 		kills = 0;
 		scoreKills.text = "Kills: " + kills.ToString();
 		playerCurrent = (GameObject) Instantiate(playerType, spawnPos, Quaternion.Euler(0, 0, 0));
+		cameraFollower.SendMessage("NewPlayer", playerCurrent);
 		for (int i =  0; i<spawners.Length; i++) {
 			spawners[i].SendMessage("NewTargets");
 		}
