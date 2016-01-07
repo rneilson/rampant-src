@@ -15,7 +15,7 @@ public class Scorer : MonoBehaviour {
 	private GameObject playerCurrent;
 	private bool isPaused = true;
 	private int totalSpawned;
-	private string instructions = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nPause: start button/escape key\nQuit: Q";
+	private string instructions = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nPause: start button/ESC\nQuit: Q";
 
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
@@ -49,8 +49,8 @@ public class Scorer : MonoBehaviour {
 		respawn = true;
 		respawnCountdown = 0.0f;
 		totalSpawned = 0;
-		titleText.text = "Press start/ESC to begin";
-		subtitleText.text = instructions;
+		titleText.text = "A Plain Shooter";
+		subtitleText.text = "Press start button/ESC to begin\n" + instructions;
 		myAudioSource = GetComponent<AudioSource>();
 		Cursor.visible = false;
 		//Cursor.lockState = CursorLockMode.Locked;
@@ -78,6 +78,7 @@ public class Scorer : MonoBehaviour {
 		if (!isPaused) {
 			if (respawn == true) {
 				respawnCountdown -= Time.deltaTime;
+				cameraFollower.SendMessage("RespawnCountdown", respawnCountdown);
 			}
 			if (respawnCountdown <= 0f) {
 				respawnCountdown = respawnTime;
