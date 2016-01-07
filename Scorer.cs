@@ -100,7 +100,7 @@ public class Scorer : MonoBehaviour {
 			// Update high score
 			if (kills > maxKills) {
 				maxKills = kills;
-				scoreHigh.text = "High: " + maxKills.ToString();
+				scoreHigh.text = "Best: " + maxKills.ToString();
 			}
 
 			// Check for weapon upgrade, or bomb, or bomb-minus warning
