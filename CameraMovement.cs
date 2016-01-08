@@ -33,7 +33,7 @@ public class CameraMovement : MonoBehaviour {
 		}
 	}
 
-	void NewPlayer (GameObject newPlayer) {
+	public void NewPlayer (GameObject newPlayer) {
 		// Get new player object
 		player = newPlayer;
 		// Reset camera position
@@ -43,7 +43,7 @@ public class CameraMovement : MonoBehaviour {
 		rb.isKinematic = true;
 	}
 
-	void RespawnCountdown (float countdown) {
+	public void RespawnCountdown (float countdown) {
 		if((!movingToStart) && (countdown <= resetTime)) {
 			movingToStart = true;
 			rb.isKinematic = false;

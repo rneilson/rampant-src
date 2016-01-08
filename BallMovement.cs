@@ -42,7 +42,7 @@ public class BallMovement : MonoBehaviour {
 
 	// Status properties
 	public bool BiggerGun {
-		get: {
+		get {
 			if(fireMode < 2) {
 				return false;
 			}
@@ -52,7 +52,7 @@ public class BallMovement : MonoBehaviour {
 		}
 	}
 	public bool HasBomb {
-		get: { return hasBomb; }
+		get { return hasBomb; }
 	}
 	
 	// Use this for initialization
@@ -202,7 +202,7 @@ public class BallMovement : MonoBehaviour {
 		}
 	}
 
-	void FireFaster () {
+	public void FireFaster () {
 		if (fireMode < 2) {
 			fireMode++;
 			PowerUp();
@@ -218,27 +218,27 @@ public class BallMovement : MonoBehaviour {
 		Destroy(powerUpEffect, 1.0f);
 	}
 	
-	void BombMinusTwo () {
+	public void BombMinusTwo () {
 		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
 		GameObject powerUpEffect = Instantiate(bMinusTwo, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
 		powerUpEffect.transform.parent = transform;
 		Destroy(powerUpEffect, 1.0f);
 	}
 
-	void BombMinusOne () {
+	public void BombMinusOne () {
 		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
 		GameObject powerUpEffect = Instantiate(bMinusOne, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
 		powerUpEffect.transform.parent = transform;
 		Destroy(powerUpEffect, 1.0f);
 	}
 
-	void GiveBomb () {
+	public void GiveBomb () {
 		hasBomb = true;
 		// TODO: instantiate armed-bomb effect
 	}
 
 	// Old name: void PowerUpBoom () {
-	void UseBomb () {
+	public void UseBomb () {
 		// Use up bomb
 		hasBomb = false;
 		// TODO: destroy armed-bomb effect
