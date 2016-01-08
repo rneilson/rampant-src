@@ -19,6 +19,8 @@ public class BallMovement : MonoBehaviour {
 	public GameObject powerUpBoom;
 	public GameObject bMinusTwo;
 	public GameObject bMinusOne;
+	private GameObject fireCursor;
+	private CursorMovement fireCursorControl;
 	//public AudioClip boomKillSound;
 	
 	private int fireMode = 1;
@@ -32,6 +34,7 @@ public class BallMovement : MonoBehaviour {
 	//private Scorer scorer;
 
 	const float fireDist = 0.16f;
+	const float fireSpeed = 5.0f;
 	
 	// Use this for initialization
 	void Start () {
@@ -41,26 +44,9 @@ public class BallMovement : MonoBehaviour {
 
 		myRigidbody.drag=dragNoInput;
 		controller = GameObject.FindGameObjectWithTag("GameController");
+		fireCursor = GameObject.Find("FireCursor");
+		fireCursorControl = fireCursor.GetComponent<CursorMovement>();
 		//scorer = controller.GetComponent<Scorer>();
-	}
-	
-	// Fire bullet
-	void FireBullet (Vector3 firePos, Vector3 fireDir, float speed, AudioClip fireSound) {
-		//alternating *= -1f;
-		//Vector3 dir = new Vector3(dirx, 0, dirz).normalized;
-		//Vector3 firePos = transform.position + (new Vector3(alternating*dirz, 0, alternating*dirx*-1f).normalized * 0.15f);
-
-		//Rigidbody bulletClone = (Rigidbody) Instantiate(bullet, firePos, transform.rotation);
-		Rigidbody bulletClone = Instantiate(bullet, firePos, transform.rotation) as Rigidbody;
-		bulletClone.AddForce(fireDir * speed);
-		myAudioSource.PlayOneShot(fireSound, 1.0f);
-	}
-	
-	Vector3 RotateFortyFive (Vector3 vec, float dir) {
-		// dir 1 is counterclockwise, -1 is clockwise
-		float newx = vec.x*Mathf.Cos(piOverFour) - vec.z*Mathf.Sin(piOverFour)*dir;
-		float newz = vec.x*Mathf.Sin(piOverFour)*dir + vec.z*Mathf.Cos(piOverFour);
-		return new Vector3(newx, 0, newz);
 	}
 	
 	// Update is called once per frame
@@ -70,6 +56,7 @@ public class BallMovement : MonoBehaviour {
 	
 	//Put everything in FixedUpdate
 	void FixedUpdate () {
+		// Get movement
 		float dx=Input.GetAxis("Horizontal");
 		float dz=Input.GetAxis("Vertical");
 		float ndx = 0.0f;
@@ -99,52 +86,28 @@ public class BallMovement : MonoBehaviour {
 
 		}
 		
-		// Bullet launcher setup
+		// Get right stick input
 		float dxr = Input.GetAxis("RightHorizontal");
 		float dzr = Input.GetAxis("RightVertical");
 
+		// If right stick moved, shoot in that direction
 		if(dxr != 0 || dzr != 0)
 		{
-			fireDirCurrent = new Vector3(dxr, 0, dzr).normalized;
-			
-			if (fireMode == 1) {
-				if (fireCycle == 0) {
-					firePosCurrent = transform.position + (fireDirCurrent * fireDist);
-					FireBullet(firePosCurrent, fireDirCurrent, 5f, bulletSound1);
-				}
-			}
-			else if (fireMode == 2) {
-				if (fireCycle == 0) {
-					//firePosCurrent = transform.position + (new Vector3(dzr, 0, -1f*dxr).normalized * 0.15f);
-					firePosCurrent  = transform.position + (RotateFortyFive(fireDirCurrent, 1.0f) * fireDist);
-					FireBullet(firePosCurrent, fireDirCurrent, 5f, bulletSound2);
-				}
-				else if (fireCycle == 3) {
-					//firePosCurrent = transform.position + (new Vector3(-1f*dzr, 0, dxr).normalized * 0.15f);
-					firePosCurrent  = transform.position + (RotateFortyFive(fireDirCurrent, -1.0f) * fireDist);
-					FireBullet(firePosCurrent, fireDirCurrent, 5f, bulletSound3);
-				}
-			}
-			// Removed while testing firemode 2 limit
-			/* else if (fireMode == 3) {
-				if (fireCycle == 0) {
-					firePosCurrent = transform.position + (new Vector3(dzr, 0, -1f*dxr).normalized * 0.15f);
-					FireBullet(firePosCurrent, fireDirCurrent, 5f, bulletSound2);
-				}
-				else if (fireCycle == 2) {
-					firePosCurrent = transform.position + (new Vector3(dxr, 0, dzr).normalized * 0.15f);
-					FireBullet(firePosCurrent, fireDirCurrent, 5f, bulletSound1);
-				}
-				else if (fireCycle == 4) {
-					firePosCurrent = transform.position + (new Vector3(-1f*dzr, 0, dxr).normalized * 0.15f);
-					FireBullet(firePosCurrent, fireDirCurrent, 5f, bulletSound3);
-				}
-			} */
-			
-			fireCycle++;
-			if (fireCycle > 5){
-				fireCycle = 0;
-			}
+			// Hide mouse cursor
+			fireCursorControl.SendMessage("HideCursor");
+
+			// Fire in given direction
+			//fireDirCurrent = new Vector3(dxr, 0, dzr).normalized;
+			FireGun(new Vector3(dxr, 0, dzr).normalized);
+		}
+		// Otherwise, check if left mouse pressed and fire towards cursor
+		else if (Input.GetButton("Fire")) {
+			// Show mouse cursor
+			fireCursorControl.SendMessage("UnhideCursor");
+
+			// Fire in given direction
+			FireGun(new Vector3((fireCursor.transform.position.x - transform.position.x), 0, 
+				(fireCursor.transform.position.z - transform.position.z)).normalized);
 		}
 		
 		// Debug guitext
@@ -158,6 +121,68 @@ public class BallMovement : MonoBehaviour {
 		Destroy(gameObject);
 	}
 	
+	// Fire bullet
+	void FireBullet (Vector3 firePos, Vector3 fireDir, float speed, AudioClip fireSound) {
+		//alternating *= -1f;
+		//Vector3 dir = new Vector3(dirx, 0, dirz).normalized;
+		//Vector3 firePos = transform.position + (new Vector3(alternating*dirz, 0, alternating*dirx*-1f).normalized * 0.15f);
+
+		//Rigidbody bulletClone = (Rigidbody) Instantiate(bullet, firePos, transform.rotation);
+		Rigidbody bulletClone = Instantiate(bullet, firePos, transform.rotation) as Rigidbody;
+		bulletClone.AddForce(fireDir * speed);
+		myAudioSource.PlayOneShot(fireSound, 1.0f);
+	}
+	
+	Vector3 RotateFortyFive (Vector3 vec, float dir) {
+		// dir 1 is counterclockwise, -1 is clockwise
+		float newx = vec.x*Mathf.Cos(piOverFour) - vec.z*Mathf.Sin(piOverFour)*dir;
+		float newz = vec.x*Mathf.Sin(piOverFour)*dir + vec.z*Mathf.Cos(piOverFour);
+		return new Vector3(newx, 0, newz);
+	}
+	
+	void FireGun (Vector3 fireDir) {
+		// Check firemode and fire accordingly
+		if (fireMode == 1) {
+			if (fireCycle == 0) {
+				firePosCurrent = transform.position + (fireDir * fireDist);
+				FireBullet(firePosCurrent, fireDir, fireSpeed, bulletSound1);
+			}
+		}
+		else if (fireMode == 2) {
+			if (fireCycle == 0) {
+				//firePosCurrent = transform.position + (new Vector3(dzr, 0, -1f*dxr).normalized * 0.15f);
+				firePosCurrent  = transform.position + (RotateFortyFive(fireDir, 1.0f) * fireDist);
+				FireBullet(firePosCurrent, fireDir, fireSpeed, bulletSound2);
+			}
+			else if (fireCycle == 3) {
+				//firePosCurrent = transform.position + (new Vector3(-1f*dzr, 0, dxr).normalized * 0.15f);
+				firePosCurrent  = transform.position + (RotateFortyFive(fireDir, -1.0f) * fireDist);
+				FireBullet(firePosCurrent, fireDir, fireSpeed, bulletSound3);
+			}
+		}
+		// Removed while testing firemode 2 limit
+		/* else if (fireMode == 3) {
+			if (fireCycle == 0) {
+				firePosCurrent = transform.position + (new Vector3(dzr, 0, -1f*dxr).normalized * 0.15f);
+				FireBullet(firePosCurrent, fireDirCurrent, fireSpeed, bulletSound2);
+			}
+			else if (fireCycle == 2) {
+				firePosCurrent = transform.position + (new Vector3(dxr, 0, dzr).normalized * 0.15f);
+				FireBullet(firePosCurrent, fireDirCurrent, fireSpeed, bulletSound1);
+			}
+			else if (fireCycle == 4) {
+				firePosCurrent = transform.position + (new Vector3(-1f*dzr, 0, dxr).normalized * 0.15f);
+				FireBullet(firePosCurrent, fireDirCurrent, fireSpeed, bulletSound3);
+			}
+		} */
+		
+		// Advance firing cycle
+		fireCycle++;
+		if (fireCycle > 5){
+			fireCycle = 0;
+		}
+	}
+
 	void FireFaster () {
 		if (fireMode < 2) {
 			fireMode++;
