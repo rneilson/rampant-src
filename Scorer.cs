@@ -16,6 +16,8 @@ public class Scorer : MonoBehaviour {
 	private bool isPaused = true;
 	private int totalSpawned;
 	private string instructions = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nQuit: Q";
+	private CursorLockMode desiredCursorMode;
+	private bool desiredCursorVisibility;
 
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
@@ -52,6 +54,8 @@ public class Scorer : MonoBehaviour {
 		titleText.text = "A Plain Shooter";
 		subtitleText.text = "Press start button/tab to begin\n" + instructions;
 		myAudioSource = GetComponent<AudioSource>();
+		desiredCursorMode = Cursor.lockState;
+		desiredCursorVisibility = Cursor.visible;
 	}
 	
 	// Update is called once per frame
@@ -65,6 +69,13 @@ public class Scorer : MonoBehaviour {
 			else {
 				PauseGame();
 			}
+		}
+
+		if (Cursor.lockState != desiredCursorMode) {
+			Cursor.lockState = desiredCursorMode;
+		}
+		if (Cursor.visible != desiredCursorVisibility) {
+			Cursor.visible = desiredCursorVisibility;
 		}
 		
 		if (!isPaused) {
@@ -194,8 +205,9 @@ public class Scorer : MonoBehaviour {
 		Time.timeScale = 0;
 		titleText.text = "Paused";
 		subtitleText.text = instructions;
-		Cursor.visible = true;
-		Cursor.lockState = CursorLockMode.None;
+		desiredCursorVisibility = true;
+		//Cursor.lockState = CursorLockMode.None;
+		desiredCursorMode = CursorLockMode.None;
 	}
 		
 	void UnPauseGame () {
@@ -203,9 +215,10 @@ public class Scorer : MonoBehaviour {
 		Time.timeScale = 1;
 		titleText.text = "";
 		subtitleText.text = "";
-		Cursor.visible = false;
+		desiredCursorVisibility = false;
 		//Cursor.lockState = CursorLockMode.Confined;
-		Cursor.lockState = CursorLockMode.Locked;
+		//Cursor.lockState = CursorLockMode.Locked;
+		desiredCursorMode = CursorLockMode.Locked;
 	}
 
 }
