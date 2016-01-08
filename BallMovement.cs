@@ -35,6 +35,25 @@ public class BallMovement : MonoBehaviour {
 
 	const float fireDist = 0.16f;
 	const float fireSpeed = 5.0f;
+
+	// Status vars
+	private bool biggerGun;
+	private bool hasBomb;
+
+	// Status properties
+	public bool BiggerGun {
+		get: {
+			if(fireMode < 2) {
+				return false;
+			}
+			else {
+				return true;
+			}
+		}
+	}
+	public bool HasBomb {
+		get: { return hasBomb; }
+	}
 	
 	// Use this for initialization
 	void Start () {
@@ -188,8 +207,8 @@ public class BallMovement : MonoBehaviour {
 			fireMode++;
 			PowerUp();
 		}
-		else
-			PowerUpBoom();
+		//else
+		//	PowerUpBoom();
 	}
 	
 	void PowerUp () {
@@ -213,7 +232,17 @@ public class BallMovement : MonoBehaviour {
 		Destroy(powerUpEffect, 1.0f);
 	}
 
-	void PowerUpBoom () {
+	void GiveBomb () {
+		hasBomb = true;
+		// TODO: instantiate armed-bomb effect
+	}
+
+	// Old name: void PowerUpBoom () {
+	void UseBomb () {
+		// Use up bomb
+		hasBomb = false;
+		// TODO: destroy armed-bomb effect
+
 		// Spawn effect
 		Destroy(Instantiate(powerUpBoom, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
 		

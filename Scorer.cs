@@ -13,9 +13,12 @@ public class Scorer : MonoBehaviour {
 	private float respawnCountdown;
 	//private bool respawn;
 	private GameObject playerCurrent;
+	private BallMovement playerControl;
 	private bool isPaused = true;
 	private int totalSpawned;
 	private string instructions = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nQuit: Q";
+
+	// Cursor state
 	private CursorLockMode desiredCursorMode;
 	private bool desiredCursorVisibility;
 
@@ -33,6 +36,14 @@ public class Scorer : MonoBehaviour {
 	public GameObject spawnEffect;
 	public AudioClip spawnSound;
 	public CameraMovement cameraFollower;
+
+	// Powerup state tracking
+	public bool forceBombUse;
+	public int biggerGunAt;
+	public int giveBombEvery;
+	public int bombMinusOneAt;
+	public int bombMinusTwoAt;
+	private int killsUntilPowerup;
 
 	// Use this for initialization
 	void Start () {
@@ -81,7 +92,8 @@ public class Scorer : MonoBehaviour {
 		if (!isPaused) {
 			if (respawn == true) {
 				respawnCountdown -= Time.deltaTime;
-				cameraFollower.SendMessage("RespawnCountdown", respawnCountdown);
+				//cameraFollower.SendMessage("RespawnCountdown", respawnCountdown);
+				cameraFollower.RespawnCountdown(respawnCountdown);
 			}
 			if (respawnCountdown <= 0f) {
 				respawnCountdown = respawnTime;
@@ -107,6 +119,33 @@ public class Scorer : MonoBehaviour {
 			}
 
 			// Check for weapon upgrade, or bomb, or bomb-minus warning
+			if (!playerControl.HasBomb) {
+				killsUntilPowerup--;
+
+				if (playerControl.BiggerGun) {
+					if (killsUntilPowerup == bombMinusTwoAt) {
+						playerControl.BombMinusTwo();
+					}
+					else if (killsUntilPowerup == bombMinusOneAt) {
+						playerControl.BombMinusOne();
+					}
+					else if (killsUntilPowerup == 0) {
+						killsUntilPowerup = giveBombEvery;
+						playerControl.GiveBomb();
+						if (forceBombUse) {
+							playerControl.UseBomb();
+						}
+					}
+				}
+				else {
+					if (killsUntilPowerup == 0) {
+						playerControl.FireFaster();
+						killsUntilPowerup = giveBombEvery;
+					}
+				}
+			}
+			
+			/* Old powerup code
 			int modKills = kills % 50;
 			//Debug.Log("Kills: " + kills.ToString() + ", spawned: " + totalSpawned.ToString());
 			if (kills >= 50) {
@@ -122,7 +161,7 @@ public class Scorer : MonoBehaviour {
 					if (playerCurrent != null)
 						playerCurrent.SendMessage("FireFaster");
 				}
-			}
+			}*/
 		}
 	}
 	
@@ -146,7 +185,7 @@ public class Scorer : MonoBehaviour {
 		}
 	}
 	
-	void spawnBomb (Vector3 pos, float killRadius, float pushRadius) {
+	void SpawnBomb (Vector3 pos, float killRadius, float pushRadius) {
 		Collider[] enemies;
 		int mask = 1 << LayerMask.NameToLayer("Enemy");
 		//Debug.Log(mask);
@@ -177,7 +216,7 @@ public class Scorer : MonoBehaviour {
 		myAudioSource.PlayOneShot(spawnSound, 1.0f);
 		
 		// Bomb enemies near spawn point
-		spawnBomb(spawnPos, 2.0f, 5.0f);
+		SpawnBomb(spawnPos, 2.0f, 5.0f);
 		
 		// Old bomb routine
 		/* GameObject[] enemies;
@@ -190,11 +229,20 @@ public class Scorer : MonoBehaviour {
 			}
 		} */
 		
-		// Spawn player, reset kills
+		// Reset kills
 		kills = 0;
 		scoreKills.text = "Kills: " + kills.ToString();
+
+		// Reset powerup threshold
+		killsUntilPowerup = biggerGunAt;
+
+		// Spawn player, notify camera
 		playerCurrent = (GameObject) Instantiate(playerType, spawnPos, Quaternion.Euler(0, 0, 0));
-		cameraFollower.SendMessage("NewPlayer", playerCurrent);
+		playerControl = playerCurrent.GetComponent<BallMovement>();
+		//cameraFollower.SendMessage("NewPlayer", playerCurrent);
+		cameraFollower.NewPlayer(playerCurrent);
+		
+		// Assign new target
 		for (int i =  0; i<spawners.Length; i++) {
 			spawners[i].SendMessage("NewTargets");
 		}
