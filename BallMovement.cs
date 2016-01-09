@@ -44,6 +44,7 @@ public class BallMovement : MonoBehaviour {
 	// Status vars
 	private bool biggerGun;
 	private bool hasBomb;
+	private bool triggerDown;
 
 	// Status properties
 	public bool BiggerGun {
@@ -75,7 +76,21 @@ public class BallMovement : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		
+		// Check if bomb triggered
+		if (hasBomb) {
+			if (Input.GetButtonDown("BombButton")) {
+				UseBomb();
+			}
+			if (Mathf.Abs(Input.GetAxis("BombTrigger")) > 0.05f) {
+				if (!triggerDown) {
+					triggerDown = true;
+					UseBomb();
+				}
+			}
+			else {
+				triggerDown = false;
+			}
+		}
 	}
 	
 	//Put everything in FixedUpdate
@@ -135,14 +150,14 @@ public class BallMovement : MonoBehaviour {
 		}
 
 		// Check if bomb triggered
-		if (hasBomb) {
+		/*if (hasBomb) {
 			if (Input.GetButton("BombButton")) {
 				UseBomb();
 			}
 			if (Mathf.Abs(Input.GetAxis("BombTrigger")) > 0.05f) {
 				UseBomb();
 			}
-		}
+		}*/
 		
 		// Debug guitext
 		//xInput.text = dxr.ToString();
