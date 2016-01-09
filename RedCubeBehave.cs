@@ -50,10 +50,10 @@ public class RedCubeBehave : MonoBehaviour {
 	
 	void BlowUp () {
 		if (loud) {
-			Destroy(Instantiate(burster, transform.position, Quaternion.Euler(0, 0, 0)), 1);
+			Destroy(Instantiate(burster, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
 		}
 		else {
-			Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 1);
+			Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
 		}
 		scorer.AddKill();
 		Destroy(gameObject);

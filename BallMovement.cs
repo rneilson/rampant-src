@@ -17,8 +17,11 @@ public class BallMovement : MonoBehaviour {
 	public GameObject deathThroes;
 	public GameObject powerUp;
 	public GameObject powerUpBoom;
-	public GameObject bMinusTwo;
-	public GameObject bMinusOne;
+	public GameObject bombMinusTwo;
+	public GameObject bombMinusOne;
+	public GameObject bombAcquired;
+	public GameObject bombOnBoard;
+	private GameObject bombBlinker;
 	private GameObject fireCursor;
 	private CursorMovement fireCursorControl;
 	//public AudioClip boomKillSound;
@@ -128,6 +131,16 @@ public class BallMovement : MonoBehaviour {
 			FireGun(new Vector3((fireCursor.transform.position.x - transform.position.x), 0, 
 				(fireCursor.transform.position.z - transform.position.z)).normalized);
 		}
+
+		// Check if bomb triggered
+		if (hasBomb) {
+			if (Input.GetButton("BombButton")) {
+				UseBomb();
+			}
+			if (Mathf.Abs(Input.GetAxis("BombTrigger")) > 0.05f) {
+				UseBomb();
+			}
+		}
 		
 		// Debug guitext
 		//xInput.text = dxr.ToString();
@@ -212,36 +225,45 @@ public class BallMovement : MonoBehaviour {
 	}
 	
 	void PowerUp () {
-		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
+		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
 		GameObject powerUpEffect = Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
 		powerUpEffect.transform.parent = transform;
-		Destroy(powerUpEffect, 1.0f);
+		Destroy(powerUpEffect, 0.5f);
 	}
 	
 	public void BombMinusTwo () {
-		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
-		GameObject powerUpEffect = Instantiate(bMinusTwo, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
+		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
+		GameObject powerUpEffect = Instantiate(bombMinusTwo, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
 		powerUpEffect.transform.parent = transform;
-		Destroy(powerUpEffect, 1.0f);
+		Destroy(powerUpEffect, 0.5f);
 	}
 
 	public void BombMinusOne () {
-		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
-		GameObject powerUpEffect = Instantiate(bMinusOne, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
+		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
+		GameObject powerUpEffect = Instantiate(bombMinusOne, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
 		powerUpEffect.transform.parent = transform;
-		Destroy(powerUpEffect, 1.0f);
+		Destroy(powerUpEffect, 0.5f);
 	}
 
-	public void GiveBomb () {
+	public void GiveBomb (bool forced) {
 		hasBomb = true;
-		// TODO: instantiate armed-bomb effect
+		if (!forced) {
+			// Powerup effect (transitory)
+			GameObject powerUpEffect = Instantiate(bombMinusOne, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
+			powerUpEffect.transform.parent = transform;
+			Destroy(powerUpEffect, 0.5f);
+			// Bomb-carrying effect (permanent until bomb used)
+			bombBlinker = Instantiate(bombOnBoard, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
+			bombBlinker.transform.parent = transform;
+		}
 	}
 
 	// Old name: void PowerUpBoom () {
 	public void UseBomb () {
 		// Use up bomb
 		hasBomb = false;
-		// TODO: destroy armed-bomb effect
+		// Destroy armed-bomb effect
+		Destroy(bombBlinker, 0.0f);
 
 		// Spawn effect
 		Destroy(Instantiate(powerUpBoom, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);

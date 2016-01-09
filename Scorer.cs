@@ -16,7 +16,9 @@ public class Scorer : MonoBehaviour {
 	private BallMovement playerControl;
 	private bool isPaused = true;
 	private int totalSpawned;
-	private string instructions = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nQuit: Q";
+	private string instructionsForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nQuit: Q";
+	private string instructionsNoForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nBomb: space/right mouse button\nBomb: left/right trigger\nQuit: Q";
+	private string instructions;
 
 	// Cursor state
 	private CursorLockMode desiredCursorMode;
@@ -30,7 +32,10 @@ public class Scorer : MonoBehaviour {
 	public int maxKills;
 	public int totalDeaths;
 	public float respawnTime;
-	public bool respawn;
+	private bool respawn;
+	public bool Respawn {
+		get { return respawn; }
+	}
 
 	public GameObject playerType;
 	public GameObject spawnEffect;
@@ -62,11 +67,19 @@ public class Scorer : MonoBehaviour {
 		respawn = true;
 		respawnCountdown = 0.0f;
 		totalSpawned = 0;
-		titleText.text = "A Plain Shooter";
-		subtitleText.text = "Press start button/tab to begin\n" + instructions;
 		myAudioSource = GetComponent<AudioSource>();
 		desiredCursorMode = Cursor.lockState;
 		desiredCursorVisibility = Cursor.visible;
+
+		// Check which instructions to make visible
+		if (forceBombUse) {
+			instructions = instructionsForceBomb;
+		}
+		else {
+			instructions = instructionsNoForceBomb;
+		}
+		titleText.text = "A Plain Shooter";
+		subtitleText.text = "Press start button/tab to begin\n" + instructions;
 	}
 	
 	// Update is called once per frame
@@ -131,7 +144,7 @@ public class Scorer : MonoBehaviour {
 					}
 					else if (killsUntilPowerup == 0) {
 						killsUntilPowerup = giveBombEvery;
-						playerControl.GiveBomb();
+						playerControl.GiveBomb(forceBombUse);
 						if (forceBombUse) {
 							playerControl.UseBomb();
 						}
