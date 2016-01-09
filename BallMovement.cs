@@ -14,6 +14,8 @@ public class BallMovement : MonoBehaviour {
 	
 	private Rigidbody myRigidbody;
 	public Rigidbody bullet;
+	public GameObject muzzleFlash;
+	public float muzzleDuration;
 	public GameObject deathThroes;
 	public GameObject powerUp;
 	public GameObject powerUpBoom;
@@ -163,6 +165,11 @@ public class BallMovement : MonoBehaviour {
 		Rigidbody bulletClone = Instantiate(bullet, firePos, transform.rotation) as Rigidbody;
 		bulletClone.AddForce(fireDir * speed);
 		myAudioSource.PlayOneShot(fireSound, 1.0f);
+
+		// Muzzle flash
+		if (muzzleFlash) {
+			Destroy(Instantiate(muzzleFlash, firePos, transform.rotation), muzzleDuration);
+		}
 	}
 	
 	Vector3 RotateFortyFive (Vector3 vec, float dir) {
@@ -233,28 +240,37 @@ public class BallMovement : MonoBehaviour {
 	
 	public void BombMinusTwo () {
 		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
-		GameObject powerUpEffect = Instantiate(bombMinusTwo, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
-		powerUpEffect.transform.parent = transform;
-		Destroy(powerUpEffect, 0.5f);
+		if (bombMinusTwo) {
+			GameObject powerUpEffect = Instantiate(bombMinusTwo, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
+			powerUpEffect.transform.parent = transform;
+			Destroy(powerUpEffect, 0.5f);
+		}
 	}
 
 	public void BombMinusOne () {
 		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
-		GameObject powerUpEffect = Instantiate(bombMinusOne, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
-		powerUpEffect.transform.parent = transform;
-		Destroy(powerUpEffect, 0.5f);
+		if (bombMinusOne) {
+			GameObject powerUpEffect = Instantiate(bombMinusOne, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
+			powerUpEffect.transform.parent = transform;
+			Destroy(powerUpEffect, 0.5f);
+		}
 	}
 
 	public void GiveBomb (bool forced) {
 		hasBomb = true;
 		if (!forced) {
 			// Powerup effect (transitory)
-			GameObject powerUpEffect = Instantiate(bombMinusOne, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
-			powerUpEffect.transform.parent = transform;
-			Destroy(powerUpEffect, 0.5f);
+			if (bombAcquired) {
+				GameObject powerUpEffect = Instantiate(bombAcquired, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
+				powerUpEffect.transform.parent = transform;
+				Destroy(powerUpEffect, 0.5f);
+			}
+
 			// Bomb-carrying effect (permanent until bomb used)
-			bombBlinker = Instantiate(bombOnBoard, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
-			bombBlinker.transform.parent = transform;
+			if (bombOnBoard) {
+				bombBlinker = Instantiate(bombOnBoard, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
+				bombBlinker.transform.parent = transform;
+			}
 		}
 	}
 
