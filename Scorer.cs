@@ -9,11 +9,12 @@ public class Scorer : MonoBehaviour {
 	private TextMesh scoreLevel;
 	private TextMesh titleText;
 	private TextMesh subtitleText;
-	private Component[] spawners;
+	//private Component[] spawners;
 	private float respawnCountdown;
 	//private bool respawn;
 	private GameObject playerCurrent;
 	private BallMovement playerControl;
+	private CameraMovement cameraFollower;
 	private bool isPaused = true;
 	private int totalSpawned;
 	private string instructionsForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nQuit: Q";
@@ -32,15 +33,25 @@ public class Scorer : MonoBehaviour {
 	public int maxKills;
 	public int totalDeaths;
 	public float respawnTime;
+
 	private bool respawn;
+
 	public bool Respawn {
 		get { return respawn; }
 	}
+	public int Level {
+		get { return level; }
+	}
 
+	// Player object and friends
 	public GameObject playerType;
 	public GameObject spawnEffect;
 	public AudioClip spawnSound;
-	public CameraMovement cameraFollower;
+
+	// Enemy phases (ie difficulty stuff)
+	public GameObject[] enemyPhases;
+	private GameObject currentPhase;
+	private int phaseIndex;
 
 	// Powerup state tracking
 	public bool forceBombUse;
@@ -59,7 +70,7 @@ public class Scorer : MonoBehaviour {
 		scoreLevel = GameObject.Find("Display-level").GetComponent<TextMesh>();
 		titleText = GameObject.Find("TitleText").GetComponent<TextMesh>();
 		subtitleText = GameObject.Find("SubtitleText").GetComponent<TextMesh>();
-		spawners = gameObject.GetComponents(typeof(Spawner));
+		//spawners = gameObject.GetComponents(typeof(Spawner));
 		kills = 0;
 		level = 0;
 		maxKills = 0;
@@ -70,6 +81,10 @@ public class Scorer : MonoBehaviour {
 		myAudioSource = GetComponent<AudioSource>();
 		desiredCursorMode = Cursor.lockState;
 		desiredCursorVisibility = Cursor.visible;
+
+		// Start first enemy phase
+		phaseIndex = 0;
+		currentPhase = Instantiate(enemyPhases[phaseIndex]);
 
 		// Check which instructions to make visible
 		if (forceBombUse) {
@@ -125,11 +140,13 @@ public class Scorer : MonoBehaviour {
 			kills++;
 			scoreKills.text = "Kills: " + kills.ToString();
 
+			/*
 			// Update high score
 			if (kills > maxKills) {
 				maxKills = kills;
 				scoreHigh.text = "Best: " + maxKills.ToString();
 			}
+			*/
 
 			// Check for weapon upgrade, or bomb, or bomb-minus warning
 			if (!playerControl.HasBomb) {
@@ -186,16 +203,40 @@ public class Scorer : MonoBehaviour {
 	public void AddSpawns (int spawns) {
 		totalSpawned += spawns;
 	}
+
+	public void NextPhase () {
+		// Destroy current phase, obvs
+		Destroy(currentPhase, 0.0f);
+
+		// Advance index, and loop around if all phases complete
+		phaseIndex++;
+		if (phaseIndex >= enemyPhases.Length) {
+			phaseIndex = 0;
+		}
+
+		// Instantiate new phase, and let chips fall
+		currentPhase = Instantiate(enemyPhases[phaseIndex]);
+	}
 	
 	void PlayerDied () {
+		// Update high score
+		if (kills > maxKills) {
+			maxKills = kills;
+			scoreHigh.text = "Best: " + maxKills.ToString();
+		}
+
+		// Set respawn, update counts, etc		
 		respawn = true;
 		totalDeaths++;
 		scoreDeaths.text = "Deaths: " + totalDeaths.ToString();
 		titleText.text = kills.ToString() + " kills";
 		subtitleText.text = "Total deaths: " + totalDeaths.ToString() + "\nMost kills: " + maxKills.ToString();
+		ClearTargets();
+		/*
 		for (int i =  0; i<spawners.Length; i++) {
 			spawners[i].SendMessage("ClearTargets");
 		}
+		*/
 	}
 	
 	void SpawnBomb (Vector3 pos, float killRadius, float pushRadius) {
@@ -256,9 +297,12 @@ public class Scorer : MonoBehaviour {
 		cameraFollower.NewPlayer(playerCurrent);
 		
 		// Assign new target
+		NewTargets(playerCurrent);
+		/*
 		for (int i =  0; i<spawners.Length; i++) {
 			spawners[i].SendMessage("NewTargets");
 		}
+		*/
 	}
 
 	void PauseGame () {
@@ -282,4 +326,19 @@ public class Scorer : MonoBehaviour {
 		desiredCursorMode = CursorLockMode.Locked;
 	}
 
+	void ClearTargets () {
+		GameObject[] enemies;
+		enemies = GameObject.FindGameObjectsWithTag("Enemy");
+		for (int i = 0; i < enemies.Length; i++) {
+			enemies[i].SendMessage("ClearTarget");
+		}
+	}
+	
+	void NewTargets (GameObject player) {
+		GameObject[] enemies;
+		enemies = GameObject.FindGameObjectsWithTag("Enemy");
+		for (int i = 0; i < enemies.Length; i++) {
+			enemies[i].SendMessage("NewTarget", player);
+		}
+	}
 }
