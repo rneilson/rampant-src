@@ -55,6 +55,21 @@ public class EnemyPhase : MonoBehaviour {
 		countdown = waveInterval;
 	}
 
+	// Reset phase to beginning
+	public void ResetPhase () {
+		countdown = initialDelay;
+		waveNum = 0;
+
+		foreach (EnemySpawner spawner in spawners) {
+			spawner.ResetWave();
+		}
+	}
+
+	// Start phase back up (testing)
+	public void StartPhase () {
+		phaseActive = true;
+	}
+
 	// Shut down (mostly for testing (normally it would be destroyed))
 	public void StopPhase () {
 		phaseActive = false;

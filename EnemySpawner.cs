@@ -3,15 +3,15 @@ using System.Collections;
 
 public class EnemySpawner : MonoBehaviour {
 	
-	public int roundSizeStart;
+	public int roundSizeStart = 1;
 	public int roundSizeStep;
-	public int roundNumStart;
+	public int roundNumStart = 1;
 	public int roundNumStep;
-	public float initialDelay;
-	public float roundInterval;
-	public int waveMin; // inclusive
+	public float initialDelay = 1.0f;
+	public float roundInterval = 0.5f;
+	public int waveMin = 1; // inclusive
 	public int waveMax; // inclusive
-	public IncreaseType[] increaseCycle;
+	public IncreaseType[] increaseCycle = {IncreaseType.None};
 	public GameObject enemySpawn;
 	public AudioClip enemySpawnSound;
 	

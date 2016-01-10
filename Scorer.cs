@@ -52,6 +52,7 @@ public class Scorer : MonoBehaviour {
 	public GameObject[] enemyPhases;
 	private GameObject currentPhase;
 	private int phaseIndex;
+	public int checkpoint;
 
 	// Powerup state tracking
 	public bool forceBombUse;
@@ -211,6 +212,9 @@ public class Scorer : MonoBehaviour {
 		// Deactivate current phase (testing, mostly)
 		currentPhase.GetComponent<EnemyPhase>().StopPhase();
 
+		// Save current wave number as checkpoint
+		checkpoint = level;
+
 		// Advance index, and loop around if all phases complete
 		phaseIndex++;
 		if (phaseIndex >= enemyPhases.Length) {
@@ -292,6 +296,11 @@ public class Scorer : MonoBehaviour {
 
 		// Reset powerup threshold
 		killsUntilPowerup = biggerGunAt;
+
+		// Reset current enemy phase and level
+		currentPhase.GetComponent<EnemyPhase>().ResetPhase();
+		level = checkpoint;
+		scoreLevel.text = "Wave: " + level.ToString();
 
 		// Spawn player, notify camera
 		playerCurrent = (GameObject) Instantiate(playerType, spawnPos, Quaternion.Euler(0, 0, 0));
