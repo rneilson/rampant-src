@@ -4,10 +4,10 @@ using System.Collections;
 public class EnemySpawner : MonoBehaviour {
 	
 	public int roundSizeStart = 1;
-	public int roundSizeStep;
+	public int roundSizeStep = 1;
 	public int roundNumStart = 1;
-	public int roundNumStep;
-	public float initialDelay = 1.0f;
+	public int roundNumStep = 1;
+	public float initialDelay = 0.0f;
 	public float roundInterval = 0.5f;
 	public float safeZoneRadius = 2.0f;
 	public int waveMin = 1; // inclusive
@@ -26,7 +26,7 @@ public class EnemySpawner : MonoBehaviour {
 	private int increaseCounter;
 	//private int mask;
 	private bool playerBreak;
-	private float maxSafeRadius = 4.5f;
+	private float maxSafeRadius = 4.75f;
 
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
@@ -112,15 +112,16 @@ public class EnemySpawner : MonoBehaviour {
 		Collider[] others;
 		bool clear = false;
 		// Expand safezone radius if player just respawned
-		float safeRadius = (playerBreak) ? Mathf.Max(safeZoneRadius + scorer.PlayerBreakRadius, maxSafeRadius) : 
-			Mathf.Max(safeZoneRadius, maxSafeRadius);
+		float safeRadius = (playerBreak) ? Mathf.Min(safeZoneRadius + scorer.PlayerBreakRadius, maxSafeRadius) : 
+			Mathf.Min(safeZoneRadius, maxSafeRadius);
 
 		// Spawn loop
 		for	(int i = roundSizeCurrent; i > 0; i--) {
 			clear = false;
 
 			do {
-				spawnPos = new Vector3(Random.Range(-4.7f, 4.7f), 1f, Random.Range(-4.7f, 4.7f));
+				spawnPos = new Vector3(Random.Range(-maxSafeRadius, maxSafeRadius), 1f, 
+					Random.Range(-maxSafeRadius, maxSafeRadius));
 				others = Physics.OverlapSphere(spawnPos, 0.2f);
 				if (others.Length == 0 && ((spawnPos - playerPos).magnitude > safeRadius))
 					clear = true;
