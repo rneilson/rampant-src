@@ -109,7 +109,7 @@ public class EnemySpawner : MonoBehaviour {
 		Vector3 spawnPos;
 		Collider[] others;
 		bool clear = false;
-		float safeRadius = (playerBreak) ? (safeZoneRadius + scorer.PlayerBreakRadius) : safeZoneRadius;
+		float safeRadius = (playerBreak) ? Mathf.Max(safeZoneRadius + scorer.PlayerBreakRadius, 4.5f) : safeZoneRadius;
 
 		// Spawn loop
 		for	(int i = roundSizeCurrent; i > 0; i--) {
