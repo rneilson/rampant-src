@@ -31,6 +31,7 @@ public class Scorer : MonoBehaviour {
 	public int kills;
 	public int level;
 	public int maxKills;
+	public int maxLevel;
 	public int totalDeaths;
 	public float respawnTime;
 
@@ -232,10 +233,15 @@ public class Scorer : MonoBehaviour {
 			scoreHigh.text = "Best: " + maxKills.ToString();
 		}
 
+		// Update high wave
+		if (level > maxLevel) {
+			maxLevel = level;
+			scoreDeaths.text = "Best: " + maxLevel.ToString();
+		}
+
 		// Set respawn, update counts, etc		
 		respawn = true;
 		totalDeaths++;
-		scoreDeaths.text = "Deaths: " + totalDeaths.ToString();
 		titleText.text = kills.ToString() + " kills";
 		subtitleText.text = "Total deaths: " + totalDeaths.ToString() + "\nMost kills: " + maxKills.ToString();
 		ClearTargets();
