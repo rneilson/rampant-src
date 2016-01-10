@@ -206,7 +206,10 @@ public class Scorer : MonoBehaviour {
 
 	public void NextPhase () {
 		// Destroy current phase, obvs
-		Destroy(currentPhase, 0.0f);
+		//Destroy(currentPhase, 0.0f);
+
+		// Deactivate current phase (testing, mostly)
+		currentPhase.GetComponent<EnemyPhase>().StopPhase();
 
 		// Advance index, and loop around if all phases complete
 		phaseIndex++;

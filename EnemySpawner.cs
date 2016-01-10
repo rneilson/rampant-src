@@ -35,7 +35,7 @@ public class EnemySpawner : MonoBehaviour {
 		//mask = 1 << LayerMask.NameToLayer("Spawn");
 
 		// Unity 5 API changes
-		myAudioSource = GetComponent<AudioSource>();
+		myAudioSource = scorer.GetComponent<AudioSource>();
 	}
 	
 	// Update is called once per frame
@@ -53,7 +53,6 @@ public class EnemySpawner : MonoBehaviour {
 				// let's spare the poor machine some cycles
 				if (roundSizeCurrent > 0) {
 					SpawnRound();
-					roundCounter++;
 				}
 
 				// Set false here as a guard
@@ -87,7 +86,7 @@ public class EnemySpawner : MonoBehaviour {
 	// Start a wave -- called by phase class before spawner runs
 	public void StartWave (int wave) {
 		// Check if we should even be doing anything
-		if ((wave >= waveMin) && (wave <= waveMax)) {
+		if ((wave >= waveMin) && ((wave <= waveMax) || waveMax == 0)) {
 			// If still more phase rounds to come, increase as per cycle
 			if (wave > waveMin) {
 				Increase();
@@ -124,6 +123,9 @@ public class EnemySpawner : MonoBehaviour {
 
 		// Play one instance only of spawn sound
 		myAudioSource.PlayOneShot(enemySpawnSound, 1.0f);
+
+		// Advance round counter
+		roundCounter++;
 	}
 	
 	// Increase round size by step

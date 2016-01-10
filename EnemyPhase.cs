@@ -8,12 +8,12 @@ public class EnemyPhase : MonoBehaviour {
 	public float initialDelay;
 	public float waveInterval;
 
-	private float countdown;
-	private int waveNum;
+	public float countdown;
+	public int waveNum;
 	private Scorer scorer;
 	private Component[] spawners;
 
-	private bool isActive;
+	private bool phaseActive = true;
 
 	// Use this for initialization
 	void Start () {
@@ -30,7 +30,7 @@ public class EnemyPhase : MonoBehaviour {
 
 	//Put everything in FixedUpdate
 	void FixedUpdate () {
-		if (!scorer.Respawn) {
+		if ((!scorer.Respawn) && (phaseActive)) {
 			if (countdown <= 0.0f) {
 				waveNum++;
 				StartWave();
@@ -51,5 +51,12 @@ public class EnemyPhase : MonoBehaviour {
 		foreach (EnemySpawner spawner in spawners) {
 			spawner.StartWave(waveNum);
 		}
+
+		countdown = waveInterval;
+	}
+
+	// Shut down (mostly for testing (normally it would be destroyed))
+	public void StopPhase () {
+		phaseActive = false;
 	}
 }
