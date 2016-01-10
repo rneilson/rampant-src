@@ -77,6 +77,7 @@ public class Scorer : MonoBehaviour {
 	// Enemy phases (ie difficulty stuff)
 	public GameObject[] enemyPhases;
 	private GameObject currentPhase;
+	private GameObject prevPhase;
 	private int phaseIndex;
 	public int checkpoint;
 
@@ -226,6 +227,11 @@ public class Scorer : MonoBehaviour {
 		level++;
 		scoreLevel.text = "Wave: " + level.ToString();
 		playerBreak = false;
+
+		// Destroy previous phase, if present
+		if (prevPhase) {
+			Destroy(prevPhase, 0.0f);
+		}
 	}
 	
 	public void AddSpawns (int spawns) {
@@ -233,11 +239,8 @@ public class Scorer : MonoBehaviour {
 	}
 
 	public void NextPhase () {
-		// Destroy current phase, obvs
-		Destroy(currentPhase, 0.0f);
-
 		// Deactivate current phase (testing, mostly)
-		//currentPhase.GetComponent<EnemyPhase>().StopPhase();
+		currentPhase.GetComponent<EnemyPhase>().StopPhase();
 
 		// Save current wave number as checkpoint
 		checkpoint = level;
