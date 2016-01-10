@@ -38,8 +38,8 @@ public class Scorer : MonoBehaviour {
 	private bool respawn;
 	private bool playerBreak = false;
 	public bool givePlayerBreak = true;
-	public float playerBreakDelay = 2.0f;
-	public float playerBreakRadius = 2.0f;
+	public float playerBreakDelay = 1.0f;
+	public float playerBreakRadius = 1.0f;
 
 	public bool Respawn {
 		get { return respawn; }
