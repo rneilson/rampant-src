@@ -237,8 +237,9 @@ public class Scorer : MonoBehaviour {
 	}
 
 	public void NextPhase () {
-		// Deactivate current phase (testing, mostly)
+		// Deactivate current phase and slate for destruction
 		currentPhase.GetComponent<EnemyPhase>().StopPhase();
+		prevPhase = currentPhase;
 
 		// Save current wave number as checkpoint
 		checkpoint = level;
