@@ -20,6 +20,8 @@ public class Scorer : MonoBehaviour {
 	private string instructionsForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nQuit: Q";
 	private string instructionsNoForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nBomb: space/right mouse button\nBomb: left/right trigger\nQuit: Q";
 	private string instructions;
+	private string prevTitle;
+	private string prevSubtitle;
 
 	// Cursor state
 	private CursorLockMode desiredCursorMode;
@@ -326,6 +328,8 @@ public class Scorer : MonoBehaviour {
 	void PauseGame () {
 		isPaused = true;
 		Time.timeScale = 0;
+		prevTitle = titleText.text;
+		prevSubtitle = subtitleText.text;
 		titleText.text = "Paused";
 		subtitleText.text = instructions;
 		desiredCursorVisibility = true;
@@ -336,8 +340,8 @@ public class Scorer : MonoBehaviour {
 	void UnPauseGame () {
 		isPaused = false;
 		Time.timeScale = 1;
-		titleText.text = "";
-		subtitleText.text = "";
+		titleText.text = prevTitle;
+		subtitleText.text = prevSubtitle;
 		desiredCursorVisibility = false;
 		//Cursor.lockState = CursorLockMode.Confined;
 		//Cursor.lockState = CursorLockMode.Locked;
