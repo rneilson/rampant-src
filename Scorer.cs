@@ -154,10 +154,10 @@ public class Scorer : MonoBehaviour {
 				killsUntilPowerup--;
 
 				if (playerControl.BiggerGun) {
-					if (killsUntilPowerup == bombMinusTwoAt) {
+					if ((killsUntilPowerup == bombMinusTwoAt) && (forceBombUse)) {
 						playerControl.BombMinusTwo();
 					}
-					else if (killsUntilPowerup == bombMinusOneAt) {
+					else if ((killsUntilPowerup == bombMinusOneAt) && (forceBombUse)) {
 						playerControl.BombMinusOne();
 					}
 					else if (killsUntilPowerup == 0) {
@@ -207,10 +207,10 @@ public class Scorer : MonoBehaviour {
 
 	public void NextPhase () {
 		// Destroy current phase, obvs
-		//Destroy(currentPhase, 0.0f);
+		Destroy(currentPhase, 0.0f);
 
 		// Deactivate current phase (testing, mostly)
-		currentPhase.GetComponent<EnemyPhase>().StopPhase();
+		//currentPhase.GetComponent<EnemyPhase>().StopPhase();
 
 		// Save current wave number as checkpoint
 		checkpoint = level;
