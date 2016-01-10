@@ -26,6 +26,7 @@ public class EnemySpawner : MonoBehaviour {
 	private int increaseCounter;
 	//private int mask;
 	private bool playerBreak;
+	private float maxSafeRadius = 4.5f;
 
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
@@ -98,7 +99,8 @@ public class EnemySpawner : MonoBehaviour {
 			counting = true;
 			roundCounter = 0;
 			playerBreak = giveBreak;
-			countdown = (playerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
+			//countdown = (playerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
+			countdown = initialDelay; // PlayerBreakDelay only used in EnemyPhase
 		}
 	}
 
@@ -109,7 +111,9 @@ public class EnemySpawner : MonoBehaviour {
 		Vector3 spawnPos;
 		Collider[] others;
 		bool clear = false;
-		float safeRadius = (playerBreak) ? Mathf.Max(safeZoneRadius + scorer.PlayerBreakRadius, 4.5f) : safeZoneRadius;
+		// Expand safezone radius if player just respawned
+		float safeRadius = (playerBreak) ? Mathf.Max(safeZoneRadius + scorer.PlayerBreakRadius, maxSafeRadius) : 
+			Mathf.Max(safeZoneRadius, maxSafeRadius);
 
 		// Spawn loop
 		for	(int i = roundSizeCurrent; i > 0; i--) {

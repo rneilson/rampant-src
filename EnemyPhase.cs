@@ -19,7 +19,8 @@ public class EnemyPhase : MonoBehaviour {
 	void Start () {
 		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
 		spawners = gameObject.GetComponents<EnemySpawner>();
-		countdown = initialDelay;
+		//countdown = initialDelay;
+		countdown = (scorer.PlayerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
 		waveNum = 0;
 	}
 	
@@ -59,7 +60,8 @@ public class EnemyPhase : MonoBehaviour {
 
 	// Reset phase to beginning
 	public void ResetPhase () {
-		countdown = initialDelay;
+		//countdown = initialDelay;
+		countdown = (scorer.PlayerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
 		waveNum = 0;
 
 		foreach (EnemySpawner spawner in spawners) {
