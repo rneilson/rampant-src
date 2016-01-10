@@ -30,20 +30,43 @@ public class Scorer : MonoBehaviour {
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
 	
-	public int kills;
-	public int level;
-	public int maxKills;
-	public int maxLevel;
-	public int totalDeaths;
+	private int kills;
+	private int level;
+	private int maxKills;
+	private int maxLevel;
+	private int totalDeaths;
 	public float respawnTime;
 
 	private bool respawn;
+	private bool playerBreak = false;
+	public bool givePlayerBreak = true;
+	public float playerBreakDelay = 1.0f;
+	public float playerBreakRadius = 1.0f;
 
 	public bool Respawn {
 		get { return respawn; }
 	}
 	public int Level {
 		get { return level; }
+	}
+	public bool SingleGun {
+		get {
+			if ((playerControl) && (playerControl.BiggerGun)) {
+				return false;
+			}
+			else {
+				return true;
+			}
+		}
+	}
+	public bool PlayerBreak {
+		get { return playerBreak; }
+	}
+	public float PlayerBreakDelay {
+		get { return playerBreakDelay; }
+	}
+	public float PlayerBreakRadius {
+		get { return playerBreakRadius; }
 	}
 
 	// Player object and friends
@@ -202,6 +225,7 @@ public class Scorer : MonoBehaviour {
 	public void AddLevel () {
 		level++;
 		scoreLevel.text = "Wave: " + level.ToString();
+		playerBreak = false;
 	}
 	
 	public void AddSpawns (int spawns) {
@@ -243,6 +267,7 @@ public class Scorer : MonoBehaviour {
 
 		// Set respawn, update counts, etc		
 		respawn = true;
+		playerBreak = true;
 		totalDeaths++;
 		titleText.text = kills.ToString() + " kills";
 		subtitleText.text = "Total deaths: " + totalDeaths.ToString() + "\nMost kills: " + maxKills.ToString();

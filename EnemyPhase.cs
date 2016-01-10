@@ -46,13 +46,15 @@ public class EnemyPhase : MonoBehaviour {
 
 	// Begin wave
 	public void StartWave () {
-		scorer.AddLevel();
 
 		foreach (EnemySpawner spawner in spawners) {
-			spawner.StartWave(waveNum);
+			spawner.StartWave(waveNum, scorer.PlayerBreak);
 		}
 
 		countdown = waveInterval;
+
+		// Once complete, tell scorer
+		scorer.AddLevel();
 	}
 
 	// Reset phase to beginning
