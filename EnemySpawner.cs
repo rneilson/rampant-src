@@ -9,6 +9,7 @@ public class EnemySpawner : MonoBehaviour {
 	public int roundNumStep;
 	public float initialDelay = 1.0f;
 	public float roundInterval = 0.5f;
+	public float safeZoneRadius = 2.0f;
 	public int waveMin = 1; // inclusive
 	public int waveMax; // inclusive
 	public IncreaseType[] increaseCycle = {IncreaseType.None};
@@ -24,6 +25,7 @@ public class EnemySpawner : MonoBehaviour {
 	//private int waveCurrent;
 	private int increaseCounter;
 	//private int mask;
+	private bool playerBreak;
 
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
@@ -84,7 +86,7 @@ public class EnemySpawner : MonoBehaviour {
 	}
 
 	// Start a wave -- called by phase class before spawner runs
-	public void StartWave (int wave) {
+	public void StartWave (int wave, bool giveBreak) {
 		// Check if we should even be doing anything
 		if ((wave >= waveMin) && ((wave <= waveMax) || waveMax == 0)) {
 			// If still more phase rounds to come, increase as per cycle
@@ -95,7 +97,8 @@ public class EnemySpawner : MonoBehaviour {
 			// Start countdown, reset counters
 			counting = true;
 			roundCounter = 0;
-			countdown = initialDelay;
+			playerBreak = giveBreak;
+			countdown = (playerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
 		}
 	}
 
@@ -106,6 +109,7 @@ public class EnemySpawner : MonoBehaviour {
 		Vector3 spawnPos;
 		Collider[] others;
 		bool clear = false;
+		float safeRadius = (playerBreak) ? (safeZoneRadius + scorer.PlayerBreakRadius) : safeZoneRadius;
 
 		// Spawn loop
 		for	(int i = roundSizeCurrent; i > 0; i--) {
@@ -114,7 +118,7 @@ public class EnemySpawner : MonoBehaviour {
 			do {
 				spawnPos = new Vector3(Random.Range(-4.7f, 4.7f), 1f, Random.Range(-4.7f, 4.7f));
 				others = Physics.OverlapSphere(spawnPos, 0.2f);
-				if (others.Length == 0 && ((spawnPos - playerPos).magnitude > 2.0f))
+				if (others.Length == 0 && ((spawnPos - playerPos).magnitude > safeRadius))
 					clear = true;
 			} while (!clear);
 
