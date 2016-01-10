@@ -33,7 +33,7 @@ public class EnemyPhase : MonoBehaviour {
 		if ((!scorer.Respawn) && (phaseActive)) {
 			if (countdown <= 0.0f) {
 				waveNum++;
-				StartWave();
+				StartWave(waveNum);
 				if ((maxWaves > 0) && (waveNum >= maxWaves)) {
 					scorer.NextPhase();
 				}
@@ -45,10 +45,10 @@ public class EnemyPhase : MonoBehaviour {
 	}
 
 	// Begin wave
-	public void StartWave () {
+	public void StartWave (int wave) {
 
 		foreach (EnemySpawner spawner in spawners) {
-			spawner.StartWave(waveNum, scorer.PlayerBreak);
+			spawner.StartWave(wave, scorer.PlayerBreak);
 		}
 
 		countdown = waveInterval;
