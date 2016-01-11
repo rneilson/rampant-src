@@ -3,9 +3,9 @@ using System.Collections;
 
 public class EnemySpawner : MonoBehaviour {
 	
-	public int roundSizeStart = 1;
+	public int roundSizeStart = 1; // Set to 0 if monotonically increasing size
 	public int roundSizeStep = 1;
-	public int roundNumStart = 1;
+	public int roundNumStart = 1; // Set to 0 if monotonically increasing num
 	public int roundNumStep = 1;
 	public float initialDelay = 0.0f;
 	public float roundInterval = 0.5f;
@@ -13,6 +13,7 @@ public class EnemySpawner : MonoBehaviour {
 	public int waveMin = 1; // inclusive
 	public int waveMax; // inclusive
 	public IncreaseType[] increaseCycle = {IncreaseType.None};
+	public WaveType[] waveCycle = {WaveType.Current};
 	public GameObject enemySpawn;
 	public AudioClip enemySpawnSound;
 	
@@ -22,8 +23,8 @@ public class EnemySpawner : MonoBehaviour {
 	private int roundCounter;
 	private int roundNumCurrent;
 	private int roundSizeCurrent;
-	//private int waveCurrent;
 	private int increaseCounter;
+	private int waveCounter;
 	//private int mask;
 	private bool playerBreak;
 	private float maxSafeRadius = 4.75f;
@@ -80,7 +81,7 @@ public class EnemySpawner : MonoBehaviour {
 		roundSizeCurrent = roundSizeStart;
 		roundNumCurrent = roundNumStart;
 		roundCounter = 0;
-	//	waveCurrent = 0;
+		waveCounter = 0;
 		increaseCounter = 0;
 		counting = false;
 		countdown = initialDelay;
@@ -90,17 +91,32 @@ public class EnemySpawner : MonoBehaviour {
 	public void StartWave (int wave, bool giveBreak) {
 		// Check if we should even be doing anything
 		if ((wave >= waveMin) && ((wave <= waveMax) || waveMax == 0)) {
+			/* [OLD] kept for reference
 			// If still more phase rounds to come, increase as per cycle
 			if (wave > waveMin) {
 				Increase();
 			}
+			*/
 
-			// Start countdown, reset counters
-			counting = true;
-			roundCounter = 0;
-			playerBreak = giveBreak;
-			//countdown = (playerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
-			countdown = initialDelay; // PlayerBreakDelay only used in EnemyPhase
+			// Check cycle array, don't do anything if skipping this wave
+			WaveType currentWave = waveCycle[waveCounter];
+			if (currentWave != WaveType.None) {
+				// Increase/decrease as necessary
+				IncreaseWave(currentWave);
+
+				// Start countdown, reset counters
+				counting = true;
+				roundCounter = 0;
+				playerBreak = giveBreak;
+				//countdown = (playerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
+				countdown = initialDelay; // PlayerBreakDelay only used in EnemyPhase
+			}
+
+			// Advance counter and loop if necessary
+			waveCounter++;
+			if (waveCounter >= waveCycle.Length) {
+				waveCounter = 0;
+			}
 		}
 	}
 
@@ -142,9 +158,19 @@ public class EnemySpawner : MonoBehaviour {
 		roundSizeCurrent += roundSizeStep;
 	}
 
+	// Decrease round size by step
+	void DecreaseSize () {
+		roundSizeCurrent -= roundSizeStep;
+	}
+
 	// Increase number of rounds by step
 	void IncreaseNum () {
 		roundNumCurrent += roundNumStep;
+	}
+
+	// Decrease number of rounds by step
+	void DecreaseNum () {
+		roundNumCurrent -= roundNumStep;
 	}
 
 	// Increase by whatever's in the queue
@@ -163,6 +189,38 @@ public class EnemySpawner : MonoBehaviour {
 			increaseCounter = 0;
 		}
 	}
+
+	// Increase/decrease size/num/both/neither
+	void IncreaseWave (WaveType waveType) {
+		switch (waveType) {
+			case WaveType.IncBoth:
+				IncreaseSize();
+				IncreaseNum();
+				return;
+			case WaveType.IncSize:
+				IncreaseSize();
+				return;
+			case WaveType.IncNum:
+				IncreaseNum();
+				return;
+			case WaveType.DecBoth:
+				DecreaseSize();
+				DecreaseNum();
+				return;
+			case WaveType.DecSize:
+				DecreaseSize();
+				return;
+			case WaveType.DecNum:
+				DecreaseNum();
+				return;
+			case WaveType.Current:
+				return;
+			case WaveType.None:
+				return;
+			default:
+				return;
+		}
+	}
 }
 
 // Enum for round increase types
@@ -172,4 +230,17 @@ public enum IncreaseType : byte {
 	Size,
 	Num,
 	Both
+}
+
+// Enum for wave types
+
+public enum WaveType : byte {
+	None = 0,
+	Current,
+	IncSize,
+	DecSize,
+	IncNum,
+	DecNum,
+	IncBoth,
+	DecBoth
 }
