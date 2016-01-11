@@ -56,6 +56,9 @@ public class EnemyPhase : MonoBehaviour {
 
 		// Once complete, tell scorer
 		scorer.AddLevel();
+
+		// Debug
+		Debug.Log("Beginning wave " + wave.ToString());
 	}
 
 	// Reset phase to beginning

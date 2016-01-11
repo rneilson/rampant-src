@@ -149,6 +149,9 @@ public class EnemySpawner : MonoBehaviour {
 		// Play one instance only of spawn sound
 		myAudioSource.PlayOneShot(enemySpawnSound, 1.0f);
 
+		// Debug
+		Debug.Log("Spawned round of " + roundSizeCurrent.ToString());
+
 		// Advance round counter
 		roundCounter++;
 	}
