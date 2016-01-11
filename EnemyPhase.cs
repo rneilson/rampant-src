@@ -22,6 +22,9 @@ public class EnemyPhase : MonoBehaviour {
 		//countdown = initialDelay;
 		countdown = (scorer.PlayerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
 		waveNum = 0;
+
+		// Debug
+		Debug.Log("Entering phase " + phaseName);
 	}
 	
 	// Update is called once per frame
