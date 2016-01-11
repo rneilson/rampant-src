@@ -79,7 +79,8 @@ public class Scorer : MonoBehaviour {
 	private GameObject currentPhase;
 	private GameObject prevPhase;
 	private int phaseIndex;
-	public int checkpoint;
+	private int checkpoint;
+	public int terminalPhase;
 
 	// Powerup state tracking
 	public bool forceBombUse;
@@ -113,6 +114,12 @@ public class Scorer : MonoBehaviour {
 		// Start first enemy phase
 		phaseIndex = 0;
 		currentPhase = Instantiate(enemyPhases[phaseIndex]);
+
+		// Sanity check on terminal phase setting
+		// Defaults to last phase in array
+		if (terminalPhase >= enemyPhases.Length) {
+			terminalPhase = enemyPhases.Length - 1;
+		}
 
 		// Check which instructions to make visible
 		if (forceBombUse) {
@@ -246,10 +253,10 @@ public class Scorer : MonoBehaviour {
 		// Save current wave number as checkpoint
 		checkpoint = level;
 
-		// Advance index, and loop around if all phases complete
+		// Advance index, and go to terminal phase if all phases complete
 		phaseIndex++;
 		if (phaseIndex >= enemyPhases.Length) {
-			phaseIndex = 0;
+			phaseIndex = terminalPhase;
 		}
 
 		// Instantiate new phase, and let chips fall
