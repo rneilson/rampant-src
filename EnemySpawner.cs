@@ -71,7 +71,7 @@ public class EnemySpawner : MonoBehaviour {
 				}
 			}
 			else {
-				countdown -= Time.deltaTime;
+				countdown -= Time.fixedDeltaTime;
 			}
 		}
 	}
