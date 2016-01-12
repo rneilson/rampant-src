@@ -43,7 +43,7 @@ public class EnemyPhase : MonoBehaviour {
 				}
 			}
 			else {
-				countdown -= Time.deltaTime;
+				countdown -= Time.fixedDeltaTime;
 			}
 		}
 	}
