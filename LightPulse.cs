@@ -3,9 +3,9 @@ using System.Collections;
 
 public class LightPulse : MonoBehaviour {
 
-	public float intensityTarget = 2;
-	public float timeInitialTarget = 0.5;
-	public float timeTargetInitial = 0.5;
+	public float intensityTarget = 2.0f;
+	public float timeInitialTarget = 0.5f;
+	public float timeTargetInitial = 0.5f;
 	public bool returnToInitial = true;
 	public bool looping = false;
 
