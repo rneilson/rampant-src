@@ -303,7 +303,8 @@ public class BallMovement : MonoBehaviour {
 		Destroy(bombBlinker, 0.0f);
 
 		// Spawn effect
-		Destroy(Instantiate(powerUpBoom, bombPos, Quaternion.Euler(0, 0, 0)), 1.0f);
+		// At player position because it looks better
+		Destroy(Instantiate(powerUpBoom, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
 		
 		Collider[] enemies;
 		int mask = 1 << LayerMask.NameToLayer("Enemy");
