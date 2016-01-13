@@ -40,7 +40,7 @@ public class BallMovement : MonoBehaviour {
 
 	const float fireDist = 0.16f;
 	const float fireSpeed = 5.0f;
-	public float bombHeight = 0.01f;
+	public float bombHeight = 0.51f;
 	public float bombForce = 500f;
 	public float bombKillRadius = 2.0f;
 	public float bombPushRadius = 4.5f;
@@ -295,7 +295,7 @@ public class BallMovement : MonoBehaviour {
 
 	// Old name: void PowerUpBoom () {
 	public void UseBomb () {
-		Vector3 bombPos = new Vector3 (transform.position.x, bombHeight, transform.position.y);
+		Vector3 bombPos = new Vector3 (transform.position.x, bombHeight, transform.position.z);
 
 		// Use up bomb
 		hasBomb = false;
