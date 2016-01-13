@@ -45,7 +45,7 @@ public class LightPulse : MonoBehaviour {
 							+ phase.ToString() + ", intensity: " + lightControl.intensity, gameObject);
 					}
 					// Set time to target->initial, less any overshoot
-					counter = timeTargetInitial - (counter - timeInitialTarget);
+					counter = 0.0f + (counter - timeInitialTarget);
 					// Switch mode
 					mode = PulseMode.FromTarget;
 				}
@@ -56,11 +56,11 @@ public class LightPulse : MonoBehaviour {
 					if (looping) {
 						// Debug
 						if (debugInfo) {
-							Debug.Log("Switching mode to FromTarget, counter: " + counter.ToString() + ", phase: " 
+							Debug.Log("Switching mode to ToTarget, counter: " + counter.ToString() + ", phase: " 
 								+ phase.ToString() + ", intensity: " + lightControl.intensity, gameObject);
 						}
 						// Set time to initial->target, less any overshoot
-						counter = timeInitialTarget - (counter - timeTargetInitial);
+						counter = 0.0f + (counter - timeTargetInitial);
 						// Switch mode
 						mode = PulseMode.ToTarget;
 					}
