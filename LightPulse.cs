@@ -8,6 +8,7 @@ public class LightPulse : MonoBehaviour {
 	public float timeTargetInitial = 0.5f;
 	public bool returnToInitial = true;
 	public bool looping = false;
+	public bool debugInfo = false;
 
 	private Light lightControl;
 	private float intensityStart;
@@ -38,6 +39,11 @@ public class LightPulse : MonoBehaviour {
 			// Check if time reached (and *which* time), and set mode accordingly
 			if (mode == PulseMode.ToTarget) {
 				if (counter >= timeInitialTarget) {
+					// Debug
+					if (debugInfo) {
+						Debug.Log("Switching mode to FromTarget, counter: " + counter.ToString() + ", phase: " 
+							+ phase.ToString() + ", intensity: " + lightControl.intensity, gameObject);
+					}
 					// Set time to target->initial, less any overshoot
 					counter = timeTargetInitial - (counter - timeInitialTarget);
 					// Switch mode
@@ -48,12 +54,22 @@ public class LightPulse : MonoBehaviour {
 				if (counter >= timeTargetInitial) {
 					// Check if we're looping
 					if (looping) {
+						// Debug
+						if (debugInfo) {
+							Debug.Log("Switching mode to FromTarget, counter: " + counter.ToString() + ", phase: " 
+								+ phase.ToString() + ", intensity: " + lightControl.intensity, gameObject);
+						}
 						// Set time to initial->target, less any overshoot
 						counter = timeInitialTarget - (counter - timeTargetInitial);
 						// Switch mode
 						mode = PulseMode.ToTarget;
 					}
 					else {
+						// Debug
+						if (debugInfo) {
+							Debug.Log("Switching mode to Stopped, counter: " + counter.ToString() + ", phase: " 
+								+ phase.ToString() + ", intensity: " + lightControl.intensity, gameObject);
+						}
 						// Set phase to Pi, since we're done
 						phase = Mathf.PI;
 						// Switch mode
