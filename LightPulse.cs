@@ -9,13 +9,14 @@ public class LightPulse : MonoBehaviour {
 	public bool returnToInitial = true;
 	public bool looping = false;
 	public bool debugInfo = false;
+	public PulseMode pulseMode = PulseMode.Sine;
 
 	private Light lightControl;
 	private float intensityStart;
 	private float intensityDiff;
 	private float counter;
 	private float phase;
-	private PulseMode mode;
+	private PulseState currentState;
 
 	private const float halfPi = Mathf.PI / 2.0f;
 
@@ -24,7 +25,7 @@ public class LightPulse : MonoBehaviour {
 		lightControl = GetComponent<Light>();
 		intensityStart = lightControl.intensity;
 		intensityDiff = intensityTarget - intensityStart;
-		mode = PulseMode.Starting;
+		currentState = PulseState.Starting;
 		phase = 0.0f;
 		counter = 0.0f;
 		if (debugInfo) {
@@ -36,96 +37,93 @@ public class LightPulse : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-		if (mode != PulseMode.Stopped) {
+		if (currentState != PulseState.Stopped) {
 
 			// If we haven't started yet, let's do that
-			if (mode == PulseMode.Starting) {
+			if (currentState == PulseState.Starting) {
 				if (debugInfo) {
-					Debug.Log("Switching mode to ToTarget, counter: " + counter.ToString() + ", phase: " 
+					Debug.Log("Switching currentState to ToTarget, counter: " + counter.ToString() + ", phase: " 
 						+ phase.ToString() + ", intensity: " + lightControl.intensity, gameObject);
 				}
-				mode = PulseMode.ToTarget;
+				currentState = PulseState.ToTarget;
 			}
 			else {
 				// Add dt to counter
 				counter += Time.deltaTime;
 			}
 
-			// Check if time reached (and *which* time), and set mode accordingly
-			if (mode == PulseMode.ToTarget) {
+			// Check if time reached (and *which* time), and set currentState accordingly
+			if (currentState == PulseState.ToTarget) {
 				if (counter >= timeInitialTarget) {
 					if (returnToInitial) {
 						// Debug
 						if (debugInfo) {
-							Debug.Log("Switching mode to FromTarget, counter: " + counter.ToString() + ", phase: " 
+							Debug.Log("Switching currentState to FromTarget, counter: " + counter.ToString() + ", phase: " 
 								+ phase.ToString() + ", intensity: " + lightControl.intensity, gameObject);
 						}
 						// Set time to target->initial, less any overshoot
-						counter = 0.0f + (counter - timeInitialTarget);
-						// Switch mode
-						mode = PulseMode.FromTarget;
+						counter = counter - timeInitialTarget;
+						// Switch currentState
+						currentState = PulseState.FromTarget;
 					}
 					else {
 						// Debug
 						if (debugInfo) {
-							Debug.Log("Switching mode to Stopped, counter: " + counter.ToString() + ", phase: " 
+							Debug.Log("Switching currentState to Stopped, counter: " + counter.ToString() + ", phase: " 
 								+ phase.ToString() + ", intensity: " + lightControl.intensity, gameObject);
 						}
-						// Set phase to Pi/2, since we're done
-						phase = halfPi;
-						// Switch mode
-						mode = PulseMode.Stopped;
+						// Set phase to 1, since we're done
+						phase = 1.0f;
+						// Switch currentState
+						currentState = PulseState.Stopped;
 					}
 				}
 			}
-			else if (mode == PulseMode.FromTarget) {
+			else if (currentState == PulseState.FromTarget) {
 				if (counter >= timeTargetInitial) {
 					// Check if we're looping
 					if (looping) {
 						// Debug
 						if (debugInfo) {
-							Debug.Log("Switching mode to ToTarget, counter: " + counter.ToString() + ", phase: " 
+							Debug.Log("Switching currentState to ToTarget, counter: " + counter.ToString() + ", phase: " 
 								+ phase.ToString() + ", intensity: " + lightControl.intensity, gameObject);
 						}
 						// Set time to initial->target, less any overshoot
-						counter = 0.0f + (counter - timeTargetInitial);
-						// Switch mode
-						mode = PulseMode.ToTarget;
+						counter = counter - timeTargetInitial;
+						// Switch currentState
+						currentState = PulseState.ToTarget;
 					}
 					else {
 						// Debug
 						if (debugInfo) {
-							Debug.Log("Switching mode to Stopped, counter: " + counter.ToString() + ", phase: " 
+							Debug.Log("Switching currentState to Stopped, counter: " + counter.ToString() + ", phase: " 
 								+ phase.ToString() + ", intensity: " + lightControl.intensity, gameObject);
 						}
-						// Set phase to Pi, since we're done
-						phase = Mathf.PI;
-						// Switch mode
-						mode = PulseMode.Stopped;
+						// Set phase to 0, since we're done
+						phase = 0.0f;
+						// Switch currentState
+						currentState = PulseState.Stopped;
 					}
 				}
 			}
 
 			// Calulate phase depending on whether we're (now) going to/from target
-			// Phase goes between 0->Pi/2 for initial->target, and Pi/2->Pi for target->initial
-			// Intensity is calc'd by sin(phase)
-			if (mode == PulseMode.ToTarget) {
-				phase = (counter / timeInitialTarget) * halfPi;
+			if (currentState == PulseState.ToTarget) {
+				phase = (counter / timeInitialTarget);
 			}
-			else if (mode == PulseMode.FromTarget) {
-				phase = ((counter / timeTargetInitial) + 1.0f) * halfPi;
+			else if (currentState == PulseState.FromTarget) {
+				phase = 1.0f - (counter / timeTargetInitial);
 			}
 
 			// Set intensity based on phase
-			lightControl.intensity = intensityStart + (intensityDiff * Mathf.Sin(phase));
+			if (pulseMode == PulseMode.Linear) {
+				lightControl.intensity = intensityStart + (intensityDiff * phase);
+			}
+			else if (pulseMode == PulseMode.Sine) {
+				lightControl.intensity = intensityStart + (intensityDiff * Mathf.Sin(phase * halfPi));
+			}
 		}
 
 	}
 }
 
-public enum PulseMode : byte {
-	Stopped = 0,
-	Starting,
-	ToTarget,
-	FromTarget
-}
