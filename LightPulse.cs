@@ -17,7 +17,7 @@ public class LightPulse : MonoBehaviour {
 	private float phase;
 	private PulseMode mode;
 
-	private static float halfPi = Mathf.PI / 2.0f;
+	private const float halfPi = Mathf.PI / 2.0f;
 
 	// Use this for initialization
 	void Start () {
