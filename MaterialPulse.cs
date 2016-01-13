@@ -34,11 +34,17 @@ public class MaterialPulse : MonoBehaviour {
 		matControl.EnableKeyword("_EMISSION");
 		emissionId = Shader.PropertyToID("_EmissionColor");
 		emissionInitial = matControl.GetColor(emissionId);
+		/*
 		if (QualitySettings.activeColorSpace == ColorSpace.Gamma) {
 			emissionTarget = emissionColor * Mathf.LinearToGammaSpace(emissionFraction);
 		}
 		else {
 			emissionTarget = emissionColor * emissionFraction;
+		}
+		*/
+		emissionTarget = emissionColor * emissionFraction;
+		if (debugInfo) {
+			Debug.Log("Initial: " + emissionInitial.ToString() + ", Target: " + emissionTarget.ToString(), gameObject);
 		}
 		
 		currentState = PulseState.Starting;
