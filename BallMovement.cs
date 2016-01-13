@@ -40,6 +40,10 @@ public class BallMovement : MonoBehaviour {
 
 	const float fireDist = 0.16f;
 	const float fireSpeed = 5.0f;
+	public float bombHeight = 0.01f;
+	public float bombForce = 500f;
+	public float bombKillRadius = 2.0f;
+	public float bombPushRadius = 4.5f;
 
 	// Status vars
 	private bool biggerGun;
@@ -291,19 +295,21 @@ public class BallMovement : MonoBehaviour {
 
 	// Old name: void PowerUpBoom () {
 	public void UseBomb () {
+		Vector3 bombPos = new Vector3 (transform.position.x, bombHeight, transform.position.y);
+
 		// Use up bomb
 		hasBomb = false;
 		// Destroy armed-bomb effect
 		Destroy(bombBlinker, 0.0f);
 
 		// Spawn effect
-		Destroy(Instantiate(powerUpBoom, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
+		Destroy(Instantiate(powerUpBoom, bombPos, Quaternion.Euler(0, 0, 0)), 1.0f);
 		
 		Collider[] enemies;
 		int mask = 1 << LayerMask.NameToLayer("Enemy");
 		
 		// Kill enemies in inner radius
-		enemies = Physics.OverlapSphere(transform.position, 2.0f, mask);
+		enemies = Physics.OverlapSphere(bombPos, bombKillRadius, mask);
 		if (enemies.Length > 0) {
 			for (int i=0; i<enemies.Length; i++) {
 				enemies[i].SendMessage("Die", false);
@@ -311,9 +317,9 @@ public class BallMovement : MonoBehaviour {
 		}
 		
 		// Push enemies in outer radius
-		enemies = Physics.OverlapSphere(transform.position, 4.0f, mask);
+		enemies = Physics.OverlapSphere(bombPos, bombPushRadius, mask);
 		for (int i=0; i<enemies.Length; i++) {
-			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(500f, transform.position, 0f);
+			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 		}
 	}
 	
