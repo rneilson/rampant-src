@@ -316,12 +316,13 @@ public class Scorer : MonoBehaviour {
 		subtitleText.text = "";
 		
 		// Spawn effect in center
-		Vector3 spawnPos = new Vector3 (0, 1, 0);
+		Vector3 spawnPos = new Vector3 (0f, 1f, 0f);
+		Vector3 bombPos = new Vector3 (0f, 0.6f, 0f);
 		Destroy(Instantiate(spawnEffect, spawnPos, Quaternion.Euler(-90, 0, 0)), 1f);
 		myAudioSource.PlayOneShot(spawnSound, 1.0f);
 		
 		// Bomb enemies near spawn point
-		SpawnBomb(spawnPos, 2.0f, 5.0f);
+		SpawnBomb(bombPos, 2.0f, 5.0f);
 		
 		// Old bomb routine
 		/* GameObject[] enemies;
