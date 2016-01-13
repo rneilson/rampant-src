@@ -111,6 +111,11 @@ public class Scorer : MonoBehaviour {
 		desiredCursorMode = Cursor.lockState;
 		desiredCursorVisibility = Cursor.visible;
 
+		// Start paused
+		if (isPaused) {
+			Time.timeScale = 0;
+		}
+
 		// Start first enemy phase
 		phaseIndex = 0;
 		currentPhase = Instantiate(enemyPhases[phaseIndex]);
