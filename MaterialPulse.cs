@@ -17,8 +17,10 @@ public class MaterialPulse : MonoBehaviour {
 	private int emissionId;
 	private Color emissionInitial;
 	private Color emissionTarget;
+	private Color emissionFinal;
 	private float counter;
 	private float phase;
+	private float timeTargetFinal;
 	private PulseState currentState;
 
 	private const float halfPi = Mathf.PI / 2.0f;
@@ -44,9 +46,10 @@ public class MaterialPulse : MonoBehaviour {
 		}
 		*/
 		emissionTarget = emissionColor * emissionFraction;
-		if (debugInfo) {
-			Debug.Log("Initial: " + emissionInitial.ToString() + ", Target: " + emissionTarget.ToString(), gameObject);
-		}
+
+		// Set final values now, which might be updated if interrupted
+		emissionFinal = emissionInitial;
+		timeTargetFinal = timeTargetInitial;
 
 		// Initialize to stopped
 		currentState = PulseState.Stopped;
@@ -102,7 +105,7 @@ public class MaterialPulse : MonoBehaviour {
 				}
 			}
 			else if (currentState == PulseState.FromTarget) {
-				if (counter >= timeTargetInitial) {
+				if (counter >= timeTargetFinal) {
 					// Check if we're looping
 					if (looping) {
 						// Debug
@@ -111,9 +114,11 @@ public class MaterialPulse : MonoBehaviour {
 								+ phase.ToString(), gameObject);
 						}
 						// Set time to initial->target, less any overshoot
-						counter = counter - timeTargetInitial;
+						counter = counter - timeTargetFinal;
 						// Switch currentState
 						currentState = PulseState.ToTarget;
+						// In case we've been updated, set new initial value
+						emissionInitial = emissionFinal;
 					}
 					else {
 						// Debug
@@ -129,22 +134,30 @@ public class MaterialPulse : MonoBehaviour {
 				}
 			}
 
-			// Calulate phase depending on whether we're (now) going to/from target
+			// Calulate phase and current color depending on whether we're (now) going to/from target
 			if (currentState == PulseState.ToTarget) {
-				phase = (counter / timeInitialTarget);
+				phase = counter / timeInitialTarget;
+				// Set color based on phase
+				// Color is lerped between initial and target
+				if (pulseMode == PulseMode.Linear) {
+					matControl.SetColor(emissionId, Color.Lerp(emissionInitial, emissionTarget, phase));
+				}
+				else if (pulseMode == PulseMode.Sine) {
+					matControl.SetColor(emissionId, Color.Lerp(emissionInitial, emissionTarget, Mathf.Sin(phase)));
+				}
 			}
 			else if (currentState == PulseState.FromTarget) {
-				phase = 1.0f - (counter / timeTargetInitial);
+				phase = 1.0f - (counter / timeTargetFinal);
+				// Set color based on phase
+				// Color is lerped between final and target
+				if (pulseMode == PulseMode.Linear) {
+					matControl.SetColor(emissionId, Color.Lerp(emissionFinal, emissionTarget, phase));
+				}
+				else if (pulseMode == PulseMode.Sine) {
+					matControl.SetColor(emissionId, Color.Lerp(emissionFinal, emissionTarget, Mathf.Sin(phase)));
+				}
 			}
 
-			// Set color based on phase
-			// Color is lerped between initial and target
-			if (pulseMode == PulseMode.Linear) {
-				matControl.SetColor(emissionId, Color.Lerp(emissionInitial, emissionTarget, phase));
-			}
-			else if (pulseMode == PulseMode.Sine) {
-				matControl.SetColor(emissionId, Color.Lerp(emissionInitial, emissionTarget, Mathf.Sin(phase)));
-			}
 		}
 	}
 
@@ -158,8 +171,81 @@ public class MaterialPulse : MonoBehaviour {
 			if (debugInfo) {
 				Debug.Log("Staring pulse, counter: " + counter.ToString() + ", phase: " 
 					+ phase.ToString(), gameObject);
+				Debug.Log("Initial color: " + emissionInitial.ToString() 
+					+ ", Target color: " + emissionTarget.ToString()
+					+ ", Final color: " + emissionFinal.ToString(), gameObject);
 			}
 		}
+		else {
+			// We should really never be here
+			Debug.LogError("StartPulse() called on running MaterialPulse!", gameObject);
+		}
+	}
+
+	// Various ways and means of setting a new target (and optionally a new final)
+	// Presumes autostarting, of course -- wouldn't be called otherwise
+
+	// Starts a new pulse, with a new target, a new final, and new counters for each
+	// Other variants will call this one
+	void NewPulse (Color targetColor, float targetFraction, float timeToTarget, 
+		Color finalColor, float finalFraction, float timeToFinal, bool loopNewValues)
+	{
+		// Set initial to current color
+		emissionInitial = matControl.GetColor(emissionId);
+
+		// Set new target values
+		emissionTarget = targetColor * targetFraction;
+		timeInitialTarget = timeToTarget;
+
+		// Set new final values
+		emissionFinal = finalColor * finalFraction;
+		timeTargetFinal = timeToFinal;
+
+		// Set looping status
+		looping = loopNewValues;
+
+		// Yes, assume we're returning to initial (well, new final (there's a one-way function later))
+		returnToInitial = true;
+
+		// Start pulse with new values
+		currentState = PulseState.Stopped;
+		StartPulse();
+	}
+
+	// Starts a new pulse, but with current final values
+	void NewPulse (Color targetColor, float targetFraction, float timeToTarget, bool loopNewValues=false) {
+		NewPulse(targetColor, targetFraction, timeToTarget, emissionFinal, 1.0f, timeTargetFinal, loopNewValues);
+	}
+
+	// Starts a new pulse, but with current final values, current times, and optional fraction
+	void NewPulse (Color targetColor, float targetFraction=1.0f, bool loopNewValues=false) {
+		NewPulse(targetColor, targetFraction, timeInitialTarget, emissionFinal, 1.0f, timeTargetFinal, loopNewValues);
+	}
+
+	// Starts a new pulse with no return/final value
+	void NewPulseNoReturn (Color targetColor, float targetFraction, float timeToTarget) {
+		// Set initial to current color
+		emissionInitial = matControl.GetColor(emissionId);
+
+		// Set new target values
+		emissionTarget = targetColor * targetFraction;
+		timeInitialTarget = timeToTarget;
+
+		// Set looping status
+		looping = false;
+
+		// This is a one-way trip
+		returnToInitial = false;
+
+		// Start pulse with new values
+		currentState = PulseState.Stopped;
+		StartPulse();
+	}
+
+	// There may be a time when you're lazy enough to do a one-way and not know what time to use
+	// So we default to timeInitialTarget
+	void NewPulseNoReturn (Color targetColor) {
+		NewPulseNoReturn(targetColor, 1.0f, timeInitialTarget);
 	}
 
 }
