@@ -67,6 +67,7 @@ public class Scorer : MonoBehaviour {
 
 	// Plane (etc) for color pulses
 	public Color playerPulseColor = Color.white * 0.4f;
+	private Color currentPulseColor;
 	private List<MaterialPulse> arenaPulsers = new List<MaterialPulse>(1);
 
 	public bool Respawn {
@@ -145,6 +146,7 @@ public class Scorer : MonoBehaviour {
 		foreach (GameObject pulser in GameObject.FindGameObjectsWithTag("ArenaPulser")) {
 			arenaPulsers.Add(pulser.GetComponent<MaterialPulse>());
 		}
+		currentPulseColor = playerPulseColor;
 		/*
 		if (arenaPulsers.Length > 0) {
 			arenaPulseMats = new List<MaterialPulse>(arenaPulsers.Length);
@@ -384,8 +386,8 @@ public class Scorer : MonoBehaviour {
 		}
 		*/
 
-		// Flash grid white
-		FlashGrid(playerPulseColor);
+		// Flash grid
+		FlashGrid(currentPulseColor);
 
 	}
 
@@ -433,5 +435,9 @@ public class Scorer : MonoBehaviour {
 		foreach (MaterialPulse pulser in arenaPulsers) {
 			pulser.NewPulse(gridColor);
 		}
+	}
+
+	public void NewRespawnColor (Color gridColor) {
+		currentPulseColor = gridColor;
 	}
 }

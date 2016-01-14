@@ -58,13 +58,14 @@ public class EnemyPhase : MonoBehaviour {
 
 		countdown = waveInterval;
 
+		// Send color pulse if first wave of phase
+		if ((wave == 1) && !(scorer.PlayerBreak)) {
+			scorer.FlashGrid(pulseColor);
+			scorer.NewRespawnColor(pulseColor);
+		}
+
 		// Once complete, tell scorer
 		scorer.AddLevel();
-
-		// Send color pulse if first wave of phase
-		if (wave == 1) {
-			scorer.FlashGrid(pulseColor);
-		}
 
 		// Debug
 		Debug.Log("Beginning wave " + wave.ToString());
