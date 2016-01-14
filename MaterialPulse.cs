@@ -7,6 +7,7 @@ public class MaterialPulse : MonoBehaviour {
 	public float emissionFraction = 1.0f;
 	public float timeInitialTarget = 0.5f;
 	public float timeTargetInitial = 0.5f;
+	public bool autoStart = true;
 	public bool returnToInitial = true;
 	public bool looping = false;
 	public bool debugInfo = false;
@@ -46,13 +47,13 @@ public class MaterialPulse : MonoBehaviour {
 		if (debugInfo) {
 			Debug.Log("Initial: " + emissionInitial.ToString() + ", Target: " + emissionTarget.ToString(), gameObject);
 		}
+
+		// Initialize to stopped
+		currentState = PulseState.Stopped;
 		
-		currentState = PulseState.Starting;
-		phase = 0.0f;
-		counter = 0.0f;
-		if (debugInfo) {
-			Debug.Log("Staring pulse, counter: " + counter.ToString() + ", phase: " 
-				+ phase.ToString(), gameObject);
+		// Start only if autostarting
+		if (autoStart) {
+			StartPulse();
 		}
 	}
 	
@@ -146,4 +147,19 @@ public class MaterialPulse : MonoBehaviour {
 			}
 		}
 	}
+
+	// Start pulse cycle
+	void StartPulse () {
+		// Only start if we're stopped
+		if (currentState == PulseState.Stopped) {
+			currentState = PulseState.Starting;
+			phase = 0.0f;
+			counter = 0.0f;
+			if (debugInfo) {
+				Debug.Log("Staring pulse, counter: " + counter.ToString() + ", phase: " 
+					+ phase.ToString(), gameObject);
+			}
+		}
+	}
+
 }
