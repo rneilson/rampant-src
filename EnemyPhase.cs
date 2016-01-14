@@ -7,9 +7,10 @@ public class EnemyPhase : MonoBehaviour {
 	public int maxWaves; // Set to 0 if terminal/eternal/steadystate
 	public float initialDelay;
 	public float waveInterval;
+	public Color pulseColor = Color.red * 0.5f;
 
-	public float countdown;
-	public int waveNum;
+	private float countdown;
+	private int waveNum;
 	private Scorer scorer;
 	private Component[] spawners;
 
@@ -59,6 +60,11 @@ public class EnemyPhase : MonoBehaviour {
 
 		// Once complete, tell scorer
 		scorer.AddLevel();
+
+		// Send color pulse if first wave of phase
+		if (wave == 1) {
+			scorer.FlashGrid(pulseColor);
+		}
 
 		// Debug
 		Debug.Log("Beginning wave " + wave.ToString());

@@ -428,7 +428,7 @@ public class Scorer : MonoBehaviour {
 		}
 	}
 
-	void FlashGrid (Color gridColor) {
+	public void FlashGrid (Color gridColor) {
 		// Update each flasher with new color (same times, though)
 		foreach (MaterialPulse pulser in arenaPulsers) {
 			pulser.NewPulse(gridColor);
