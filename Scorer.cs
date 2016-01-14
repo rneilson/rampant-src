@@ -43,6 +43,30 @@ public class Scorer : MonoBehaviour {
 	public float playerBreakDelay = 1.0f;
 	public float playerBreakRadius = 1.0f;
 
+	// Player object and friends
+	public GameObject playerType;
+	public GameObject spawnEffect;
+	public AudioClip spawnSound;
+
+	// Enemy phases (ie difficulty stuff)
+	public GameObject[] enemyPhases;
+	private GameObject currentPhase;
+	private GameObject prevPhase;
+	private int phaseIndex;
+	private int checkpoint;
+	public int terminalPhase;
+
+	// Powerup state tracking
+	public bool forceBombUse;
+	public int biggerGunAt;
+	public int giveBombEvery;
+	public int bombMinusOneAt;
+	public int bombMinusTwoAt;
+	private int killsUntilPowerup;
+
+	// Plane (etc) for color pulses
+	public GameObject[] arenaPulsers;
+
 	public bool Respawn {
 		get { return respawn; }
 	}
@@ -68,27 +92,6 @@ public class Scorer : MonoBehaviour {
 	public float PlayerBreakRadius {
 		get { return playerBreakRadius; }
 	}
-
-	// Player object and friends
-	public GameObject playerType;
-	public GameObject spawnEffect;
-	public AudioClip spawnSound;
-
-	// Enemy phases (ie difficulty stuff)
-	public GameObject[] enemyPhases;
-	private GameObject currentPhase;
-	private GameObject prevPhase;
-	private int phaseIndex;
-	private int checkpoint;
-	public int terminalPhase;
-
-	// Powerup state tracking
-	public bool forceBombUse;
-	public int biggerGunAt;
-	public int giveBombEvery;
-	public int bombMinusOneAt;
-	public int bombMinusTwoAt;
-	private int killsUntilPowerup;
 
 	// Use this for initialization
 	void Start () {
