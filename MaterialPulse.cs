@@ -101,6 +101,8 @@ public class MaterialPulse : MonoBehaviour {
 						phase = 1.0f;
 						// Switch currentState
 						currentState = PulseState.Stopped;
+						// Set now-terminal color
+						SetColorByPhase(emissionInitial, emissionTarget);
 					}
 				}
 			}
@@ -130,6 +132,8 @@ public class MaterialPulse : MonoBehaviour {
 						phase = 0.0f;
 						// Switch currentState
 						currentState = PulseState.Stopped;
+						// Set now-terminal color
+						SetColorByPhase(emissionFinal, emissionTarget);
 					}
 				}
 			}
@@ -138,6 +142,9 @@ public class MaterialPulse : MonoBehaviour {
 			if (currentState == PulseState.ToTarget) {
 				phase = counter / timeInitialTarget;
 				// Set color based on phase
+				SetColorByPhase(emissionInitial, emissionTarget);
+
+				/* Old code, cleanup
 				// Color is lerped between initial and target
 				if (pulseMode == PulseMode.Linear) {
 					matControl.SetColor(emissionId, Color.Lerp(emissionInitial, emissionTarget, phase));
@@ -145,10 +152,14 @@ public class MaterialPulse : MonoBehaviour {
 				else if (pulseMode == PulseMode.Sine) {
 					matControl.SetColor(emissionId, Color.Lerp(emissionInitial, emissionTarget, Mathf.Sin(phase)));
 				}
+				*/
 			}
 			else if (currentState == PulseState.FromTarget) {
 				phase = 1.0f - (counter / timeTargetFinal);
 				// Set color based on phase
+				SetColorByPhase(emissionFinal, emissionTarget);
+
+				/* Old code, cleanup
 				// Color is lerped between final and target
 				if (pulseMode == PulseMode.Linear) {
 					matControl.SetColor(emissionId, Color.Lerp(emissionFinal, emissionTarget, phase));
@@ -156,8 +167,21 @@ public class MaterialPulse : MonoBehaviour {
 				else if (pulseMode == PulseMode.Sine) {
 					matControl.SetColor(emissionId, Color.Lerp(emissionFinal, emissionTarget, Mathf.Sin(phase)));
 				}
+				*/
 			}
 
+		}
+	}
+
+	// Set color according to current phase
+	void SetColorByPhase (Color baseColor, Color targetColor) {
+		// Uses current phase value
+		// Color is lerped between final and target
+		if (pulseMode == PulseMode.Linear) {
+			matControl.SetColor(emissionId, Color.Lerp(baseColor, targetColor, phase));
+		}
+		else if (pulseMode == PulseMode.Sine) {
+			matControl.SetColor(emissionId, Color.Lerp(baseColor, targetColor, Mathf.Sin(phase)));
 		}
 	}
 
@@ -187,7 +211,7 @@ public class MaterialPulse : MonoBehaviour {
 
 	// Starts a new pulse, with a new target, a new final, and new counters for each
 	// Other variants will call this one
-	void NewPulse (Color targetColor, float targetFraction, float timeToTarget, 
+	public void NewPulse (Color targetColor, float targetFraction, float timeToTarget, 
 		Color finalColor, float finalFraction, float timeToFinal, bool loopNewValues)
 	{
 		// Set initial to current color
@@ -213,17 +237,22 @@ public class MaterialPulse : MonoBehaviour {
 	}
 
 	// Starts a new pulse, but with current final values
-	void NewPulse (Color targetColor, float targetFraction, float timeToTarget, bool loopNewValues=false) {
+	public void NewPulse (Color targetColor, float targetFraction, float timeToTarget, bool loopNewValues) {
 		NewPulse(targetColor, targetFraction, timeToTarget, emissionFinal, 1.0f, timeTargetFinal, loopNewValues);
 	}
 
-	// Starts a new pulse, but with current final values, current times, and optional fraction
-	void NewPulse (Color targetColor, float targetFraction=1.0f, bool loopNewValues=false) {
+	// Starts a new pulse, but with current final values and current times
+	public void NewPulse (Color targetColor, float targetFraction, bool loopNewValues) {
 		NewPulse(targetColor, targetFraction, timeInitialTarget, emissionFinal, 1.0f, timeTargetFinal, loopNewValues);
 	}
 
+	// Starts a new pulse, changes only the color (lazy!)
+	public void NewPulse (Color targetColor) {
+		NewPulse(targetColor, 1.0f, timeInitialTarget, emissionFinal, 1.0f, timeTargetFinal, looping);
+	}
+
 	// Starts a new pulse with no return/final value
-	void NewPulseNoReturn (Color targetColor, float targetFraction, float timeToTarget) {
+	public void NewPulseNoReturn (Color targetColor, float targetFraction, float timeToTarget) {
 		// Set initial to current color
 		emissionInitial = matControl.GetColor(emissionId);
 
@@ -244,7 +273,7 @@ public class MaterialPulse : MonoBehaviour {
 
 	// There may be a time when you're lazy enough to do a one-way and not know what time to use
 	// So we default to timeInitialTarget
-	void NewPulseNoReturn (Color targetColor) {
+	public void NewPulseNoReturn (Color targetColor) {
 		NewPulseNoReturn(targetColor, 1.0f, timeInitialTarget);
 	}
 

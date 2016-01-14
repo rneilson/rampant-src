@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Scorer : MonoBehaviour {
 	
@@ -65,7 +66,8 @@ public class Scorer : MonoBehaviour {
 	private int killsUntilPowerup;
 
 	// Plane (etc) for color pulses
-	public GameObject[] arenaPulsers;
+	public Color playerPulseColor = Color.white * 0.4f;
+	private List<MaterialPulse> arenaPulsers = new List<MaterialPulse>(1);
 
 	public bool Respawn {
 		get { return respawn; }
@@ -138,6 +140,19 @@ public class Scorer : MonoBehaviour {
 		}
 		titleText.text = "A Plain Shooter";
 		subtitleText.text = "Press start button/tab to begin\n" + instructions;
+
+		// Get pulsers
+		foreach (GameObject pulser in GameObject.FindGameObjectsWithTag("ArenaPulser")) {
+			arenaPulsers.Add(pulser.GetComponent<MaterialPulse>());
+		}
+		/*
+		if (arenaPulsers.Length > 0) {
+			arenaPulseMats = new List<MaterialPulse>(arenaPulsers.Length);
+			foreach (GameObject pulser in arenaPulsers) {
+				arenaPulseMats.Add(pulser.GetComponent<MaterialPulse>());
+			}
+
+		}*/
 	}
 	
 	// Update is called once per frame
@@ -368,6 +383,10 @@ public class Scorer : MonoBehaviour {
 			spawners[i].SendMessage("NewTargets");
 		}
 		*/
+
+		// Flash grid white
+		FlashGrid(playerPulseColor);
+
 	}
 
 	void PauseGame () {
@@ -406,6 +425,13 @@ public class Scorer : MonoBehaviour {
 		enemies = GameObject.FindGameObjectsWithTag("Enemy");
 		for (int i = 0; i < enemies.Length; i++) {
 			enemies[i].SendMessage("NewTarget", player);
+		}
+	}
+
+	void FlashGrid (Color gridColor) {
+		// Update each flasher with new color (same times, though)
+		foreach (MaterialPulse pulser in arenaPulsers) {
+			pulser.NewPulse(gridColor);
 		}
 	}
 }
