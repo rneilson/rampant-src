@@ -151,7 +151,7 @@ public class Scorer : MonoBehaviour {
 		}
 		currentPulseColor = playerPulseColor;
 		// Get shifters
-		foreach (GameObject shifter in GameObject.FindGameObjectsWithTag("Shifter")) {
+		foreach (GameObject shifter in GameObject.FindGameObjectsWithTag("ArenaShifter")) {
 			arenaShifters.Add(shifter.GetComponent<MaterialShift>());
 		}
 		/*
@@ -274,10 +274,11 @@ public class Scorer : MonoBehaviour {
 	}
 
 	public void StartNewPhase (Color pulseColor) {
+		// Shift if we're shifting
+		ShiftGrid(phaseIndex);
 		// Phase used to do this itself
 		FlashGrid(pulseColor);
 		NewRespawnColor(pulseColor);
-		ShiftGrid(phaseIndex);
 		AddLevel();
 	}
 	
@@ -448,7 +449,9 @@ public class Scorer : MonoBehaviour {
 	public void FlashGrid (Color gridColor) {
 		// Update each flasher with new color (same times, though)
 		foreach (MaterialPulse pulser in arenaPulsers) {
-			pulser.NewPulse(gridColor);
+			if (pulser) {
+				pulser.NewPulse(gridColor);
+			}
 		}
 	}
 
@@ -458,7 +461,9 @@ public class Scorer : MonoBehaviour {
 
 	public void ShiftGrid (int shiftIndex) {
 		foreach (MaterialShift shifter in arenaShifters) {
-			shifter.BeginShift(shiftIndex);
+			if (shifter) {
+				shifter.BeginShift(shiftIndex);
+			}
 		}
 	}
 }

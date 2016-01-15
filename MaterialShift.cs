@@ -5,7 +5,9 @@ public class MaterialShift : MonoBehaviour {
 
 	// Material list and parameters
 	public Material[] materials;
-	public float shiftTime = 0.5f;
+	public float timeToTarget = 0.5f;
+	public float timeFromTarget = 0.5f;
+	public bool returnToBase = true;
 	public bool debugInfo = false;
 
 	private Renderer rendControl;
@@ -51,25 +53,60 @@ public class MaterialShift : MonoBehaviour {
 
 			// Check if time reached (and *which* time), and set currentState accordingly
 			if (currentState == PulseState.ToTarget) {
-				if (counter >= shiftTime) {
-					// Debug
+				if (counter >= timeToTarget) {
+					if (returnToBase) {
+						if (debugInfo) {
+							Debug.Log("Switching currentState to FromTarget, counter: " + counter.ToString() + ", phase: " 
+								+ phase.ToString(), gameObject);
+							Debug.Log("matBase: " + matBase.ToString() + ", matTarget: " + matTarget.ToString() 
+								+ ", rendControl.material: " + rendControl.material.ToString(), gameObject);
+						}
+						// Set time, less any overshoot
+						counter = counter - timeToTarget;
+						// Switch currentState
+						currentState = PulseState.FromTarget;
+					}
+					else {
+						if (debugInfo) {
+							Debug.Log("Switching currentState to Stopped, counter: " + counter.ToString() + ", phase: " 
+								+ phase.ToString(), gameObject);
+							Debug.Log("matBase: " + matBase.ToString() + ", matTarget: " + matTarget.ToString() 
+								+ ", rendControl.material: " + rendControl.material.ToString(), gameObject);
+						}
+						// Set phase to 1, since we're done
+						phase = 1.0f;
+						// Switch currentState
+						currentState = PulseState.Stopped;
+						// Set material to target
+						rendControl.material = matTarget;
+					}
+				}
+			}
+			else if (currentState == PulseState.FromTarget) {
+				if (counter >= timeFromTarget) {
 					if (debugInfo) {
 						Debug.Log("Switching currentState to Stopped, counter: " + counter.ToString() + ", phase: " 
 							+ phase.ToString(), gameObject);
 						Debug.Log("matBase: " + matBase.ToString() + ", matTarget: " + matTarget.ToString() 
 							+ ", rendControl.material: " + rendControl.material.ToString(), gameObject);
 					}
-					// Set phase to 1, since we're done
-					phase = 1.0f;
+					// Set phase to 0, since we're done
+					phase = 0.0f;
 					// Switch currentState
 					currentState = PulseState.Stopped;
-					// Set now-terminal material
-					rendControl.material = matTarget;
+					// Set material back to base
+					rendControl.material = matBase;
 				}
-				else {
-					phase = counter / shiftTime;
-					rendControl.material.Lerp(matBase, matTarget, phase);
-				}
+			}
+
+			// Set lerp fraction
+			if (currentState == PulseState.ToTarget) {
+				phase = counter / timeToTarget;
+				rendControl.material.Lerp(matBase, matTarget, phase);
+			}
+			else if (currentState == PulseState.FromTarget) {
+				phase = 1.0f - (counter / timeFromTarget);
+				rendControl.material.Lerp(matBase, matTarget, phase);
 			}
 		}
 	}
