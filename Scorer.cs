@@ -262,7 +262,7 @@ public class Scorer : MonoBehaviour {
 		}
 	}
 	
-	public void AddLevel () {
+	public void AddLevel (Color pulseColor) {
 		level++;
 		scoreLevel.text = "Wave: " + level.ToString();
 		playerBreak = false;
@@ -271,6 +271,9 @@ public class Scorer : MonoBehaviour {
 		if (prevPhase) {
 			Destroy(prevPhase, 0.0f);
 		}
+
+		// Set color, just in case we die during phase transition
+		NewRespawnColor(pulseColor);
 	}
 
 	public void StartNewPhase (Color pulseColor) {
@@ -278,8 +281,7 @@ public class Scorer : MonoBehaviour {
 		ShiftGrid(phaseIndex);
 		// Phase used to do this itself
 		FlashGrid(pulseColor);
-		NewRespawnColor(pulseColor);
-		AddLevel();
+		AddLevel(pulseColor);
 	}
 	
 	public void AddSpawns (int spawns) {
@@ -404,7 +406,8 @@ public class Scorer : MonoBehaviour {
 
 		// Flash grid
 		FlashGrid(currentPulseColor);
-
+		// Shift grid
+		ShiftGrid(phaseIndex);
 	}
 
 	void PauseGame () {

@@ -4,19 +4,22 @@ using System.Collections;
 public class MaterialShift : MonoBehaviour {
 
 	// Material list and parameters
-	public Material[] materials;
+	public Material materialBase;	// Public for debug
+	public Material materialTarget;	// Public for debug
+	public Material[] materialTargetList;
 	public float timeToTarget = 0.5f;
 	public float timeFromTarget = 0.5f;
-	public bool returnToBase = true;
+	private bool returnToBase = true;	// Always return to base for now
 	public bool debugInfo = false;
 
 	private Renderer rendControl;
-	public Material matBase;	// Public for debug
-	public Material matTarget;	// Public for debug
 	private float counter = 0.0f;
 	private float phase = 0.0f;
 	private PulseState currentState = PulseState.Stopped;
 	private bool isActive = false;
+	private int emissionId;
+	private Color emissionBase;
+	private Color emissionTarget;
 
 	// Use this for initialization
 	void Start () {
@@ -24,9 +27,11 @@ public class MaterialShift : MonoBehaviour {
 		rendControl = GetComponent<Renderer>();
 		// Enable emissions, just in case
 		rendControl.material.EnableKeyword("_EMISSION");
+		emissionId = Shader.PropertyToID("_EmissionColor");
+		emissionBase = materialBase.GetColor(emissionId);
 	
 		// Sanity check on materials array
-		if (materials.Length <= 0) {
+		if (materialTargetList.Length <= 0) {
 			Debug.LogError("No materials in shift array!", gameObject);
 		}
 
@@ -58,7 +63,8 @@ public class MaterialShift : MonoBehaviour {
 						if (debugInfo) {
 							Debug.Log("Switching currentState to FromTarget, counter: " + counter.ToString() + ", phase: " 
 								+ phase.ToString(), gameObject);
-							Debug.Log("matBase: " + matBase.ToString() + ", matTarget: " + matTarget.ToString() 
+							Debug.Log("materialBase: " + materialBase.ToString() + ", materialTarget: " 
+								+ materialTarget.ToString() 
 								+ ", rendControl.material: " + rendControl.material.ToString(), gameObject);
 						}
 						// Set time, less any overshoot
@@ -70,7 +76,8 @@ public class MaterialShift : MonoBehaviour {
 						if (debugInfo) {
 							Debug.Log("Switching currentState to Stopped, counter: " + counter.ToString() + ", phase: " 
 								+ phase.ToString(), gameObject);
-							Debug.Log("matBase: " + matBase.ToString() + ", matTarget: " + matTarget.ToString() 
+							Debug.Log("materialBase: " + materialBase.ToString() + ", materialTarget: " 
+								+ materialTarget.ToString() 
 								+ ", rendControl.material: " + rendControl.material.ToString(), gameObject);
 						}
 						// Set phase to 1, since we're done
@@ -78,7 +85,7 @@ public class MaterialShift : MonoBehaviour {
 						// Switch currentState
 						currentState = PulseState.Stopped;
 						// Set material to target
-						rendControl.material = matTarget;
+						rendControl.material = materialTarget;
 					}
 				}
 			}
@@ -87,7 +94,7 @@ public class MaterialShift : MonoBehaviour {
 					if (debugInfo) {
 						Debug.Log("Switching currentState to Stopped, counter: " + counter.ToString() + ", phase: " 
 							+ phase.ToString(), gameObject);
-						Debug.Log("matBase: " + matBase.ToString() + ", matTarget: " + matTarget.ToString() 
+						Debug.Log("materialBase: " + materialBase.ToString() + ", materialTarget: " + materialTarget.ToString() 
 							+ ", rendControl.material: " + rendControl.material.ToString(), gameObject);
 					}
 					// Set phase to 0, since we're done
@@ -95,50 +102,57 @@ public class MaterialShift : MonoBehaviour {
 					// Switch currentState
 					currentState = PulseState.Stopped;
 					// Set material back to base
-					rendControl.material = matBase;
+					rendControl.material = materialBase;
 				}
 			}
 
 			// Set lerp fraction
 			if (currentState == PulseState.ToTarget) {
 				phase = counter / timeToTarget;
-				rendControl.material.Lerp(matBase, matTarget, phase);
+				UpdateMaterial();
 			}
 			else if (currentState == PulseState.FromTarget) {
 				phase = 1.0f - (counter / timeFromTarget);
-				rendControl.material.Lerp(matBase, matTarget, phase);
+				UpdateMaterial();
 			}
 		}
 	}
 
 	// Begin shift to specified index in materials array
 	public void BeginShift (int shiftIndex) {
-		if (isActive) {
+		if ((isActive) && (currentState == PulseState.Stopped)) {
 			// Sanity check
-			if (shiftIndex >= materials.Length) {
+			if (shiftIndex >= materialTargetList.Length) {
 				Debug.LogError("BeginShift() called with out-of-bounds index", gameObject);
 			}
 
-			// Stash copy of present material as basis
-			//matBase = rendControl.material;
-
-			// Might need to do this instead if materials aren't instantiated like I think they are
-			matBase = Material.Instantiate(rendControl.material);
-
 			// Set material at index as target
-			matTarget = materials[shiftIndex];
+			materialTarget = materialTargetList[shiftIndex];
+			// Update target emission color
+			emissionTarget = materialTarget.GetColor(emissionId);
+			// Set current material to target (hopefully this'll be lerped properly)
+			rendControl.material = materialTarget;
+			// Enable emissions
+			//rendControl.material.EnableKeyword("_EMISSION");
 
 			// Set counters and go
-			float counter = 0.0f;
-			float phase = 0.0f;
+			counter = 0.0f;
+			phase = 0.0f;
 			currentState = PulseState.Starting;
 
 			if (debugInfo) {
-				Debug.Log("Beginning shift, index " + shiftIndex.ToString(), gameObject);
-				/*Debug.Log("matBase: " + matBase.ToString() + ", matTarget: " + matTarget.ToString() 
+				Debug.Log("Beginning shift, index " + shiftIndex.ToString() 
+					+ ", target color " + emissionTarget.ToString(), gameObject);
+				/*Debug.Log("materialBase: " + materialBase.ToString() + ", materialTarget: " + materialTarget.ToString() 
 					+ ", rendControl.material: " + rendControl.material.ToString(), gameObject);*/
 			}
 		}
+	}
+
+	// Update and lerp material properties
+	void UpdateMaterial () {
+		// Lerp materials
+		rendControl.material.Lerp(materialBase, materialTarget, phase);
 	}
 }
 

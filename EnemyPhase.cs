@@ -67,7 +67,7 @@ public class EnemyPhase : MonoBehaviour {
 			scorer.StartNewPhase(pulseColor);
 		}
 		else {
-			scorer.AddLevel();
+			scorer.AddLevel(pulseColor);
 		}
 
 		if (debugInfo) {
