@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Scorer : MonoBehaviour {
 	
@@ -38,10 +39,37 @@ public class Scorer : MonoBehaviour {
 	public float respawnTime;
 
 	private bool respawn;
-	private bool playerBreak = false;
-	public bool givePlayerBreak = true;
+	private bool playerBreak = false;		// Should rename at some point
+	//public bool givePlayerBreak = true;	// unused
 	public float playerBreakDelay = 1.0f;
 	public float playerBreakRadius = 1.0f;
+
+	// Player object and friends
+	public GameObject playerType;
+	public GameObject spawnEffect;
+	public AudioClip spawnSound;
+
+	// Enemy phases (ie difficulty stuff)
+	public GameObject[] enemyPhases;
+	private GameObject currentPhase;
+	private GameObject prevPhase;
+	private int phaseIndex;
+	private int checkpoint;
+	public int terminalPhase;
+
+	// Powerup state tracking
+	public bool forceBombUse;
+	public int biggerGunAt;
+	public int giveBombEvery;
+	public int bombMinusOneAt;
+	public int bombMinusTwoAt;
+	private int killsUntilPowerup;
+
+	// Plane (etc) for color pulses and material shifts
+	public Color playerPulseColor = Color.white * 0.4f;
+	private Color currentPulseColor;
+	private List<MaterialPulse> arenaPulsers = new List<MaterialPulse>();
+	private List<MaterialShift> arenaShifters = new List<MaterialShift>();
 
 	public bool Respawn {
 		get { return respawn; }
@@ -68,27 +96,9 @@ public class Scorer : MonoBehaviour {
 	public float PlayerBreakRadius {
 		get { return playerBreakRadius; }
 	}
-
-	// Player object and friends
-	public GameObject playerType;
-	public GameObject spawnEffect;
-	public AudioClip spawnSound;
-
-	// Enemy phases (ie difficulty stuff)
-	public GameObject[] enemyPhases;
-	private GameObject currentPhase;
-	private GameObject prevPhase;
-	private int phaseIndex;
-	private int checkpoint;
-	public int terminalPhase;
-
-	// Powerup state tracking
-	public bool forceBombUse;
-	public int biggerGunAt;
-	public int giveBombEvery;
-	public int bombMinusOneAt;
-	public int bombMinusTwoAt;
-	private int killsUntilPowerup;
+	public float PhaseIndex {
+		get { return phaseIndex; }
+	}
 
 	// Use this for initialization
 	void Start () {
@@ -111,6 +121,13 @@ public class Scorer : MonoBehaviour {
 		desiredCursorMode = Cursor.lockState;
 		desiredCursorVisibility = Cursor.visible;
 
+		// Start paused
+		/*
+		if (isPaused) {
+			Time.timeScale = 0;
+		}
+		*/
+
 		// Start first enemy phase
 		phaseIndex = 0;
 		currentPhase = Instantiate(enemyPhases[phaseIndex]);
@@ -130,6 +147,24 @@ public class Scorer : MonoBehaviour {
 		}
 		titleText.text = "A Plain Shooter";
 		subtitleText.text = "Press start button/tab to begin\n" + instructions;
+
+		// Get pulsers
+		foreach (GameObject pulser in GameObject.FindGameObjectsWithTag("ArenaPulser")) {
+			arenaPulsers.Add(pulser.GetComponent<MaterialPulse>());
+		}
+		currentPulseColor = playerPulseColor;
+		// Get shifters
+		foreach (GameObject shifter in GameObject.FindGameObjectsWithTag("ArenaShifter")) {
+			arenaShifters.Add(shifter.GetComponent<MaterialShift>());
+		}
+		/*
+		if (arenaPulsers.Length > 0) {
+			arenaPulseMats = new List<MaterialPulse>(arenaPulsers.Length);
+			foreach (GameObject pulser in arenaPulsers) {
+				arenaPulseMats.Add(pulser.GetComponent<MaterialPulse>());
+			}
+
+		}*/
 	}
 	
 	// Update is called once per frame
@@ -230,7 +265,7 @@ public class Scorer : MonoBehaviour {
 		}
 	}
 	
-	public void AddLevel () {
+	public void AddLevel (Color pulseColor) {
 		level++;
 		scoreLevel.text = "Wave: " + level.ToString();
 		playerBreak = false;
@@ -239,6 +274,17 @@ public class Scorer : MonoBehaviour {
 		if (prevPhase) {
 			Destroy(prevPhase, 0.0f);
 		}
+
+		// Set color, just in case we die during phase transition
+		NewRespawnColor(pulseColor);
+	}
+
+	public void StartNewPhase (Color pulseColor) {
+		// Shift if we're shifting
+		ShiftGrid(phaseIndex);
+		// Phase used to do this itself
+		FlashGrid(pulseColor);
+		AddLevel(pulseColor);
 	}
 	
 	public void AddSpawns (int spawns) {
@@ -360,6 +406,13 @@ public class Scorer : MonoBehaviour {
 			spawners[i].SendMessage("NewTargets");
 		}
 		*/
+
+		// Flash grid
+		FlashGrid(currentPulseColor);
+		// Shift grid
+		if (level > 0) {
+			ShiftGrid(phaseIndex);
+		}
 	}
 
 	void PauseGame () {
@@ -398,6 +451,27 @@ public class Scorer : MonoBehaviour {
 		enemies = GameObject.FindGameObjectsWithTag("Enemy");
 		for (int i = 0; i < enemies.Length; i++) {
 			enemies[i].SendMessage("NewTarget", player);
+		}
+	}
+
+	public void FlashGrid (Color gridColor) {
+		// Update each flasher with new color (same times, though)
+		foreach (MaterialPulse pulser in arenaPulsers) {
+			if (pulser) {
+				pulser.NewPulse(gridColor);
+			}
+		}
+	}
+
+	public void NewRespawnColor (Color gridColor) {
+		currentPulseColor = gridColor;
+	}
+
+	public void ShiftGrid (int shiftIndex) {
+		foreach (MaterialShift shifter in arenaShifters) {
+			if (shifter) {
+				shifter.BeginShift(shiftIndex);
+			}
 		}
 	}
 }

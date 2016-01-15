@@ -9,6 +9,7 @@ public class SpawnPoint : MonoBehaviour {
 	
 	private float spawnTime;
 	private bool spawned;
+	private float phaseIndex;
 
 	// Use this for initialization
 	void Start () {
@@ -24,13 +25,19 @@ public class SpawnPoint : MonoBehaviour {
 	void FixedUpdate () {
 		if (spawned == false && Time.fixedTime >= spawnTime) {
 			GetComponent<Collider>().enabled = false;
-			Instantiate(enemyType, transform.position, transform.rotation);
+			float spawnZ = Random.Range(0f, (phaseIndex * 10f) + 10f);
+			float spawnY = Random.Range(0f, 360f);
+			Instantiate(enemyType, transform.position, Quaternion.Euler(spawnZ, 0, spawnY));
 			if (postTime > 0)
 				Destroy(gameObject, postTime);
 			else
 				Destroy(gameObject);
 			spawned = true;
 		}
+	}
+
+	void SetPhaseIndex (int phase) {
+		phaseIndex = phase;
 	}
 	
 }
