@@ -410,7 +410,9 @@ public class Scorer : MonoBehaviour {
 		// Flash grid
 		FlashGrid(currentPulseColor);
 		// Shift grid
-		ShiftGrid(phaseIndex);
+		if (level > 0) {
+			ShiftGrid(phaseIndex);
+		}
 	}
 
 	void PauseGame () {
