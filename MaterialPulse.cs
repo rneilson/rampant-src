@@ -228,8 +228,10 @@ public class MaterialPulse : MonoBehaviour {
 		// Set looping status
 		looping = loopNewValues;
 
+		/* No, don't assume that!
 		// Yes, assume we're returning to initial (well, new final (there's a one-way function later))
 		returnToInitial = true;
+		*/
 
 		// Start pulse with new values
 		currentState = PulseState.Stopped;
