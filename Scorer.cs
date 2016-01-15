@@ -119,9 +119,11 @@ public class Scorer : MonoBehaviour {
 		desiredCursorVisibility = Cursor.visible;
 
 		// Start paused
+		/*
 		if (isPaused) {
 			Time.timeScale = 0;
 		}
+		*/
 
 		// Start first enemy phase
 		phaseIndex = 0;
