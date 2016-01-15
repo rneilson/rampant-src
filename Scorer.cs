@@ -69,7 +69,7 @@ public class Scorer : MonoBehaviour {
 	public Color playerPulseColor = Color.white * 0.4f;
 	private Color currentPulseColor;
 	private List<MaterialPulse> arenaPulsers = new List<MaterialPulse>();
-	public List<MaterialShift> arenaShifters = new List<MaterialShift>();	// Public for debug
+	private List<MaterialShift> arenaShifters = new List<MaterialShift>();
 
 	public bool Respawn {
 		get { return respawn; }
@@ -95,6 +95,9 @@ public class Scorer : MonoBehaviour {
 	}
 	public float PlayerBreakRadius {
 		get { return playerBreakRadius; }
+	}
+	public float PhaseIndex {
+		get { return phaseIndex; }
 	}
 
 	// Use this for initialization

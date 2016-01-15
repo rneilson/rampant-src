@@ -144,7 +144,8 @@ public class EnemySpawner : MonoBehaviour {
 					clear = true;
 			} while (!clear);
 
-			Instantiate(enemySpawn, spawnPos, Quaternion.Euler(0, 0, 0));
+			GameObject spawner = Instantiate(enemySpawn, spawnPos, Quaternion.Euler(0, 0, 0)) as GameObject;
+			spawner.SendMessage("SetPhaseIndex", scorer.PhaseIndex);
 		}
 
 		// Play one instance only of spawn sound
