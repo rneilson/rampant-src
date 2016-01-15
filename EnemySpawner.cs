@@ -16,6 +16,7 @@ public class EnemySpawner : MonoBehaviour {
 	public WaveType[] waveCycle = {WaveType.Current};
 	public GameObject enemySpawn;
 	public AudioClip enemySpawnSound;
+	public bool debugInfo = false;
 	
 	private Scorer scorer;
 	private float countdown;
@@ -149,8 +150,9 @@ public class EnemySpawner : MonoBehaviour {
 		// Play one instance only of spawn sound
 		myAudioSource.PlayOneShot(enemySpawnSound, 1.0f);
 
-		// Debug
-		Debug.Log("Spawned round of " + roundSizeCurrent.ToString());
+		if (debugInfo) {
+			Debug.Log("Spawned round of " + roundSizeCurrent.ToString());
+		}
 
 		// Advance round counter
 		roundCounter++;

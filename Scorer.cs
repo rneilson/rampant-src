@@ -39,8 +39,8 @@ public class Scorer : MonoBehaviour {
 	public float respawnTime;
 
 	private bool respawn;
-	private bool playerBreak = false;
-	public bool givePlayerBreak = true;
+	private bool playerBreak = false;		// Should rename at some point
+	//public bool givePlayerBreak = true;	// unused
 	public float playerBreakDelay = 1.0f;
 	public float playerBreakRadius = 1.0f;
 
@@ -65,10 +65,11 @@ public class Scorer : MonoBehaviour {
 	public int bombMinusTwoAt;
 	private int killsUntilPowerup;
 
-	// Plane (etc) for color pulses
+	// Plane (etc) for color pulses and material shifts
 	public Color playerPulseColor = Color.white * 0.4f;
 	private Color currentPulseColor;
-	private List<MaterialPulse> arenaPulsers = new List<MaterialPulse>(1);
+	private List<MaterialPulse> arenaPulsers = new List<MaterialPulse>();
+	public List<MaterialShift> arenaShifters = new List<MaterialShift>();	// Public for debug
 
 	public bool Respawn {
 		get { return respawn; }
@@ -147,6 +148,10 @@ public class Scorer : MonoBehaviour {
 			arenaPulsers.Add(pulser.GetComponent<MaterialPulse>());
 		}
 		currentPulseColor = playerPulseColor;
+		// Get shifters
+		foreach (GameObject shifter in GameObject.FindGameObjectsWithTag("Shifter")) {
+			arenaShifters.Add(shifter.GetComponent<MaterialShift>());
+		}
 		/*
 		if (arenaPulsers.Length > 0) {
 			arenaPulseMats = new List<MaterialPulse>(arenaPulsers.Length);
@@ -264,6 +269,14 @@ public class Scorer : MonoBehaviour {
 		if (prevPhase) {
 			Destroy(prevPhase, 0.0f);
 		}
+	}
+
+	public void StartNewPhase (Color pulseColor) {
+		// Phase used to do this itself
+		FlashGrid(pulseColor);
+		NewRespawnColor(pulseColor);
+		ShiftGrid(phaseIndex);
+		AddLevel();
 	}
 	
 	public void AddSpawns (int spawns) {
@@ -439,5 +452,11 @@ public class Scorer : MonoBehaviour {
 
 	public void NewRespawnColor (Color gridColor) {
 		currentPulseColor = gridColor;
+	}
+
+	public void ShiftGrid (int shiftIndex) {
+		foreach (MaterialShift shifter in arenaShifters) {
+			shifter.BeginShift(shiftIndex);
+		}
 	}
 }

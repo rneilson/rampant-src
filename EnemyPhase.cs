@@ -8,6 +8,7 @@ public class EnemyPhase : MonoBehaviour {
 	public float initialDelay;
 	public float waveInterval;
 	public Color pulseColor = Color.red * 0.5f;
+	public bool debugInfo = false;
 
 	private float countdown;
 	private int waveNum;
@@ -24,8 +25,9 @@ public class EnemyPhase : MonoBehaviour {
 		countdown = (scorer.PlayerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
 		waveNum = 0;
 
-		// Debug
-		Debug.Log("Entering phase " + phaseName);
+		if (debugInfo) {
+			Debug.Log("Entering phase " + phaseName);
+		}
 	}
 	
 	// Update is called once per frame
@@ -60,15 +62,17 @@ public class EnemyPhase : MonoBehaviour {
 
 		// Send color pulse if first wave of phase
 		if ((wave == 1) && !(scorer.PlayerBreak)) {
-			scorer.FlashGrid(pulseColor);
-			scorer.NewRespawnColor(pulseColor);
+			//scorer.FlashGrid(pulseColor);
+			//scorer.NewRespawnColor(pulseColor);
+			scorer.StartNewPhase(pulseColor);
+		}
+		else {
+			scorer.AddLevel();
 		}
 
-		// Once complete, tell scorer
-		scorer.AddLevel();
-
-		// Debug
-		Debug.Log("Beginning wave " + wave.ToString());
+		if (debugInfo) {
+			Debug.Log("Beginning wave " + wave.ToString());
+		}
 	}
 
 	// Reset phase to beginning
