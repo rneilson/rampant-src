@@ -29,6 +29,7 @@ public class EnemySpawner : MonoBehaviour {
 	//private int mask;
 	private bool playerBreak;
 	private float maxSafeRadius = 4.75f;
+	private float maxDisplacement;
 
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
@@ -38,6 +39,7 @@ public class EnemySpawner : MonoBehaviour {
 		ResetWave();
 		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
 		//mask = 1 << LayerMask.NameToLayer("Spawn");
+		maxDisplacement = scorer.MaxDisplacement;
 
 		// Unity 5 API changes
 		myAudioSource = scorer.GetComponent<AudioSource>();
@@ -137,8 +139,8 @@ public class EnemySpawner : MonoBehaviour {
 			clear = false;
 
 			do {
-				spawnPos = new Vector3(Random.Range(-maxSafeRadius, maxSafeRadius), 1f, 
-					Random.Range(-maxSafeRadius, maxSafeRadius));
+				spawnPos = new Vector3(Random.Range(-maxDisplacement, maxDisplacement), 1f, 
+					Random.Range(-maxDisplacement, maxDisplacement));
 				others = Physics.OverlapSphere(spawnPos, 0.2f);
 				if (others.Length == 0 && ((spawnPos - playerPos).magnitude > safeRadius))
 					clear = true;

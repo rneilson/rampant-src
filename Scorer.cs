@@ -43,6 +43,7 @@ public class Scorer : MonoBehaviour {
 	//public bool givePlayerBreak = true;	// unused
 	public float playerBreakDelay = 1.0f;
 	public float playerBreakRadius = 1.0f;
+	private float maxDisplacement = 4.75f;
 
 	// Player object and friends
 	public GameObject playerType;
@@ -98,6 +99,9 @@ public class Scorer : MonoBehaviour {
 	}
 	public float PhaseIndex {
 		get { return phaseIndex; }
+	}
+	public float MaxDisplacement {
+		get { return maxDisplacement; }
 	}
 
 	// Use this for initialization
