@@ -414,7 +414,7 @@ public class Scorer : MonoBehaviour {
 		// Flash grid
 		FlashGrid(currentPulseColor);
 		// Shift grid
-		if (level > 0) {
+		if (totalDeaths == 0) {
 			ShiftGrid(phaseIndex);
 		}
 	}
