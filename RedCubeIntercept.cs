@@ -8,6 +8,7 @@ public class RedCubeIntercept : MonoBehaviour {
 	//private float speed = 10f;
 	//private float drag = 4f;
 	private Vector3 bearing;
+	private float deltaTime;
 	private bool dead;
 	private bool loud;
 
@@ -15,15 +16,6 @@ public class RedCubeIntercept : MonoBehaviour {
 	//private AudioSource myAudioSource;
 	private Rigidbody myRigidbody;
 	
-	// Player tracking
-	private Vector3 prevPos = new Vector3(0f, 0f, 0f);
-	private Vector3 currPos = new Vector3(0f, 0f, 0f);
-	private Vector3 prevVel = new Vector3(0f, 0f, 0f);
-	private Vector3 currVel = new Vector3(0f, 0f, 0f);
-	private Vector3 prevAccel = new Vector3(0f, 0f, 0f);
-	private Vector3 currAccel = new Vector3(0f, 0f, 0f);
-	private float deltaTime;
-
 	public float speed;
 	public float drag;
 	public GameObject burster;
@@ -51,8 +43,8 @@ public class RedCubeIntercept : MonoBehaviour {
 	//Put movement in FixedUpdate
 	void FixedUpdate () {
 		if (target) {
-			UpdateTracking(target.transform.position, Time.fixedDeltaTime);
-			//bearing = target.transform.position - transform.position;
+			//UpdateTracking(target.transform.position, Time.fixedDeltaTime);
+			bearing = target.transform.position - transform.position;
 			myRigidbody.AddForce(bearing.normalized * speed);
 		}
 		else {
@@ -93,25 +85,10 @@ public class RedCubeIntercept : MonoBehaviour {
 	
 	void NewTarget (GameObject newTarget) {
 		target = newTarget;
-		// If new target acquired, reset tracking
-		if (target) {
-			currPos = target.transform.position;
-			Vector3 currVel = new Vector3(0f, 0f, 0f);
-			Vector3 currAccel = new Vector3(0f, 0f, 0f);
-		}
 	}
 
 	void UpdateTracking(Vector3 pos, float dT) {
-		// Shift old current values to new previous (you know what I mean!)
-		prevPos = currPos;
-		prevVel = currVel;
-		prevAccel = currAccel;
 
-		// Set new current values
-		deltaTime = dT;
-		currPos = pos;
-		currVel = (currPos - prevPos) / deltaTime;
-		currAccel = (currVel - prevVel) / deltaTime;
 	}
 
 	// On collision
