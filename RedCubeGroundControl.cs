@@ -33,7 +33,7 @@ public class RedCubeGroundControl : MonoBehaviour {
 	public Vector3[] posPredictions;	// Public for debug
 	public Vector3[] prevAccelVectors;	// Public for debug
 
-	public float maxInterSpeed = 8.0f;	// Public for debug
+	public float maxInterSpeed = 1.0f;	// Public for debug
 
 	public bool DebugInfo {
 		get { return debugInfo; }
