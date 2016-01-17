@@ -9,7 +9,7 @@ public class RedCubeGroundControl : MonoBehaviour {
 	private Vector3 currPos;
 	private Vector3 prevVel;
 	private Vector3 currVel;
-	private Vector3 prevAccel;
+	//private Vector3 prevAccel;
 	private Vector3 currAccel;
 	// TODO: store averages as doubles
 	private float deltaTime;
@@ -33,6 +33,11 @@ public class RedCubeGroundControl : MonoBehaviour {
 	public Vector3[] posPredictions;	// Public for debug
 	public Vector3[] prevAccelVectors;	// Public for debug
 
+	public float maxInterSpeed = 8.0f;	// Public for debug
+
+	public bool DebugInfo {
+		get { return debugInfo; }
+	}
 	public Vector3 Prediction (int index) {
 		if (index < posPredictions.Length) {
 			return posPredictions[index];
@@ -47,6 +52,13 @@ public class RedCubeGroundControl : MonoBehaviour {
 	}
 	public float AvgDeltaTime {
 		get { return avgDeltaTime; }
+	}
+	public float MaxInterceptorSpeed {
+		get { return maxInterSpeed; }
+		set { maxInterSpeed = value; }
+	}
+	public float MaxInterceptorFrameSpeed {
+		get { return maxInterSpeed * avgDeltaTime; }
 	}
 
 	// Use this for initialization
@@ -114,8 +126,8 @@ public class RedCubeGroundControl : MonoBehaviour {
 		// If new target acquired, reset tracking
 		if (target) {
 			currPos = target.transform.position;
-			Vector3 currVel = Vector3.zero;
-			Vector3 currAccel = Vector3.zero;
+			currVel = Vector3.zero;
+			currAccel = Vector3.zero;
 			//avgTurn = Vector3.zero;
 			//lastTurn = Vector3.zero;
 			avgAccel = Vector3.zero;
@@ -127,7 +139,7 @@ public class RedCubeGroundControl : MonoBehaviour {
 		// First shift old current values to new previous (you know what I mean!)
 		prevPos = currPos;
 		prevVel = currVel;
-		prevAccel = currAccel;
+		//prevAccel = currAccel;
 
 		// Set new current values
 		deltaTime = dT;
