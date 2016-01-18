@@ -70,7 +70,7 @@ public class Scorer : MonoBehaviour {
 	public Color playerPulseColor = Color.white * 0.4f;
 	private Color currentPulseColor;
 	private List<MaterialPulse> arenaPulsers = new List<MaterialPulse>();
-	private List<MaterialShift> arenaShifters = new List<MaterialShift>();
+	private List<GameObject> arenaShifters = new List<GameObject>();
 
 	public bool Respawn {
 		get { return respawn; }
@@ -159,7 +159,7 @@ public class Scorer : MonoBehaviour {
 		currentPulseColor = playerPulseColor;
 		// Get shifters
 		foreach (GameObject shifter in GameObject.FindGameObjectsWithTag("ArenaShifter")) {
-			arenaShifters.Add(shifter.GetComponent<MaterialShift>());
+			arenaShifters.Add(shifter);
 		}
 		/*
 		if (arenaPulsers.Length > 0) {
@@ -414,7 +414,7 @@ public class Scorer : MonoBehaviour {
 		// Flash grid
 		FlashGrid(currentPulseColor);
 		// Shift grid
-		if (totalDeaths == 0) {
+		if (totalDeaths > 0) {
 			ShiftGrid(phaseIndex);
 		}
 	}
@@ -472,9 +472,9 @@ public class Scorer : MonoBehaviour {
 	}
 
 	public void ShiftGrid (int shiftIndex) {
-		foreach (MaterialShift shifter in arenaShifters) {
+		foreach (GameObject shifter in arenaShifters) {
 			if (shifter) {
-				shifter.BeginShift(shiftIndex);
+				shifter.SendMessage("BeginShift", shiftIndex);
 			}
 		}
 	}
