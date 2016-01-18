@@ -32,13 +32,14 @@ public class BallMovement : MonoBehaviour {
 	private int fireCycle = 0;
 	private Vector3 firePosCurrent;
 	private Vector3 fireDirCurrent;
+	private float bulletLifetime = 1.5f;
 	
 	private const float piOverFour = Mathf.PI / 4;
 
 	private GameObject controller;
 	//private Scorer scorer;
 
-	const float fireDist = 0.16f;
+	const float fireDist = 0.10f;
 	const float fireSpeed = 5.0f;
 	public float bombHeight = 0.51f;
 	public float bombForce = 500f;
@@ -182,6 +183,7 @@ public class BallMovement : MonoBehaviour {
 
 		//Rigidbody bulletClone = (Rigidbody) Instantiate(bullet, firePos, transform.rotation);
 		Rigidbody bulletClone = Instantiate(bullet, firePos, transform.rotation) as Rigidbody;
+		//Destroy(bulletClone, bulletLifetime);
 		bulletClone.AddForce(fireDir * speed);
 		myAudioSource.PlayOneShot(fireSound, 1.0f);
 
