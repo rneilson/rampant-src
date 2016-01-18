@@ -325,6 +325,10 @@ public class BallMovement : MonoBehaviour {
 			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 		}
 	}
+
+	public void Die (bool loudly) {
+		BlowUp();
+	}
 	
 	void OnCollisionEnter (Collision collision) {
 		GameObject thingHit = collision.gameObject;
