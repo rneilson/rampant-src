@@ -102,11 +102,27 @@ public class RedCubeIntercept : MonoBehaviour {
 			Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
 		}
 		scorer.AddKill();
+
+		// Detach and kill children (delayed 1.5s)
+		GameObject childtmp;
+		for (int i = 0; i < transform.childCount; i++) {
+			childtmp = transform.GetChild(i).gameObject;
+			childtmp.transform.parent = null;
+			Destroy(childtmp, 1.5f);
+		}
 		Destroy(gameObject);
 	}
 	
 	void Clear () {
 		Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 1);
+
+		// Detach and kill children (delayed 1.5s)
+		GameObject childtmp;
+		for (int i = 0; i < transform.childCount; i++) {
+			childtmp = transform.GetChild(i).gameObject;
+			childtmp.transform.parent = null;
+			Destroy(childtmp, 1.5f);
+		}
 		Destroy(gameObject);
 	}
 	
