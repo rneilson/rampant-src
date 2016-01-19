@@ -108,7 +108,7 @@ public class RedCubeIntercept : MonoBehaviour {
 		for (int i = 0; i < transform.childCount; i++) {
 			childtmp = transform.GetChild(i).gameObject;
 			childtmp.transform.parent = null;
-			Destroy(childtmp, 1.5f);
+			Destroy(childtmp, 1.0f);
 		}
 		Destroy(gameObject);
 	}
@@ -121,7 +121,7 @@ public class RedCubeIntercept : MonoBehaviour {
 		for (int i = 0; i < transform.childCount; i++) {
 			childtmp = transform.GetChild(i).gameObject;
 			childtmp.transform.parent = null;
-			Destroy(childtmp, 1.5f);
+			Destroy(childtmp, 1.0f);
 		}
 		Destroy(gameObject);
 	}

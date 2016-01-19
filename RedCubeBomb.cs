@@ -122,17 +122,14 @@ public class RedCubeBomb : MonoBehaviour {
 			}
 		}
 		
-		// If we're shooting the bomber or self-triggering, don't push player
+		// Only push things if we're dying loudly (and don't push player)
 		if (loud) {
 			pushmask = (1 << LayerMask.NameToLayer("Enemy"));
-		}
-		else {
-			pushmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Default"));
-		}
-		// Push things in outer radius
-		things = Physics.OverlapSphere(bombPos, bombPushRadius, pushmask);
-		for (int i=0; i<things.Length; i++) {
-			things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
+			// Push things in outer radius
+			things = Physics.OverlapSphere(bombPos, bombPushRadius, pushmask);
+			for (int i=0; i<things.Length; i++) {
+				things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
+			}
 		}
 	}
 	
