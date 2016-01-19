@@ -20,6 +20,7 @@ public class RedCubeBehave : MonoBehaviour {
 	public float drag;
 	public GameObject burster;
 	public GameObject bursterQuiet;
+	public GameObject deathFade;
 
 	// Use this for initialization
 	void Start () {
@@ -54,6 +55,9 @@ public class RedCubeBehave : MonoBehaviour {
 		}
 		else {
 			Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
+		}
+		if (deathFade) {
+			Destroy(Instantiate(deathFade, transform.position, Quaternion.identity), 1.0f);
 		}
 		scorer.AddKill();
 		Destroy(gameObject);

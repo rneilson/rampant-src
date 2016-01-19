@@ -29,6 +29,11 @@ public class RedCubeIntercept : MonoBehaviour {
 	public float drag;
 	public GameObject burster;
 	public GameObject bursterQuiet;
+	public GameObject deathFade;
+
+	// Prefab detach & delay-kill
+	//public int numChildren;
+	//public GameObject[] allChildren;
 
 	// Use this for initialization
 	void Start () {
@@ -44,6 +49,17 @@ public class RedCubeIntercept : MonoBehaviour {
 		currPos = transform.position;
 
 		NewTarget(GameObject.FindGameObjectWithTag("Player"));
+
+		/*
+		// Some debug
+		if (transform.childCount > 0) {
+			numChildren = transform.childCount;
+			allChildren = new GameObject[numChildren];
+			for (int i = 0; i < numChildren; i++) {
+				allChildren[i] = transform.GetChild(i).gameObject;
+			}
+		}
+		*/
 	}
 	
 	// Update is called once per frame
@@ -101,11 +117,14 @@ public class RedCubeIntercept : MonoBehaviour {
 		else {
 			Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
 		}
+		if (deathFade) {
+			Destroy(Instantiate(deathFade, transform.position, Quaternion.identity), 1.0f);
+		}
 		scorer.AddKill();
 
-		// Detach and kill children (delayed 1.5s)
+		// Detach and kill children (delayed 1s)
 		GameObject childtmp;
-		for (int i = 0; i < transform.childCount; i++) {
+		for (int i = transform.childCount - 1; i >= 0 ; i--) {
 			childtmp = transform.GetChild(i).gameObject;
 			childtmp.transform.parent = null;
 			Destroy(childtmp, 1.0f);
@@ -116,9 +135,9 @@ public class RedCubeIntercept : MonoBehaviour {
 	void Clear () {
 		Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 1);
 
-		// Detach and kill children (delayed 1.5s)
+		// Detach and kill children (delayed 1s)
 		GameObject childtmp;
-		for (int i = 0; i < transform.childCount; i++) {
+		for (int i = transform.childCount - 1; i >= 0 ; i--) {
 			childtmp = transform.GetChild(i).gameObject;
 			childtmp.transform.parent = null;
 			Destroy(childtmp, 1.0f);
