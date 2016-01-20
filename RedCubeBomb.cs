@@ -10,6 +10,7 @@ public class RedCubeBomb : MonoBehaviour {
 	private Vector3 bearing;
 	private bool dead;
 	private bool loud;
+	private bool armed;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
@@ -38,6 +39,7 @@ public class RedCubeBomb : MonoBehaviour {
 		myRigidbody.drag = drag;
 		dead = false;
 		loud = false;
+		armed = true;
 	}
 	
 	// Update is called once per frame
@@ -68,7 +70,9 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 
 		// Drop da bomb
-		DropBomb(transform.position);
+		if (armed) {
+			DropBomb(transform.position);
+		}
 
 		scorer.AddKill();
 		Destroy(gameObject);
@@ -80,12 +84,10 @@ public class RedCubeBomb : MonoBehaviour {
 	}
 	
 	void Die (bool loudly) {
-		if (!dead)
+		if (!dead) {
 			dead = true;
-		if (loudly)
-			loud = true;
-		else
-			loud = false;
+			loud = loudly;
+		}
 		//collider.enabled = false;
 	}
 	
@@ -99,13 +101,52 @@ public class RedCubeBomb : MonoBehaviour {
 
 	void DropBomb (Vector3 pos) {
 		Vector3 bombPos = new Vector3 (pos.x, bombHeight, pos.z);
-		int killmask, pushmask;
-		Collider[] things;
+		GameObject daBomb;
 
 		// Spawn effect
 		// At player position because it looks better
-		Destroy(Instantiate(bombEffect, pos, Quaternion.identity), 1.0f);
+		daBomb = Instantiate(bombEffect, pos, Quaternion.identity) as GameObject;
+		// Turn down flash if dying quietly
+		if (!loud) {
+			daBomb.GetComponent<LightPulse>().ChangeTargetRelative(-1.5f);
+		}
 		
+		// New bomb radius code
+		float thingSize = 0.2f;
+		float thingDist = 0.0f;
+
+		// We're dropping, make sure we're now disarmed
+		armed = false;
+
+		// Find list of enemies (probably faster than an OverlapSphere (or two))
+		GameObject[] things = GameObject.FindGameObjectsWithTag("Enemy");
+		// Iterate over and check distances to everyone, killing or pushing as required
+		for (int i = 0; i < things.Length; i++) {
+			thingDist = (things[i].transform.position - transform.position).magnitude;
+			if ((thingDist <= (bombKillRadius + thingSize)) && (things[i] != gameObject)) {
+				things[i].SendMessage("Die", false);
+			}
+			// Only push if dying loudly (shot or self-triggering)
+			else if ((loud) && (thingDist <= (bombPushRadius + thingSize))) {
+				things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
+			}
+		}
+		// Now check player distance and kill/push (only if loud)
+		// Temp debug only
+		//Debug.Log("Blowing up! Loud: " + loud.ToString() + ", target: " + target.ToString(), gameObject);
+		if ((loud) && (target)) {
+			thingDist = (target.transform.position - transform.position).magnitude;
+			if ((thingDist <= (bombKillRadius + thingSize))) {
+				target.SendMessage("Die", false);
+			}
+			else if (thingDist <= (bombPushRadius + thingSize)) {
+				target.GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
+			}
+		}
+			
+		/* We're gonna do this differently -- physics was bogging down
+		int killmask, pushmask;
+		Collider[] things;
 		// If we're shooting the bomber or self-triggering, can kill player
 		if (loud) {
 			killmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Default"));
@@ -131,6 +172,8 @@ public class RedCubeBomb : MonoBehaviour {
 				things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 			}
 		}
+		*/
+
 	}
 	
 	// On collision

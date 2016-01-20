@@ -55,6 +55,7 @@ public class Scorer : MonoBehaviour {
 	private GameObject currentPhase;
 	private GameObject prevPhase;
 	private int phaseIndex;
+	private int phaseShift;
 	private int checkpoint;
 	public int terminalPhase;
 
@@ -134,6 +135,7 @@ public class Scorer : MonoBehaviour {
 
 		// Start first enemy phase
 		phaseIndex = 0;
+		phaseShift = -1;
 		currentPhase = Instantiate(enemyPhases[phaseIndex]);
 
 		// Sanity check on terminal phase setting
@@ -269,7 +271,7 @@ public class Scorer : MonoBehaviour {
 		}
 	}
 	
-	public void AddLevel (Color pulseColor) {
+	public void AddLevel () {
 		level++;
 		scoreLevel.text = "Wave: " + level.ToString();
 		playerBreak = false;
@@ -279,16 +281,19 @@ public class Scorer : MonoBehaviour {
 			Destroy(prevPhase, 0.0f);
 		}
 
-		// Set color, just in case we die during phase transition
-		NewRespawnColor(pulseColor);
 	}
 
 	public void StartNewPhase (Color pulseColor) {
-		// Shift if we're shifting
-		ShiftGrid(phaseIndex);
-		// Phase used to do this itself
-		FlashGrid(pulseColor);
-		AddLevel(pulseColor);
+		if ((phaseShift != phaseIndex) || (phaseShift == terminalPhase)) {
+			phaseShift = phaseIndex;
+			// Shift if we're shifting
+			ShiftGrid(phaseShift);
+			// Set color, just in case we die during phase transition
+			NewRespawnColor(pulseColor);
+			// Phase used to do this itself
+			FlashGrid(pulseColor);
+		}
+		AddLevel();
 	}
 	
 	public void AddSpawns (int spawns) {
@@ -415,7 +420,7 @@ public class Scorer : MonoBehaviour {
 		FlashGrid(currentPulseColor);
 		// Shift grid
 		if (totalDeaths > 0) {
-			ShiftGrid(phaseIndex);
+			ShiftGrid(phaseShift);
 		}
 	}
 
