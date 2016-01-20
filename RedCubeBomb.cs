@@ -101,10 +101,15 @@ public class RedCubeBomb : MonoBehaviour {
 		Vector3 bombPos = new Vector3 (pos.x, bombHeight, pos.z);
 		int killmask, pushmask;
 		Collider[] things;
+		GameObject daBomb;
 
 		// Spawn effect
 		// At player position because it looks better
-		Destroy(Instantiate(bombEffect, pos, Quaternion.identity), 1.0f);
+		daBomb = Instantiate(bombEffect, pos, Quaternion.identity) as GameObject;
+		// Turn down flash if dying quietly
+		if (!loud) {
+			daBomb.GetComponent<LightPulse>().ChangeTargetRelative(-1.5f);
+		}
 		
 		// If we're shooting the bomber or self-triggering, can kill player
 		if (loud) {

@@ -24,6 +24,9 @@ public class LightPulse : MonoBehaviour {
 	void Start () {
 		lightControl = GetComponent<Light>();
 		intensityStart = lightControl.intensity;
+		if (intensityTarget < 0.0f) {
+			intensityTarget = 0.0f;
+		}
 		intensityDiff = intensityTarget - intensityStart;
 		currentState = PulseState.Starting;
 		phase = 0.0f;
@@ -124,6 +127,13 @@ public class LightPulse : MonoBehaviour {
 			}
 		}
 
+	}
+
+	public void ChangeTargetRelative (float amount) {
+		intensityTarget += amount;
+		if (intensityTarget < 0.0f) {
+			intensityTarget = 0.0f;
+		}
 	}
 }
 
