@@ -32,7 +32,7 @@ public class LightPulse : MonoBehaviour {
 		phase = 0.0f;
 		counter = 0.0f;
 		if (debugInfo) {
-			Debug.Log("Staring pulse, counter: " + counter.ToString() + ", phase: " 
+			Debug.Log("Starting pulse, counter: " + counter.ToString() + ", phase: " 
 				+ phase.ToString() + ", intensity: " + lightControl.intensity, gameObject);
 		}
 	}

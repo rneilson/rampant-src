@@ -70,7 +70,7 @@ public class Scorer : MonoBehaviour {
 	// Plane (etc) for color pulses and material shifts
 	public Color playerPulseColor = Color.white * 0.4f;
 	private Color currentPulseColor;
-	private List<MaterialPulse> arenaPulsers = new List<MaterialPulse>();
+	private List<GameObject> arenaPulsers = new List<GameObject>();
 	private List<GameObject> arenaShifters = new List<GameObject>();
 
 	public bool Respawn {
@@ -156,7 +156,7 @@ public class Scorer : MonoBehaviour {
 
 		// Get pulsers
 		foreach (GameObject pulser in GameObject.FindGameObjectsWithTag("ArenaPulser")) {
-			arenaPulsers.Add(pulser.GetComponent<MaterialPulse>());
+			arenaPulsers.Add(pulser);
 		}
 		currentPulseColor = playerPulseColor;
 		// Get shifters
@@ -465,9 +465,9 @@ public class Scorer : MonoBehaviour {
 
 	public void FlashGrid (Color gridColor) {
 		// Update each flasher with new color (same times, though)
-		foreach (MaterialPulse pulser in arenaPulsers) {
+		foreach (GameObject pulser in arenaPulsers) {
 			if (pulser) {
-				pulser.NewPulse(gridColor);
+				pulser.SendMessage("NewPulseMsg", gridColor);
 			}
 		}
 	}
