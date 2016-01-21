@@ -15,6 +15,7 @@ public class PulseControl : MonoBehaviour {
 
 	private float counter;
 	private float phase;
+	private int loops;
 	private PulseState currentState;
 
 	private const float halfPi = Mathf.PI / 2.0f;
@@ -129,6 +130,9 @@ public class PulseControl : MonoBehaviour {
 	public bool Looping {
 		get {return looping; }
 	}
+	public int Loops {
+		get { return loops; }
+	}
 
 	//	PLEASE NOTE SUBTLE DIFFERENCES BETWEEN THESE (STARTED/RUNNING/CHANGING)
 	/*	Since PulseControl runs before anything else, whatever is starting a new pulse is likely doing setup, but also might
@@ -208,6 +212,7 @@ public class PulseControl : MonoBehaviour {
 	void Start () {
 		phase = 0.0f;
 		counter = 0.0f;
+		loops = 0;
 
 		// Sanity checks
 		timeToTarget = (timeToTarget < 0.0f) ? 0.0f : timeToTarget;
@@ -227,7 +232,6 @@ public class PulseControl : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		UpdateState(Time.deltaTime);
-		UpdatePhase();
 	}
 
 	void LateUpdate () {
@@ -262,7 +266,8 @@ public class PulseControl : MonoBehaviour {
 				// Check if time reached (and *which* time), and set currentState accordingly
 				// Note that there is fall-through, so if timeAtTarget and timeFromTarget are 
 				// both zero, we'll go straight to Stopped (if at least some small amount of
-				// time has passed after Starting)
+				// time has passed after Starting), or loop around to ToTarget (if that's what
+				// you're going for)
 				if (currentState == PulseState.ToTarget) {
 					if (counter >= timeToTarget) {
 						// Check if we're returnToStart from target
@@ -276,13 +281,13 @@ public class PulseControl : MonoBehaviour {
 								// Switch currentState
 								ChangeState(PulseState.FromTarget);
 							}
-							// Set time to target->initial, less any overshoot
-							counter = counter - timeToTarget;
 						}
 						else {
 							// Stop and set phase to 1, since we're done
 							StopPulse(1.0f);
 						}
+						// Either way, set time less any overshoot
+						counter = counter - timeToTarget;
 					}
 				}
 				if (currentState == PulseState.AtTarget) {
@@ -299,16 +304,21 @@ public class PulseControl : MonoBehaviour {
 						if (looping) {
 							// Switch currentState
 							ChangeState(PulseState.ToTarget);
-							// Set time to initial->target, less any overshoot
-							counter = counter - timeFromTarget;
 						}
 						else {
 							// Stop and set phase to 0, since we're done
 							StopPulse(0.0f);
 						}
+						// Set time, less any overshoot
+						counter = counter - timeFromTarget;
+						// Advance loop counter
+						loops++;
 					}
 				}
 			}
+
+			// Update phase info regardless of dT (was previously called separately)
+			UpdatePhase();
 		}
 	}
 
@@ -324,12 +334,15 @@ public class PulseControl : MonoBehaviour {
 	}
 
 	// Start pulse cycle
-	public bool StartNewPulse () {
+	public bool StartNewPulse (bool resetLoops) {
 		// Only start if we're stopped
 		if (currentState == PulseState.Stopped) {
 			ChangeState(PulseState.Starting);
 			phase = 0.0f;
 			counter = 0.0f;
+			if (resetLoops) {
+				loops = 0;
+			}
 			if (debugInfo) {
 				Debug.Log("Starting pulse, counter: " + counter.ToString() + ", phase: " 
 					+ phase.ToString(), gameObject);
@@ -340,7 +353,7 @@ public class PulseControl : MonoBehaviour {
 			if (debugInfo) {
 				Debug.LogWarning("StartNewPulse() called on already-started PulseControl", gameObject);
 			}
-			return true;
+			return false;
 		}
 		else {
 			// We should really never be here
@@ -349,6 +362,11 @@ public class PulseControl : MonoBehaviour {
 			}
 			return false;
 		}
+	}
+
+	// Quickie version, default to resetting loops
+	public bool StartNewPulse () {
+		return StartNewPulse(true);
 	}
 
 	// Switch to running state immediately, instead of waiting until LateUpdate() (probably meaning
@@ -365,13 +383,42 @@ public class PulseControl : MonoBehaviour {
 		}
 	}
 
+	// Restarts if stopped, doesn't reset counter, and basically acts as if looping=true even if it wasn't
+	public bool RollingRestart () {
+		float tmpCounter;
+		if (currentState == PulseState.Stopped) {
+			if (counter > 0.0f) {
+				if (debugInfo) {
+					Debug.Log("Restarting pulse, counter: " + counter.ToString() + ", phase: " 
+						+ phase.ToString(), gameObject);
+				}
+				// Here we temp-save the counter and force-update after resetting
+				// This is mostly to line everything up as if the post-stop time hadn't happened
+				tmpCounter = counter;
+				counter = 0.0f;
+				ChangeState(PulseState.ToTarget);
+				return ForceUpdate(tmpCounter);
+			}
+			else {
+				// No idea how we'd get here, but y'know...
+				return StartNewPulse(false);
+			}
+		}
+		else  {
+			if (debugInfo) {
+				Debug.LogWarning("RollingRestart() called on already-started PulseControl", gameObject);
+			}
+			return false;
+		}
+	}
+
 	// Basically emulates an Update() call with given dT and sets phase accordingly -- might be useful
 	// for using PulseControl outside of the game loop or...something?
+	// (Well, it's useful for RollingStart() above...)
 	// Returns true if running (and thus if the call does anything)
 	public bool ForceUpdate (float dT) {
 		if (this.IsRunning) {
 			UpdateState(dT);
-			UpdatePhase();
 			return true;
 		}
 		else {
