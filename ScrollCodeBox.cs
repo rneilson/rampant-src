@@ -77,11 +77,16 @@ public class ScrollCodeBox : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		// TEMP CODE
+		//UpdateDisplayText(initialText);
+	}
+
+	// Use FixedUpdate instead for this, see how well it works
+	void FixedUpdate () {
 		UpdateDisplayText(initialText);
 	}
 
 	string GetCursorStr (string sourceStr) {
-		int cursorPage, cursorLine, cursorCol, cursorOffset;
+		int cursorPage, cursorLine, cursorCol;
 		string strToRet;
 
 		// Stash last cursor position

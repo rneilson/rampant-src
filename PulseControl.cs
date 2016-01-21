@@ -7,11 +7,13 @@ public class PulseControl : MonoBehaviour {
 	public float timeToTarget = 0.5f;
 	public float timeAtTarget = 0.5f;
 	public float timeFromTarget = 0.5f;
+	public float timeAfterTarget = 0.5f;
 	public bool autoStart = false;
 	public bool returnToStart = true;
 	public bool looping = false;
 	public bool debugInfo = false;
 	public PulseMode pulseMode = PulseMode.Linear;
+	public PulseUpdate pulseUpdate = PulseUpdate.UseUpdate;
 
 	private float counter;
 	private float phase;
@@ -218,6 +220,7 @@ public class PulseControl : MonoBehaviour {
 		timeToTarget = (timeToTarget < 0.0f) ? 0.0f : timeToTarget;
 		timeAtTarget = (timeAtTarget < 0.0f) ? 0.0f : timeAtTarget;
 		timeFromTarget = (timeFromTarget < 0.0f) ? 0.0f : timeFromTarget;
+		timeAfterTarget = (timeAfterTarget < 0.0f) ? 0.0f : timeAfterTarget;
 
 		// Initialize to stopped
 		currentState = PulseState.Stopped;
@@ -231,13 +234,26 @@ public class PulseControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		UpdateState(Time.deltaTime);
+		if (pulseUpdate == PulseUpdate.UseUpdate) {
+			UpdateState(Time.deltaTime);
+		}
+	}
+
+	void FixedUpdate () {
+		if (pulseUpdate == PulseUpdate.UseFixedUpdate) {
+			UpdateState(Time.fixedDeltaTime);
+		}
 	}
 
 	void LateUpdate () {
 		if (currentState == PulseState.Starting) {
 			// If we were started earlier this frame (or late last), we can now switch from Starting
 			ChangeState(PulseState.ToTarget);
+		}
+		else {
+			if (pulseUpdate == PulseUpdate.UseLateUpdate) {
+				UpdateState(Time.deltaTime);
+			}
 		}
 	}
 
@@ -275,7 +291,7 @@ public class PulseControl : MonoBehaviour {
 							// Check if we're holding at target
 							if (timeAtTarget > 0.0f) {
 								// Hold state (sets phase to 1)
-								HoldPulse();
+								HoldPulseAt();
 							}
 							else {
 								// Switch currentState
@@ -302,17 +318,35 @@ public class PulseControl : MonoBehaviour {
 					if (counter >= timeFromTarget) {
 						// Check if we're looping
 						if (looping) {
-							// Switch currentState
-							ChangeState(PulseState.ToTarget);
+							if (timeAfterTarget > 0.0f) {
+								// Hold state (sets phase to 0)
+								HoldPulseAfter();
+							}
+							else {
+								// Switch currentState
+								ChangeState(PulseState.ToTarget);
+								// Advance loop counter
+								loops++;
+							}
 						}
 						else {
 							// Stop and set phase to 0, since we're done
 							StopPulse(0.0f);
+							// Advance loop counter
+							loops++;
 						}
 						// Set time, less any overshoot
 						counter = counter - timeFromTarget;
+					}
+				}
+				if (currentState == PulseState.AfterTarget) {
+					if (counter >= timeAfterTarget) {
+						// Switch currentState
+						ChangeState(PulseState.ToTarget);
 						// Advance loop counter
 						loops++;
+						// Set time to target->initial, less any overshoot
+						counter = counter - timeAfterTarget;
 					}
 				}
 			}
@@ -427,11 +461,19 @@ public class PulseControl : MonoBehaviour {
 	}
 
 	// Hold pulse cycle at target
-	void HoldPulse () {
+	void HoldPulseAt () {
 		// Switch currentState
 		ChangeState(PulseState.AtTarget);
 		// Set phase to one, since we're at target
 		phase = 1.0f;
+	}
+
+	// Hold pulse cycle after target
+	void HoldPulseAfter () {
+		// Switch currentState
+		ChangeState(PulseState.AfterTarget);
+		// Set phase to zero, since we're back at start
+		phase = 0.0f;
 	}
 
 	// Stop pulse cycle at given phase
@@ -485,5 +527,12 @@ public enum PulseState : byte {
 	Starting,
 	ToTarget,
 	FromTarget,
-	AtTarget
+	AtTarget,
+	AfterTarget
+}
+
+public enum PulseUpdate : byte {
+	UseUpdate = 0,
+	UseFixedUpdate,
+	UseLateUpdate
 }
