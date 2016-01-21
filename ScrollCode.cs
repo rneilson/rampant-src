@@ -8,6 +8,11 @@ public class ScrollCode : MonoBehaviour {
 	private ScrollCodeBox boxRight;
 	private PulseControl colorTimer;
 
+	// Scaling
+	private float baselineX = 1280f;
+	private float baselineY = 640f;
+	private float screenScale;
+
 	// Color things
 	public Color initialTarget = Color.white;
 	public float blendFraction = 1.0f;
@@ -24,6 +29,9 @@ public class ScrollCode : MonoBehaviour {
 	void Start () {
 		// Sanity checks
 		blendFraction = (blendFraction > 1.0f) ? 1.0f : blendFraction;
+
+		// Get screen scaling size
+		//screenScale = 
 
 		// Get textboxes
 		boxLeft = GameObject.Find("Scroll Text Left").GetComponent<ScrollCodeBox>();
