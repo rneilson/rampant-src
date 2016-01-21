@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UnityEngine.UI;
+using UnityEngine;
 using System.Collections;
 using System.Globalization;
 using System.Text;
@@ -7,7 +8,8 @@ using System;
 public class ScrollCodeBox : MonoBehaviour {
 
 	// Components
-	private TextMesh display;
+	// private TextMesh display;
+	private Text display;
 	private PulseControl timer;
 
 	// Textbox sizes
@@ -43,7 +45,8 @@ public class ScrollCodeBox : MonoBehaviour {
 		removeChars = removeLines * rowlen;
 
 		// Grab components, obvs
-		display = GetComponent<TextMesh>();
+		// display = GetComponent<TextMesh>();
+		display = GetComponent<Text>();
 		timer = GetComponent<PulseControl>();
 
 		// Stash initial text just in case
@@ -113,13 +116,22 @@ public class ScrollCodeBox : MonoBehaviour {
 		workhorse.Append(GetCursorStr(sourceStr));
 		// Check if textbox is full, whittle down if so
 		if (workhorse.Length > boxChars) {
+			/*
 			if (debugInfo) {
 				Debug.Log("Textbox wrapped around, length " + workhorse.Length.ToString(), gameObject);
+				Bounds boxBounds = GetComponent<Renderer>().bounds;
+				Debug.Log("Render bounds: " + boxBounds.ToString(), gameObject);
+				Camera cam = GameObject.Find("Camera").GetComponent<Camera>();
+				Vector3 bottomLeft = cam.WorldToScreenPoint(boxBounds.min);
+				Vector3 topRight = cam.WorldToScreenPoint(boxBounds.max);
+				Vector3 center = cam.WorldToScreenPoint(boxBounds.center) - cam.WorldToScreenPoint(Vector3.zero);
+				Debug.Log("Screen points: center " + center.ToString() 
+					+ " min " + bottomLeft.ToString() 
+					+ ", max " + topRight.ToString() 
+					+ ", size " + (topRight - bottomLeft).ToString());
 			}
+			*/
 			workhorse.Remove(0, removeChars);
-			if (debugInfo) {
-				Debug.Log("New textbox string: \'" + workhorse.ToString() + "\'", gameObject);
-			}
 		}
 		// Update display
 		display.text = workhorse.ToString();
