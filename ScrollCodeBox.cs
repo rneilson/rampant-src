@@ -8,8 +8,8 @@ using System;
 public class ScrollCodeBox : MonoBehaviour {
 
 	// Components
-	//private TextMesh display;
-	private Text display;
+	private TextMesh display;
+	//private Text display;
 	private PulseControl timer;
 
 	// Textbox sizes
@@ -45,8 +45,8 @@ public class ScrollCodeBox : MonoBehaviour {
 		removeChars = removeLines * rowlen;
 
 		// Grab components, obvs
-		//display = GetComponent<TextMesh>();
-		display = GetComponent<Text>();
+		display = GetComponent<TextMesh>();
+		//display = GetComponent<Text>();
 		timer = GetComponent<PulseControl>();
 
 		// Stash initial text just in case
