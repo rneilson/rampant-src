@@ -151,7 +151,7 @@ public class Scorer : MonoBehaviour {
 		else {
 			instructions = instructionsNoForceBomb;
 		}
-		titleText.text = "A Plain Shooter";
+		titleText.text = "_rampant";
 		subtitleText.text = "Press start button/tab to begin\n" + instructions;
 
 		// Get pulsers
