@@ -34,8 +34,10 @@ public class ScrollCode : MonoBehaviour {
 		//screenScale = 
 
 		// Get textboxes
-		boxLeft = GameObject.Find("Scroll Text Left").GetComponent<ScrollCodeBox>();
-		boxRight = GameObject.Find("Scroll Text Right").GetComponent<ScrollCodeBox>();
+		//boxLeft = GameObject.Find("Scroll Text Left").GetComponent<ScrollCodeBox>();
+		//boxRight = GameObject.Find("Scroll Text Right").GetComponent<ScrollCodeBox>();
+		boxLeft = GameObject.Find("Scroll Code Left").GetComponent<ScrollCodeBox>();
+		boxRight = GameObject.Find("Scroll Code Right").GetComponent<ScrollCodeBox>();
 
 		// Get colors
 		colorStartLeft = boxLeft.GetCurrentColor();
