@@ -107,6 +107,7 @@ public class RedCubeBomb : MonoBehaviour {
 		// Spawn effect
 		// At player position because it looks better
 		daBomb = Instantiate(bombEffect, pos, Quaternion.identity) as GameObject;
+		Destroy(daBomb, 1.0f);
 		// Turn down flash if dying quietly
 		if (!loud) {
 			daBomb.GetComponent<LightPulse>().ChangeTargetRelative(-1.5f);
