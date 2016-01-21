@@ -195,7 +195,7 @@ public class Scorer : MonoBehaviour {
 		
 		if (!isPaused) {
 			if (respawn == true) {
-				respawnCountdown -= Time.fixedDeltaTime;
+				respawnCountdown -= Time.deltaTime;
 				//cameraFollower.SendMessage("RespawnCountdown", respawnCountdown);
 				cameraFollower.RespawnCountdown(respawnCountdown);
 			}

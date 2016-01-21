@@ -9,9 +9,9 @@ public class ScrollCode : MonoBehaviour {
 	private PulseControl colorTimer;
 
 	// Scaling
-	private float baselineX = 1280f;
-	private float baselineY = 640f;
-	private float screenScale;
+	//private float baselineX = 1280f;
+	//private float baselineY = 640f;
+	//private float screenScale;
 
 	// Color things
 	public Color initialTarget = Color.white;
