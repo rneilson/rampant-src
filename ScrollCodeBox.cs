@@ -141,14 +141,7 @@ public class ScrollCodeBox : MonoBehaviour {
 			// Catch up to present line
 			while (currentLine < newLine) {
 				// Finish current line
-				if (cursorPos < cols) {
-					// Most common case
-					tmpStr = String.Concat(source.Substring(cursorPos, cols - cursorPos), newlineChar);
-				}
-				else {
-					// We're right at the end of the current source line, so we'll just append a newline
-					tmpStr = newlineChar;
-				}
+				tmpStr = String.Concat(source.Substring(cursorPos, cols - cursorPos), newlineChar);
 				// Advance line, which will also roll over cursorPos
 				source = NextLine(tmpStr);
 			}
