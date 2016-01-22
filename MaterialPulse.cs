@@ -284,4 +284,8 @@ public class MaterialPulse : MonoBehaviour {
 		NewPulseNoReturn(targetColor, 1.0f, timeInitialTarget);
 	}
 
+	// Placeholder
+	public void GameStarted () {
+
+	}
 }
