@@ -98,11 +98,11 @@ public class Scorer : MonoBehaviour {
 	public float PlayerBreakRadius {
 		get { return playerBreakRadius; }
 	}
-	public float PhaseIndex {
-		get { return phaseIndex; }
-	}
 	public float MaxDisplacement {
 		get { return maxDisplacement; }
+	}
+	public int PhaseIndex {
+		get { return phaseIndex; }
 	}
 
 	// Use this for initialization

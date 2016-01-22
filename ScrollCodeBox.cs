@@ -1,6 +1,6 @@
-﻿using UnityEngine.UI;
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System;
@@ -9,8 +9,8 @@ public class ScrollCodeBox : MonoBehaviour {
 
 	// Components
 	private TextMesh display;
-	//private Text display;
 	private PulseControl timer;
+	private Scorer scorer;
 
 	// Textbox sizes
 	private int cols = 24;	// Not including newline
@@ -22,7 +22,6 @@ public class ScrollCodeBox : MonoBehaviour {
 	// Cursor state
 	// Public for debug
 	public int cursorPos = 0;		// Current pos in display line
-	public int cursorOld = 0;
 	public int displayLine = 0;		// Current line in display page
 	public int currentLine = 0;		// Current line since start -- for loop sync
 	public int sourcePos = 0;		// Current pos in source lines -- for lines > rowlen
@@ -30,8 +29,8 @@ public class ScrollCodeBox : MonoBehaviour {
 
 	// String data
 	private StringBuilder workhorse;
-	public String initialText;		// Public for debug
-	public String availableChars;	// Public for debug
+	public string initialText;		// Public for debug
+	public string[] availableChars;	// Public for debug
 	public string[] displayLines;	// Lines for display
 	public string[] sourceLines;	// Lines from source text
 	private string sourceStr;
@@ -40,21 +39,19 @@ public class ScrollCodeBox : MonoBehaviour {
 
 	// Controls
 	public bool debugInfo = false;
-	//public int removeLines = 24;
 	public ScrollMode scrollMode = ScrollMode.ByPage;
+	public int corruptionsPerPhase = 2;
 
 	// Use this for initialization
 	void Start () {
 		// Stupid compiler won't let me put these in initialization...
 		rowlen = cols + 1;
 		boxChars = rows * rowlen;
-		//removeLines = (removeLines > rows) ? rows : removeLines;
-		//removeChars = removeLines * rowlen;
 
 		// Grab components, obvs
 		display = GetComponent<TextMesh>();
-		//display = GetComponent<Text>();
 		timer = GetComponent<PulseControl>();
+		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
 
 		// Debug screen pos/size
 		if (debugInfo) {
@@ -83,15 +80,14 @@ public class ScrollCodeBox : MonoBehaviour {
 		// Only here while I figure out what I've got access to
 		CharacterInfo[] charArray = display.font.characterInfo;
 		int charArrayLen = charArray.Length;
-		workhorse = new StringBuilder(charArrayLen * 2);
+		//workhorse = new StringBuilder(charArrayLen * 2);
+		availableChars = new string[charArrayLen];
 		for (int i = 0; i < charArrayLen; i++) {
-			workhorse.Append(Char.ConvertFromUtf32(charArray[i].index));
+			//workhorse.Append(Char.ConvertFromUtf32(charArray[i].index));
+			availableChars[i] = Char.ConvertFromUtf32(charArray[i].index);
 		}
-		availableChars = workhorse.ToString();
-
-		// Just to get scrolling working
-		workhorse.Remove(0, workhorse.Length);
-		workhorse.EnsureCapacity(boxChars);
+		//availableChars = workhorse.ToString();
+		//workhorse.Remove(0, workhorse.Length);
 
 		// Set up source, split on newline
 		// We'll change this to a text asset later
@@ -123,7 +119,6 @@ public class ScrollCodeBox : MonoBehaviour {
 		/* I /was/ going to do this all functional-style, but there are /way/ too many moving parts */
 		int newPos = Mathf.FloorToInt(phase * (float) rowlen);
 		int newLine = loops;
-		string tmpStr;
 
 		// Only do anything if we've advanced since last time
 		if ((newPos > cursorPos) || (newLine > currentLine)) {
@@ -141,7 +136,7 @@ public class ScrollCodeBox : MonoBehaviour {
 			// Catch up to present line
 			while (currentLine < newLine) {
 				// Finish current line and advance, which will also roll over cursorPos
-				AppendDisplayNewLine(GetSourceString(cursorPos, cols - cursorPos));
+				AppendDisplayLine(GetSourceString(cursorPos, cols - cursorPos));
 			}
 
 			// Now we can finish the current line if necessary
@@ -159,7 +154,7 @@ public class ScrollCodeBox : MonoBehaviour {
 		displayLines[displayLine] += toAppend;
 	}
 
-	void AppendDisplayNewLine (string toAppend) {
+	void AppendDisplayLine (string toAppend) {
 		// Append to current line, plus newline
 		AppendDisplay(toAppend + newlineChar);
 		// Carriage return and new line, essentially
@@ -250,8 +245,41 @@ public class ScrollCodeBox : MonoBehaviour {
 	}
 
 	string CorruptSource(string toCorrupt) {
-		// For right now, not much
-		return toCorrupt;
+		// Check phase and determine corruption passes
+		int passes = scorer.PhaseIndex * corruptionsPerPhase;
+
+		// Only run this if we're doing something
+		if (passes > 0) {
+			// Split incoming string
+			int sourceLen = toCorrupt.Length;
+			string[] toRet = new string[sourceLen];
+			for (int i = 0; i < sourceLen; i++) {
+				// Fetch as strings instead of chars
+				toRet[i] = toCorrupt.Substring(i, 1);
+			}
+			// Find indicies to corrupt
+			// Le sigh, I /was/ going to do this properly, but /noooo/ Unity's Mono compat sucks
+			// SortedSet<int> indicies = new SortedSet<int>();
+			Dictionary<int, int> indicies = new Dictionary<int, int>();
+			int sourceIndex;
+			int availLen = availableChars.Length;
+			while (indicies.Count < passes) {
+				sourceIndex = UnityEngine.Random.Range(0, sourceLen);
+				if (!indicies.ContainsKey(sourceIndex)) {
+					indicies.Add(sourceIndex, UnityEngine.Random.Range(0, availLen));
+				}
+			}
+			// Now corrupt them
+			foreach (KeyValuePair<int, int> index in indicies) {
+				toRet[index.Key] = availableChars[index.Value];
+			}
+			// Return our ill-gotten gains
+			// Will be StringInfo once I change over
+			return String.Concat(toRet);
+		}
+		else {
+			return toCorrupt;
+		}
 	}
 
 	public Color GetCurrentColor () {
