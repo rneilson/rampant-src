@@ -16,8 +16,6 @@ public class ScrollCodeBox : MonoBehaviour {
 	private int cols = 24;	// Not including newline
 	private int rowlen;		// Including newline
 	private int rows = 24;
-	private int boxChars;
-	private int removeChars;
 
 	// Cursor state
 	// Public for debug
@@ -33,7 +31,7 @@ public class ScrollCodeBox : MonoBehaviour {
 	public string[] availableChars;	// Public for debug
 	public string[] displayLines;	// Lines for display
 	public string[] sourceLines;	// Lines from source text
-	private string sourceStr;
+	private StringInfo sourceStr;
 	private string newlineChar = "\n";
 	private char paddingChar = ' ';
 
@@ -46,7 +44,7 @@ public class ScrollCodeBox : MonoBehaviour {
 	void Start () {
 		// Stupid compiler won't let me put these in initialization...
 		rowlen = cols + 1;
-		boxChars = rows * rowlen;
+		int boxChars = rows * rowlen;
 
 		// Grab components, obvs
 		display = GetComponent<TextMesh>();
@@ -70,6 +68,7 @@ public class ScrollCodeBox : MonoBehaviour {
 		// Stash initial text just in case
 		initialText = display.text;
 		display.text = "";
+		displayLines = new String[rows];
 
 		if (debugInfo) {
 			Debug.Log("initialText " + initialText.Length.ToString() 
@@ -91,9 +90,11 @@ public class ScrollCodeBox : MonoBehaviour {
 
 		// Set up source, split on newline
 		// We'll change this to a text asset later
-		displayLines = new String[rows];
-		string[] splitter = {"\r\n", "\n"};
-		sourceLines = initialText.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
+		// Or maybe have ScrollCode send us at intervals
+		int sourceLen = LoadNewSource(initialText);
+		if (debugInfo) {
+			Debug.Log("Loaded new source, " + sourceLen.ToString() + " lines", gameObject);
+		}
 		LoadNextSourceString();
 	}
 	
@@ -194,10 +195,10 @@ public class ScrollCodeBox : MonoBehaviour {
 
 	string GetSourceString (int offset, int length) {
 		// This was more complicated, but I moved all that to NewSourceString() and LoadNextSourceString()
-		return sourceStr.Substring(offset, length);
+		return sourceStr.SubstringByTextElements(offset, length);
 	}
 
-	string NewSourceString () {
+	StringInfo NewSourceString () {
 		// This was all first in GetSourceString(), then LoadNextSourceString()
 		// Except I'll have to initialize somehow, so might as well put it in
 		// its own function
@@ -220,7 +221,7 @@ public class ScrollCodeBox : MonoBehaviour {
 		}
 		else {
 			Debug.LogError("NewSourceString broke somehow", gameObject);
-			return "";
+			return new StringInfo("");
 		}
 
 		return CorruptSource(toRet);
@@ -244,7 +245,7 @@ public class ScrollCodeBox : MonoBehaviour {
 		sourcePos += cols;
 	}
 
-	string CorruptSource(string toCorrupt) {
+	StringInfo CorruptSource(string toCorrupt) {
 		// Check phase and determine corruption passes
 		int passes = scorer.PhaseIndex * corruptionsPerPhase;
 
@@ -275,10 +276,29 @@ public class ScrollCodeBox : MonoBehaviour {
 			}
 			// Return our ill-gotten gains
 			// Will be StringInfo once I change over
-			return String.Concat(toRet);
+			return new StringInfo(String.Concat(toRet));
 		}
 		else {
-			return toCorrupt;
+			return new StringInfo(toCorrupt);
+		}
+	}
+
+	string[] ParseSource (string toParse) {
+		string[] splitter = {"\r\n", "\n"};
+		return toParse.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
+	}
+
+	int LoadNewSource (string toLoad) {
+		sourcePos = 0;
+		sourceLine = 0;
+		sourceLines = ParseSource(toLoad);
+		return sourceLines.Length;
+	}
+
+	public void ReplaceSource (string newSource) {
+		int sourceLen = LoadNewSource(newSource);
+		if (debugInfo) {
+			Debug.Log("Replaced source, " + sourceLen.ToString() + " lines", gameObject);
 		}
 	}
 
