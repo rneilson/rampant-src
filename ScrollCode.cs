@@ -25,6 +25,16 @@ public class ScrollCode : MonoBehaviour {
 	private Color colorFinalRight;
 	private bool colorPulsing = false;
 
+	// Text things
+	public string initialText = 
+@"        --------        
+        _rampant        
+        --------        
+                        
+        a game by       
+                        
+     raymond neilson    ";
+
 	// Use this for initialization
 	void Start () {
 		// Sanity checks
@@ -53,8 +63,12 @@ public class ScrollCode : MonoBehaviour {
 
 		// Get timer, start counter
 		colorTimer = GetComponent<PulseControl>();
-		colorTimer.StartNewPulse();
+		colorTimer.NewPulse();
 		colorPulsing = true;
+
+		// Start boxes scrolling with intro text
+		boxLeft.StartScrolling(initialText);
+		boxRight.StartScrolling(initialText);
 	}
 	
 	// Update is called once per frame
@@ -90,7 +104,7 @@ public class ScrollCode : MonoBehaviour {
 	}
 
 	// Pulse new color
-	void NewPulseMsg (Color toColor) {
+	public void NewPulseMsg (Color toColor) {
 		colorStartLeft = boxLeft.GetCurrentColor();
 		colorStartRight = boxRight.GetCurrentColor();
 		if (blendWithStart) {
@@ -103,5 +117,12 @@ public class ScrollCode : MonoBehaviour {
 		}
 		colorTimer.NewPulse();
 		colorPulsing = true;
+	}
+
+	// Start boxes scrolling main text
+	public void GameStarted () {
+		// TODO: send sourcecode asset to boxes to scroll
+		boxLeft.StartScrolling(boxLeft.InitialText);
+		boxRight.StartScrolling(boxRight.InitialText);
 	}
 }
