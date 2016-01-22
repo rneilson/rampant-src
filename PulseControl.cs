@@ -19,11 +19,15 @@ public class PulseControl : MonoBehaviour {
 	private float phase;
 	private int loops;
 	private PulseState currentState;
+	private PulseState previousState;
 
 	private const float halfPi = Mathf.PI / 2.0f;
 
 	public PulseState State {
 		get { return currentState; }
+	}
+	public PulseState LastState {
+		get { return previousState; }
 	}
 	public PulseMode Mode {
 		get { return pulseMode; }
@@ -49,7 +53,7 @@ public class PulseControl : MonoBehaviour {
 	public float PulseTime {
 		get {
 			if (returnToStart) {
-				return timeToTarget + timeAtTarget + timeFromTarget;
+				return timeToTarget + timeAtTarget + timeFromTarget + timeAfterTarget;
 			}
 			else {
 				return timeToTarget;
@@ -70,6 +74,8 @@ public class PulseControl : MonoBehaviour {
 					return timeAtTarget - counter;
 				case PulseState.FromTarget:
 					return timeFromTarget - counter;
+				case PulseState.AfterTarget:
+					return timeAfterTarget - counter;
 				case PulseState.Stopped:
 					return 0.0f;
 				default:
@@ -88,10 +94,13 @@ public class PulseControl : MonoBehaviour {
 				return this.PulseTime - counter;
 			}
 			else if (currentState == PulseState.AtTarget) {
-				return timeAtTarget + timeFromTarget - counter;
+				return timeAtTarget + timeFromTarget + timeAfterTarget - counter;
 			}
 			else if (currentState == PulseState.FromTarget) {
-				return timeFromTarget - counter;
+				return timeFromTarget + timeAfterTarget - counter;
+			}
+			else if (currentState == PulseState.AfterTarget) {
+				return timeAfterTarget - counter;
 			}
 			else if (currentState == PulseState.Stopped) {
 				return 0.0f;
@@ -114,6 +123,8 @@ public class PulseControl : MonoBehaviour {
 					return counter / timeAtTarget;
 				case PulseState.FromTarget:
 					return counter / timeFromTarget;
+				case PulseState.AfterTarget:
+					return counter / timeAfterTarget;
 				case PulseState.Stopped:
 					return 1.0f;
 				default:
@@ -162,6 +173,7 @@ public class PulseControl : MonoBehaviour {
 				case PulseState.ToTarget:
 				case PulseState.AtTarget:
 				case PulseState.FromTarget:
+				case PulseState.AfterTarget:
 					return true;
 				case PulseState.Stopped:
 					return false;
@@ -178,6 +190,7 @@ public class PulseControl : MonoBehaviour {
 				case PulseState.ToTarget:
 				case PulseState.AtTarget:
 				case PulseState.FromTarget:
+				case PulseState.AfterTarget:
 					return true;
 				// Here's a litte weirdness: if we're start*ing*, we haven't actually start*ed*, so we're not running yet
 				case PulseState.Starting:
@@ -199,6 +212,7 @@ public class PulseControl : MonoBehaviour {
 				// Here's another litte weirdness: if we're starting, we're not changing *yet*
 				case PulseState.Starting:
 				case PulseState.AtTarget:
+				case PulseState.AfterTarget:
 				case PulseState.Stopped:
 					return false;
 				default:
@@ -224,6 +238,7 @@ public class PulseControl : MonoBehaviour {
 
 		// Initialize to stopped
 		currentState = PulseState.Stopped;
+		previousState = PulseState.AfterTarget;
 
 		// If autostarting, this frame we'll switch from Starting to ToTarget, and only next frame have the
 		// possibility of stopping
@@ -246,11 +261,15 @@ public class PulseControl : MonoBehaviour {
 	}
 
 	void LateUpdate () {
+		// Here's where the previous state gets brought up to current
+		previousState = currentState;
+
 		if (currentState == PulseState.Starting) {
 			// If we were started earlier this frame (or late last), we can now switch from Starting
 			ChangeState(PulseState.ToTarget);
 		}
 		else {
+			// I'm not sure what kind of wonkiness happens when using LateUpdate, but yanno...
 			if (pulseUpdate == PulseUpdate.UseLateUpdate) {
 				UpdateState(Time.deltaTime);
 			}
