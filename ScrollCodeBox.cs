@@ -98,7 +98,7 @@ public class ScrollCodeBox : MonoBehaviour {
 		displayLines = new String[rows];
 		string[] splitter = {"\r\n", "\n"};
 		sourceLines = initialText.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
-		sourceStr = CheckSourceString();
+		LoadNextSourceString();
 	}
 	
 	// Update is called once per frame
@@ -168,7 +168,7 @@ public class ScrollCodeBox : MonoBehaviour {
 		// Advance display and scroll as required
 		NextDisplayLine();
 		// Advance source as required
-		NextSourceString();
+		LoadNextSourceString();
 	}
 
 	void NextDisplayLine () {
@@ -198,12 +198,12 @@ public class ScrollCodeBox : MonoBehaviour {
 	}
 
 	string GetSourceString (int offset, int length) {
-		// This was more complicated, but I moved all that to CheckSourceString() and NextSourceString()
+		// This was more complicated, but I moved all that to NewSourceString() and LoadNextSourceString()
 		return sourceStr.Substring(offset, length);
 	}
 
-	string CheckSourceString () {
-		// This was all first in GetSourceString(), then NextSourceString()
+	string NewSourceString () {
+		// This was all first in GetSourceString(), then LoadNextSourceString()
 		// Except I'll have to initialize somehow, so might as well put it in
 		// its own function
 		string toRet;
@@ -224,16 +224,15 @@ public class ScrollCodeBox : MonoBehaviour {
 			toRet = sourceLines[sourceLine].Substring(sourcePos, curLength) + new String(paddingChar, cols - curLength);
 		}
 		else {
-			Debug.LogError("CheckSourceString broke somehow", gameObject);
+			Debug.LogError("NewSourceString broke somehow", gameObject);
 			return "";
 		}
 
-		return toRet;
+		return CorruptSource(toRet);
 	}
 
-	void NextSourceString () {
-		// Advance sourcePos before we check anything else
-		sourcePos += cols;
+	void LoadNextSourceString () {
+		// MUST BE RUN DURING INITIALIZATION
 		// Check length, get next string or advance position, check length again, round and round we go
 		int curLength = sourceLines[sourceLine].Length - sourcePos;
 		if (curLength <= 0) {
@@ -245,55 +244,15 @@ public class ScrollCodeBox : MonoBehaviour {
 				sourceLine = 0;
 			}
 		}
-		sourceStr = CheckSourceString();
+		sourceStr = NewSourceString();
+		// Now advance for next run
+		sourcePos += cols;
 	}
 
-	/*
-	string GetCursorStr (string sourceStr) {
-		int pageNum, lineNum, colNum;
-		string strToRet;
-
-		// Stash last cursor position
-		cursorOld = cursorPos;
-
-		// Find new cursor position
-		pageNum = timer.Loops / rows;
-		lineNum = timer.Loops % rows;
-		colNum = Mathf.FloorToInt(timer.Phase * (float) rowlen);
-		cursorPos = ((pageNum * boxChars) + (lineNum * rowlen) + colNum) % sourceStr.Length;
-
-		// Check if we've wrapped around
-		if (cursorPos < cursorOld) {
-			// Get remainder of source
-			strToRet = sourceStr.Substring(cursorOld, sourceStr.Length - cursorOld);
-			// Wrap around from start
-			strToRet += sourceStr.Substring(0, cursorPos);
-		}
-		else {
-			// Get difference between old and new cursor positions (might be nothing)
-			strToRet = sourceStr.Substring(cursorOld, cursorPos - cursorOld);
-		}
-
-		return strToRet;
-
-		// For later, as a reminder that corrupted letters might be multiple chars long
-		//return sourceStr.Substring(cursorOffset, 1);
+	string CorruptSource(string toCorrupt) {
+		// For right now, not much
+		return toCorrupt;
 	}
-
-	void UpdateDisplayText (string sourceStr) {
-		// Append next char from source
-		workhorse.Append(GetCursorStr(sourceStr));
-		// Check if textbox is full, whittle down if so
-		if (workhorse.Length > boxChars) {
-			if (debugInfo) {
-				Debug.Log("Textbox wrapped around, length " + workhorse.Length.ToString(), gameObject);
-			}
-			workhorse.Remove(0, removeChars);
-		}
-		// Update display
-		display.text = workhorse.ToString();
-	}
-	*/
 
 	public Color GetCurrentColor () {
 		return display.color;
