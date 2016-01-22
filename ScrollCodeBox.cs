@@ -128,7 +128,7 @@ public class ScrollCodeBox : MonoBehaviour {
 		// Only do anything if we've advanced since last time
 		if ((newPos > cursorPos) || (newLine > currentLine)) {
 			// Grab current source string
-			string source = GetSourceString();
+			//string source = GetSourceString();
 
 			// Just in the (absurdly improbable) case we're right at phase one, which should be out 
 			// of bounds on any source string -- in which case we'll advance the new cursor position
@@ -140,14 +140,12 @@ public class ScrollCodeBox : MonoBehaviour {
 
 			// Catch up to present line
 			while (currentLine < newLine) {
-				// Finish current line
-				tmpStr = String.Concat(source.Substring(cursorPos, cols - cursorPos), newlineChar);
-				// Advance line, which will also roll over cursorPos
-				source = NextLine(tmpStr);
+				// Finish current line and advance, which will also roll over cursorPos
+				AppendDisplayNewLine(GetSourceString(cursorPos, cols - cursorPos));
 			}
 
 			// Now we can finish the current line if necessary
-			AppendDisplay(source.Substring(cursorPos, newPos - cursorPos));
+			AppendDisplay(GetSourceString(cursorPos, newPos - cursorPos));
 			cursorPos = newPos;
 
 			return true;
@@ -161,21 +159,23 @@ public class ScrollCodeBox : MonoBehaviour {
 		displayLines[displayLine] += toAppend;
 	}
 
-	string NextLine (string next) {
+	void AppendDisplayNewLine (string toAppend) {
+		// Append to current line, plus newline
+		AppendDisplay(toAppend + newlineChar);
 		// Carriage return and new line, essentially
 		cursorPos = 0;
 		currentLine++;
 		// Advance display and scroll as required
-		NextDisplayLine(next);
+		NextDisplayLine();
 		// Advance source as required
-		return NextSourceString();
+		NextSourceString();
 	}
 
-	void NextDisplayLine (string toAppend) {
-		// Add string and advance
-		AppendDisplay(toAppend);
+	void NextDisplayLine () {
+		// Advance Line
 		displayLine++;
 
+		// Check for rollover and scroll
 		if (displayLine >= rows) {
 			// Scroll in the desired mode
 			if (scrollMode == ScrollMode.ByPage) {
@@ -197,9 +197,9 @@ public class ScrollCodeBox : MonoBehaviour {
 		}
 	}
 
-	string GetSourceString () {
+	string GetSourceString (int offset, int length) {
 		// This was more complicated, but I moved all that to CheckSourceString() and NextSourceString()
-		return sourceStr;
+		return sourceStr.Substring(offset, length);
 	}
 
 	string CheckSourceString () {
@@ -231,7 +231,7 @@ public class ScrollCodeBox : MonoBehaviour {
 		return toRet;
 	}
 
-	string NextSourceString () {
+	void NextSourceString () {
 		// Advance sourcePos before we check anything else
 		sourcePos += cols;
 		// Check length, get next string or advance position, check length again, round and round we go
@@ -246,10 +246,6 @@ public class ScrollCodeBox : MonoBehaviour {
 			}
 		}
 		sourceStr = CheckSourceString();
-
-		// Return with our ill-gotten gains
-		// (I suppose we could make this void and require another GetSourceString call, but yolo)
-		return sourceStr;
 	}
 
 	/*
