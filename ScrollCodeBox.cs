@@ -26,7 +26,7 @@ public class ScrollCodeBox : MonoBehaviour {
 	public int sourceLine = 0;		// Current line in source array
 
 	// String data
-	private StringBuilder workhorse;
+	private StringBuilder lineBuffer;
 	public string initialText;		// Public for debug
 	public string[] availableChars;	// Public for debug
 	public string[] displayLines;	// Lines for display
@@ -39,6 +39,8 @@ public class ScrollCodeBox : MonoBehaviour {
 	public bool debugInfo = false;
 	public ScrollMode scrollMode = ScrollMode.ByPage;
 	public int corruptionsPerPhase = 2;
+	public bool showCursor = true;
+	public string cursorStr = "_";
 
 	public string InitialText {
 		get { return initialText; }
@@ -49,6 +51,7 @@ public class ScrollCodeBox : MonoBehaviour {
 		// Stupid compiler won't let me put these in initialization...
 		rowlen = cols + 1;
 		int boxChars = rows * rowlen;
+		lineBuffer = new StringBuilder(rowlen);
 
 		// Grab components, obvs
 		display = GetComponent<TextMesh>();
@@ -129,6 +132,7 @@ public class ScrollCodeBox : MonoBehaviour {
 		if ((newPos > cursorPos) || (newLine > currentLine)) {
 			// Temp string
 			string tmpStr;
+			int availLen;
 
 			// Just in the (absurdly improbable) case we're right at phase one, which should be out 
 			// of bounds on any source string -- in which case we'll advance the new cursor position
@@ -156,12 +160,33 @@ public class ScrollCodeBox : MonoBehaviour {
 	}
 
 	void AppendDisplay (string toAppend) {
-		displayLines[displayLine] += toAppend;
+		if (showCursor) {
+			// Assumes there's always a cursor there if in use
+			lineBuffer.Remove((lineBuffer.Length - cursorStr.Length), cursorStr.Length);
+			lineBuffer.Append(toAppend);
+			lineBuffer.Append(cursorStr);
+		}
+		else {
+			lineBuffer.Append(toAppend);
+		}
+		// Now update display line
+		displayLines[displayLine] = lineBuffer.ToString();
+	}
+
+	void AppendDisplay (string toAppend, string newlineStr) {
+		if (showCursor) {
+			// Assumes there's always a cursor there
+			lineBuffer.Remove((lineBuffer.Length - cursorStr.Length), cursorStr.Length);
+		}
+		// Append text and newline
+		lineBuffer.Append(toAppend).Append(newlineStr);
+		// Now update display line
+		displayLines[displayLine] = lineBuffer.ToString();
 	}
 
 	void AppendDisplayWithNewline (string toAppend) {
 		// Append to current line, plus newline
-		AppendDisplay(toAppend + newlineChar);
+		AppendDisplay(toAppend, newlineChar);
 		// Advance display and scroll as required
 		NextDisplayLine();
 		// Advance source as required
@@ -191,14 +216,32 @@ public class ScrollCodeBox : MonoBehaviour {
 				Debug.LogError("Somehow NextDisplayLine() got broke trying to " + scrollMode, gameObject);
 			}
 		}
+		else {
+			// Still gotta clear the linebuffer
+			ClearLine();
+		}
 	}
 
-	void ClearDisplayLine(int lineNum) {
+	void ClearLine () {
+		// Clear line buffer
+		// Gotta use Remove() because Unity doesn't like Clear()
+		lineBuffer.Remove(0, lineBuffer.Length);
+
+		// Append cursor if used
+		if (showCursor) {
+			lineBuffer.Append(cursorStr);
+		}
+	}
+
+	void ClearDisplayLine (int lineNum) {
+		// Clear line buffer
+		ClearLine();
+		// Set new display line
 		displayLine = lineNum;
-		displayLines[displayLine] = "";
+		displayLines[displayLine] = lineBuffer.ToString();
 	}
 
-	void ClearDisplay() {
+	void ClearDisplay () {
 		for (int i = rows - 1; i > 0; i--) {
 			displayLines[i] = "";
 		}
