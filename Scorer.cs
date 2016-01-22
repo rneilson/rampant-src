@@ -17,6 +17,7 @@ public class Scorer : MonoBehaviour {
 	private BallMovement playerControl;
 	private CameraMovement cameraFollower;
 	private bool isPaused = true;
+	private bool isStarted = false;
 	private int totalSpawned;
 	private string instructionsForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nQuit: Q";
 	private string instructionsNoForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nBomb: space/right mouse button\nBomb: left/right trigger\nQuit: Q";
@@ -103,6 +104,12 @@ public class Scorer : MonoBehaviour {
 	}
 	public int PhaseIndex {
 		get { return phaseIndex; }
+	}
+	public bool IsPaused {
+		get { return isPaused; }
+	}
+	public bool IsStarted {
+		get { return isStarted; }
 	}
 
 	// Use this for initialization
@@ -438,6 +445,10 @@ public class Scorer : MonoBehaviour {
 		
 	void UnPauseGame () {
 		isPaused = false;
+		if (!isStarted) {
+			isStarted = true;
+			SendStartGame();
+		}
 		Time.timeScale = 1;
 		titleText.text = prevTitle;
 		subtitleText.text = prevSubtitle;
@@ -480,6 +491,19 @@ public class Scorer : MonoBehaviour {
 		foreach (GameObject shifter in arenaShifters) {
 			if (shifter) {
 				shifter.SendMessage("BeginShift", shiftIndex);
+			}
+		}
+	}
+
+	void SendStartGame () {
+		foreach (GameObject pulser in arenaPulsers) {
+			if (pulser) {
+				pulser.SendMessage("GameStarted");
+			}
+		}
+		foreach (GameObject shifter in arenaShifters) {
+			if (shifter) {
+				shifter.SendMessage("GameStarted");
 			}
 		}
 	}
