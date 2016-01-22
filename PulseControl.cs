@@ -87,28 +87,23 @@ public class PulseControl : MonoBehaviour {
 	}
 	public float CountdownTotal {
 		get {
-			if (currentState == PulseState.Starting) {
-				return this.PulseTime;
-			}
-			else if (currentState == PulseState.ToTarget) {
-				return this.PulseTime - counter;
-			}
-			else if (currentState == PulseState.AtTarget) {
-				return timeAtTarget + timeFromTarget + timeAfterTarget - counter;
-			}
-			else if (currentState == PulseState.FromTarget) {
-				return timeFromTarget + timeAfterTarget - counter;
-			}
-			else if (currentState == PulseState.AfterTarget) {
-				return timeAfterTarget - counter;
-			}
-			else if (currentState == PulseState.Stopped) {
-				return 0.0f;
-			}
-			else {
-				// We should, by all rights, never, *ever* be here
-				Debug.LogError("PulseControl in unknown state: " + currentState.ToString(), gameObject);
-				return this.PulseTime;
+			switch (currentState) {
+				case PulseState.Starting:
+					return this.PulseTime;
+				case PulseState.ToTarget:
+					return this.PulseTime - counter;
+				case PulseState.AtTarget:
+					return timeAtTarget + timeFromTarget + timeAfterTarget - counter;
+				case PulseState.FromTarget:
+					return timeFromTarget + timeAfterTarget - counter;
+				case PulseState.AfterTarget:
+					return timeAfterTarget - counter;
+				case PulseState.Stopped:
+					return 0.0f;
+				default:
+					// We should, by all rights, never, *ever* be here
+					Debug.LogError("PulseControl in unknown state: " + currentState.ToString(), gameObject);
+					return this.PulseTime;
 			}
 		}
 	}
@@ -238,7 +233,7 @@ public class PulseControl : MonoBehaviour {
 
 		// Initialize to stopped
 		currentState = PulseState.Stopped;
-		previousState = PulseState.AfterTarget;
+		previousState = PulseState.Stopped;
 
 		// If autostarting, this frame we'll switch from Starting to ToTarget, and only next frame have the
 		// possibility of stopping
@@ -351,8 +346,6 @@ public class PulseControl : MonoBehaviour {
 						else {
 							// Stop and set phase to 0, since we're done
 							StopPulse(0.0f);
-							// Advance loop counter
-							loops++;
 						}
 						// Set time, less any overshoot
 						counter = counter - timeFromTarget;
@@ -387,14 +380,15 @@ public class PulseControl : MonoBehaviour {
 	}
 
 	// Start pulse cycle
-	public bool StartNewPulse (bool resetLoops) {
+	bool StartNewPulse (bool resetLoops) {
 		// Only start if we're stopped
 		if (currentState == PulseState.Stopped) {
 			ChangeState(PulseState.Starting);
 			phase = 0.0f;
 			counter = 0.0f;
+			// If we're not resetting loops, it'll be advanced in stopphase()
 			if (resetLoops) {
-				loops = 0;
+				ResetLoops();
 			}
 			if (debugInfo) {
 				Debug.Log("Starting pulse, counter: " + counter.ToString() + ", phase: " 
@@ -418,7 +412,7 @@ public class PulseControl : MonoBehaviour {
 	}
 
 	// Quickie version, default to resetting loops
-	public bool StartNewPulse () {
+	bool StartNewPulse () {
 		return StartNewPulse(true);
 	}
 
@@ -479,6 +473,14 @@ public class PulseControl : MonoBehaviour {
 		}
 	}
 
+	// When you want to go back to the start, but don't actually want a new pulse
+	public void ForceRollover () {
+		ChangeState(PulseState.ToTarget);
+		ResetCounter();
+		phase = 0.0f;
+		loops++;
+	}
+
 	// Hold pulse cycle at target
 	void HoldPulseAt () {
 		// Switch currentState
@@ -496,15 +498,35 @@ public class PulseControl : MonoBehaviour {
 	}
 
 	// Stop pulse cycle at given phase
-	void StopPulse (float finalPhase) {
+	public void StopPulse (float finalPhase) {
 		// Switch currentState
 		ChangeState(PulseState.Stopped);
 		// Set phase to given value, since we're done
 		phase = finalPhase;
+		loops++;
+	}
+
+	// For lazy public consumption
+	public float StopPulse () {
+		if (returnToStart) {
+			StopPulse(0.0f);
+		}
+		else {
+			StopPulse(1.0f);
+		}
+		return phase;
+	}
+
+	// Stop and reset everything to initial
+	public void StopAndResetPulse() {
+		StopPulse(0.0f);
+		ResetCounter();
+		ResetLoops();
 	}
 
 	// Start new pulse, possibly interrupting
-	public void NewPulse (float newTimeTo, float newTimeAt, float newTimeFrom, bool newReturn, bool newLoop, PulseMode newMode) {
+	public void NewPulse (float newTimeTo, float newTimeAt, float newTimeFrom, float newTimeAfter,
+		bool newReturn, bool newLoop, bool resetLoops, PulseMode newMode) {
 		// Debug
 		if (debugInfo) {
 			if (this.IsStarted) {
@@ -517,22 +539,40 @@ public class PulseControl : MonoBehaviour {
 				+ ", counter: " + counter.ToString() + ", phase: " + phase.ToString(), 
 				gameObject);
 		}
-		// Stop current/previous pulse
-		StopPulse(0.0f);
+		if (this.IsStarted) {
+			// Stop current/previous pulse
+			StopPulse(0.0f);
+		}
 		// Set new values
 		timeToTarget = newTimeTo;
 		timeAtTarget = newTimeAt;
 		timeFromTarget = newTimeFrom;
+		timeAfterTarget = newTimeAfter;
 		returnToStart = newReturn;
 		looping = newLoop;
 		pulseMode = newMode;
 		// Start new pulse, and away we go
-		StartNewPulse();
+		StartNewPulse(resetLoops);
 	}
 
-	// Lazy version, keeps present values
+	// Lazy version, keeps present values -- essentially a reset
+	public void NewPulse (bool resetLoops) {
+		NewPulse(timeToTarget, timeAtTarget, timeFromTarget, timeAfterTarget, returnToStart, looping, resetLoops, pulseMode);
+	}
+
+	// Even lazier version, keeps present values and assumes loop counter reset -- essentially an active reset
 	public void NewPulse () {
-		NewPulse(timeToTarget, timeAtTarget, timeFromTarget, returnToStart, looping, pulseMode);
+		NewPulse(timeToTarget, timeAtTarget, timeFromTarget, timeAfterTarget, returnToStart, looping, true, pulseMode);
+	}
+
+	// For if you've stopped a pulse or something
+	public void ResetLoops () {
+		loops = 0;
+	}
+
+	// Same but for counter
+	public void ResetCounter () {
+		counter = 0;
 	}
 }
 
