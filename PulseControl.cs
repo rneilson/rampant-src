@@ -503,7 +503,7 @@ public class PulseControl : MonoBehaviour {
 		ChangeState(PulseState.Stopped);
 		// Set phase to given value, since we're done
 		phase = finalPhase;
-		loops++;
+		//loops++;
 	}
 
 	// For lazy public consumption
@@ -514,6 +514,12 @@ public class PulseControl : MonoBehaviour {
 		else {
 			StopPulse(1.0f);
 		}
+		return phase;
+	}
+
+	public float StopPulseCold () {
+		// Switch currentState
+		ChangeState(PulseState.Stopped);
 		return phase;
 	}
 

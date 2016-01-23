@@ -67,8 +67,8 @@ public class ScrollCode : MonoBehaviour {
 		colorPulsing = true;
 
 		// Start boxes scrolling with intro text
-		boxLeft.StartScrolling(initialText);
-		boxRight.StartScrolling(initialText);
+		boxLeft.StartScrolling(initialText, false);
+		boxRight.StartScrolling(initialText, false);
 	}
 	
 	// Update is called once per frame
@@ -122,7 +122,7 @@ public class ScrollCode : MonoBehaviour {
 	// Start boxes scrolling main text
 	public void GameStarted () {
 		// TODO: send sourcecode asset to boxes to scroll
-		boxLeft.StartScrolling(boxLeft.InitialText);
-		boxRight.StartScrolling(boxRight.InitialText);
+		boxLeft.StartScrolling(boxLeft.InitialText, true);
+		boxRight.StartScrolling(boxRight.InitialText, true);
 	}
 }

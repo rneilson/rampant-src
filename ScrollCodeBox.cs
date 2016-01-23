@@ -37,10 +37,11 @@ public class ScrollCodeBox : MonoBehaviour {
 
 	// Controls
 	public bool debugInfo = false;
-	public ScrollMode scrollMode = ScrollMode.ByPage;
-	public int corruptionsPerPhase = 2;
+	public bool loopSource = false;
 	public bool showCursor = true;
 	public string cursorStr = "_";
+	public ScrollMode scrollMode = ScrollMode.ByPage;
+	public int corruptionsPerPhase = 2;
 
 	public string InitialText {
 		get { return initialText; }
@@ -133,6 +134,7 @@ public class ScrollCodeBox : MonoBehaviour {
 			// Temp string
 			string tmpStr;
 			int availLen;
+			bool canContinue = true;
 
 			// Just in the (absurdly improbable) case we're right at phase one, which should be out 
 			// of bounds on any source string -- in which case we'll advance the new cursor position
@@ -145,13 +147,24 @@ public class ScrollCodeBox : MonoBehaviour {
 			// Catch up to present line
 			while (currentLine < newLine) {
 				// Finish current line and advance, which will also roll over cursorPos
-				AppendDisplayWithNewline(GetSourceString(cursorPos, cols - cursorPos));
+				canContinue = AppendDisplayWithNewline(GetSourceString(cursorPos, cols - cursorPos));
+			}
+
+			if (!canContinue) {
+				// Stop running
+				StopDisplay();
+				if (debugInfo) {
+					Debug.Log("Reached end of source, cursorPos: " + cursorPos.ToString() 
+						+ ", currentLine: " + currentLine.ToString() 
+						+ ", newPos: " + newPos.ToString() 
+						+ ", newLine: " + newLine.ToString(),
+						gameObject);
+				}
 			}
 
 			// Now we can finish the current line if necessary
 			AppendDisplay(GetSourceString(cursorPos, newPos - cursorPos));
 			cursorPos = newPos;
-
 			return true;
 		}
 		else {
@@ -184,13 +197,13 @@ public class ScrollCodeBox : MonoBehaviour {
 		displayLines[displayLine] = lineBuffer.ToString();
 	}
 
-	void AppendDisplayWithNewline (string toAppend) {
+	bool AppendDisplayWithNewline (string toAppend) {
 		// Append to current line, plus newline
 		AppendDisplay(toAppend, newlineChar);
 		// Advance display and scroll as required
 		NextDisplayLine();
-		// Advance source as required
-		LoadNextSourceString();
+		// Try to advance source
+		return LoadNextSourceString();
 	}
 
 	void NextDisplayLine () {
@@ -260,12 +273,30 @@ public class ScrollCodeBox : MonoBehaviour {
 
 	void StopDisplay () {
 		// Stop timer cycle
-		timer.StopPulse(timer.PhaseRaw);
+		timer.StopPulse();
+		if (debugInfo) {
+			Debug.Log("Display timer stopped, phase: " + timer.PhaseRaw.ToString() 
+				+ ", loops: " + timer.Loops.ToString(), gameObject);
+		}
+	}
+
+	int GetSourceLength () {
+		return sourceStr.LengthInTextElements;
 	}
 
 	string GetSourceString (int offset, int length) {
 		// This was more complicated, but I moved all that to NewSourceString() and LoadNextSourceString()
-		return sourceStr.SubstringByTextElements(offset, length);
+		if (offset >= sourceStr.LengthInTextElements) {
+			return "";
+		}
+		else if (length <= 0) {
+			return "";
+		}
+		else {
+			int maxLen = sourceStr.LengthInTextElements - offset;
+			int retLen = (length > maxLen) ? maxLen : length;
+			return sourceStr.SubstringByTextElements(offset, retLen);
+		}
 	}
 
 	StringInfo NewSourceString () {
@@ -297,9 +328,16 @@ public class ScrollCodeBox : MonoBehaviour {
 		return CorruptSource(toRet);
 	}
 
-	void LoadNextSourceString () {
+	bool LoadNextSourceString () {
 		// Call at initialization if you're autostarting
 		// Check length, get next string or advance position, check length again, round and round we go
+
+		// Bounds check, bail if fail
+		if (sourceLine >= sourceLines.Length) {
+			return false;
+		}
+
+		// How much do we have left on the current line?
 		int curLength = sourceLines[sourceLine].Length - sourcePos;
 		if (curLength <= 0) {
 			// Nothing more on this source line, on to the next
@@ -307,12 +345,22 @@ public class ScrollCodeBox : MonoBehaviour {
 			sourceLine++;
 			// Source rollover check
 			if (sourceLine >= sourceLines.Length) {
-				sourceLine = 0;
+				if (loopSource) {
+					// Just go back to the beginning
+					sourceLine = 0;
+				}
+				else {
+					// Set empty source string
+					// (essentially a newline before EOF)
+					sourceStr = new StringInfo("");
+					return false;
+				}
 			}
 		}
 		sourceStr = NewSourceString();
 		// Now advance for next run
 		sourcePos += cols;
+		return true;
 	}
 
 	StringInfo CorruptSource(string toCorrupt) {
@@ -374,10 +422,11 @@ public class ScrollCodeBox : MonoBehaviour {
 		}
 	}
 
-	public void StartScrolling (string newSource) {
+	public void StartScrolling (string newSource, bool loopNewSource) {
 		// Clear and reset display
 		ResetDisplay();
 		if (newSource != "") {
+			loopSource = loopNewSource;
 			// Load up new source
 			ReplaceSource(newSource);
 			LoadNextSourceString();
