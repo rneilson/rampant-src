@@ -15,7 +15,7 @@ public class ScrollCodeBox : MonoBehaviour {
 	// Textbox sizes
 	private int cols = 24;	// Not including newline
 	private int rowlen;		// Including newline
-	private int rows = 24;
+	private int rows = 32;
 
 	// Cursor state
 	// Public for debug
@@ -399,6 +399,10 @@ public class ScrollCodeBox : MonoBehaviour {
 			Dictionary<int, int> indicies = new Dictionary<int, int>();
 			int sourceIndex;
 			int availLen = availableChars.Length;
+			// Limit passes to, at most, the number of chars to corrupt
+			if (passes > sourceLen) {
+				passes = sourceLen;
+			}
 			while (indicies.Count < passes) {
 				sourceIndex = UnityEngine.Random.Range(0, sourceLen);
 				if (!indicies.ContainsKey(sourceIndex)) {
