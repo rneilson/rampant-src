@@ -115,19 +115,19 @@ public class ScrollCodeBox : MonoBehaviour {
 	// Use FixedUpdate instead for this, see how well it works
 	void FixedUpdate () {
 		//UpdateDisplayText(initialText);
-		UpdateDisplay(timer.Loops, timer.Phase);
+		UpdateDisplay();
 	}
 
-	void UpdateDisplay (int curLoops, float curPhase) {
-		if (NextDisplaySegment(curLoops, curPhase)) {
+	void UpdateDisplay () {
+		if (NextDisplaySegment()) {
 			display.text = String.Concat(displayLines);
 		}
 	}
 
-	bool NextDisplaySegment (int loops, float phase) {
+	bool NextDisplaySegment () {
 		/* I /was/ going to do this all functional-style, but there are /way/ too many moving parts */
-		int newPos = (phase > 0.0f) ? Mathf.FloorToInt(phase * (float) rowlen) : 0;
-		int newLine = loops;
+		int newPos = (timer.Phase > 0.0f) ? Mathf.FloorToInt(timer.Phase * (float) rowlen) : 0;
+		int newLine = timer.Loops;
 
 		// Only do anything if we've advanced since last time
 		if ((newPos > cursorPos) || (newLine > currentLine)) {
@@ -142,6 +142,24 @@ public class ScrollCodeBox : MonoBehaviour {
 			if (newPos >= rowlen) {
 				newPos = 0;
 				newLine++;
+			}
+
+			// If the line is too short, do a forced rollever on the timer and recalc pos/line
+			if (newPos > GetSourceLength()) {
+				if (debugInfo) {
+					Debug.Log("Line too short, newPos: " + newPos.ToString() 
+						+ ", newLine: " + newLine.ToString() 
+						+ ", source length: " + GetSourceLength().ToString(), gameObject);
+				}
+				timer.StopPulse();
+				timer.ForceRollover();
+				newPos = (timer.Phase > 0.0f) ? Mathf.FloorToInt(timer.Phase * (float) rowlen) : 0;
+				newLine = timer.Loops;
+				if (debugInfo) {
+					Debug.Log("After restart, newPos: " + newPos.ToString() 
+						+ ", newLine: " + newLine.ToString() 
+						+ ", source length: " + GetSourceLength().ToString(), gameObject);
+				}
 			}
 
 			// Catch up to present line
@@ -307,8 +325,8 @@ public class ScrollCodeBox : MonoBehaviour {
 		int curLength = sourceLines[sourceLine].Length - sourcePos;
 
 		// Check length of current line and return appropriate amount
-		if (curLength == cols) {
-			// Just right, ship it
+		if (curLength <= cols) {
+			// Fits, ship it
 			// Substring in case we're not at string start
 			toRet = sourceLines[sourceLine].Substring(sourcePos);
 		}
@@ -316,10 +334,12 @@ public class ScrollCodeBox : MonoBehaviour {
 			// Too long, truncate
 			toRet = sourceLines[sourceLine].Substring(sourcePos, cols);
 		}
+		/*
 		else if (curLength < cols) {
 			// Too short, pad it like hell
 			toRet = sourceLines[sourceLine].Substring(sourcePos, curLength) + new String(paddingChar, cols - curLength);
 		}
+		*/
 		else {
 			Debug.LogError("NewSourceString broke somehow", gameObject);
 			return new StringInfo("");
