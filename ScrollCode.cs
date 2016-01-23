@@ -33,7 +33,7 @@ public class ScrollCode : MonoBehaviour {
 
        _a_game_by
     _raymond_neilson";
-    private TextAsset sourceText;
+    public TextAsset sourceText;
 
 	// Use this for initialization
 	void Start () {
@@ -71,7 +71,7 @@ public class ScrollCode : MonoBehaviour {
 		boxRight.StartScrolling(initialText, false);
 
 		// Load sourcecode text asset
-		sourceText = Resources.Load("sourcecode") as TextAsset;
+		//sourceText = Resources.Load("sourcecode") as TextAsset;
 	}
 	
 	// Update is called once per frame
