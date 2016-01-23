@@ -33,7 +33,7 @@ public class ScrollCodeBox : MonoBehaviour {
 	public string[] sourceLines;	// Lines from source text
 	private StringInfo sourceStr;
 	private string newlineChar = "\n";
-	private char paddingChar = ' ';
+	//private char paddingChar = ' ';
 
 	// Controls
 	public bool debugInfo = false;
@@ -131,9 +131,6 @@ public class ScrollCodeBox : MonoBehaviour {
 
 		// Only do anything if we've advanced since last time
 		if ((newPos > cursorPos) || (newLine > currentLine)) {
-			// Temp string
-			string tmpStr;
-			int availLen;
 			bool canContinue = true;
 
 			// Just in the (absurdly improbable) case we're right at phase one, which should be out 
