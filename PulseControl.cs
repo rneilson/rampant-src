@@ -444,6 +444,7 @@ public class PulseControl : MonoBehaviour {
 				tmpCounter = counter;
 				counter = 0.0f;
 				ChangeState(PulseState.ToTarget);
+				loops++;
 				return ForceUpdate(tmpCounter);
 			}
 			else {
