@@ -33,7 +33,7 @@ public class ScrollCode : MonoBehaviour {
 
        _a_game_by
     _raymond_neilson";
-    public TextAsset sourceText;
+    private TextAsset sourceText;
 
 	// Use this for initialization
 	void Start () {
@@ -46,23 +46,20 @@ public class ScrollCode : MonoBehaviour {
 		// Get textboxes
 		//boxLeft = GameObject.Find("Scroll Text Left").GetComponent<ScrollCodeBox>();
 		//boxRight = GameObject.Find("Scroll Text Right").GetComponent<ScrollCodeBox>();
-		GameObject tmpObj;
-		tmpObj = GameObject.Find("Scroll Code Left");
-		if (tmpObj) {boxLeft = tmpObj.GetComponent<ScrollCodeBox>();}
-		tmpObj = GameObject.Find("Scroll Code Right");
-		if (tmpObj) {boxRight = tmpObj.GetComponent<ScrollCodeBox>();}
+		boxLeft = GameObject.Find("Scroll Code Left").GetComponent<ScrollCodeBox>();
+		boxRight = GameObject.Find("Scroll Code Right").GetComponent<ScrollCodeBox>();
 
 		// Get colors
-		if (boxLeft) {colorStartLeft = boxLeft.GetCurrentColor();}
-		if (boxRight) {colorStartRight = boxRight.GetCurrentColor();}
+		colorStartLeft = boxLeft.GetCurrentColor();
+		colorStartRight = boxRight.GetCurrentColor();
 		colorTargetLeft = initialTarget * blendFraction;
 		colorTargetRight = initialTarget * blendFraction;
 		if (blendWithStart) {
-			if (boxLeft) {colorTargetLeft = colorTargetLeft * colorStartLeft;}
-			if (boxRight) {colorTargetRight = colorTargetRight * colorStartRight;}
+			colorTargetLeft = colorTargetLeft * colorStartLeft;
+			colorTargetRight = colorTargetRight * colorStartRight;
 		}
-		if (boxLeft) {colorFinalLeft = colorStartLeft;}
-		if (boxRight) {colorFinalRight = colorStartRight;}
+		colorFinalLeft = colorStartLeft;
+		colorFinalRight = colorStartRight;
 
 		// Get timer, start counter
 		colorTimer = GetComponent<PulseControl>();
@@ -70,11 +67,11 @@ public class ScrollCode : MonoBehaviour {
 		colorPulsing = true;
 
 		// Start boxes scrolling with intro text
-		if (boxLeft) {boxLeft.StartScrolling(initialText, false);}
-		if (boxRight) {boxRight.StartScrolling(initialText, false);}
+		boxLeft.StartScrolling(initialText, false);
+		boxRight.StartScrolling(initialText, false);
 
 		// Load sourcecode text asset
-		//sourceText = Resources.Load("sourcecode") as TextAsset;
+		sourceText = Resources.Load("sourcecode") as TextAsset;
 	}
 	
 	// Update is called once per frame
@@ -83,27 +80,27 @@ public class ScrollCode : MonoBehaviour {
 			// Update color if timer running
 			if (colorTimer.IsStarted) {
 				if (colorTimer.State == PulseState.ToTarget) {
-					if (boxLeft) {boxLeft.SetColorTo(Color.Lerp(colorStartLeft, colorTargetLeft, colorTimer.Phase));}
-					if (boxRight) {boxRight.SetColorTo(Color.Lerp(colorStartRight, colorTargetRight, colorTimer.Phase));}
+					boxLeft.SetColorTo(Color.Lerp(colorStartLeft, colorTargetLeft, colorTimer.Phase));
+					boxRight.SetColorTo(Color.Lerp(colorStartRight, colorTargetRight, colorTimer.Phase));
 				}
 				else if (colorTimer.State == PulseState.AtTarget) {
-					if (boxLeft) {boxLeft.SetColorTo(colorTargetLeft);}
-					if (boxRight) {boxRight.SetColorTo(colorTargetRight);}
+					boxLeft.SetColorTo(colorTargetLeft);
+					boxRight.SetColorTo(colorTargetRight);
 				}
 				else if (colorTimer.State == PulseState.FromTarget) {
-					if (boxLeft) {boxLeft.SetColorTo(Color.Lerp(colorFinalLeft, colorTargetLeft, colorTimer.Phase));}
-					if (boxRight) {boxRight.SetColorTo(Color.Lerp(colorFinalRight, colorTargetRight, colorTimer.Phase));}
+					boxLeft.SetColorTo(Color.Lerp(colorFinalLeft, colorTargetLeft, colorTimer.Phase));
+					boxRight.SetColorTo(Color.Lerp(colorFinalRight, colorTargetRight, colorTimer.Phase));
 				}
 			}
 			else {
 				colorPulsing = false;
 				if (colorTimer.ReturnToStart) {
-					if (boxLeft) {boxLeft.SetColorTo(colorFinalLeft);}
-					if (boxRight) {boxRight.SetColorTo(colorFinalRight);}
+					boxLeft.SetColorTo(colorFinalLeft);
+					boxRight.SetColorTo(colorFinalRight);
 				}
 				else {
-					if (boxLeft) {boxLeft.SetColorTo(colorTargetLeft);}
-					if (boxRight) {boxRight.SetColorTo(colorTargetRight);}
+					boxLeft.SetColorTo(colorTargetLeft);
+					boxRight.SetColorTo(colorTargetRight);
 				}
 			}
 		}
@@ -111,17 +108,16 @@ public class ScrollCode : MonoBehaviour {
 
 	// Pulse new color
 	public void NewPulseMsg (Color toColor) {
-		if (boxLeft) {colorStartLeft = boxLeft.GetCurrentColor();}
-		if (boxRight) {colorStartRight = boxRight.GetCurrentColor();}
+		colorStartLeft = boxLeft.GetCurrentColor();
+		colorStartRight = boxRight.GetCurrentColor();
 		if (blendWithStart) {
-			if (boxLeft) {colorTargetLeft = toColor * colorFinalLeft;}
-			if (boxRight) {colorTargetRight = toColor * colorFinalRight;}
+			colorTargetLeft = toColor * colorFinalLeft;
+			colorTargetRight = toColor * colorFinalRight;
 		}
 		else {
-			if (boxLeft) {colorTargetLeft = toColor;}
-			if (boxRight) {colorTargetRight = toColor;}
+			colorTargetLeft = toColor;
+			colorTargetRight = toColor;
 		}
-		colorTimer.StopPulse();
 		colorTimer.NewPulse();
 		colorPulsing = true;
 	}
@@ -129,7 +125,7 @@ public class ScrollCode : MonoBehaviour {
 	// Start boxes scrolling main text
 	public void GameStarted () {
 		// TODO: send sourcecode asset to boxes to scroll
-		if (boxLeft) {boxLeft.StartScrolling(sourceText.text, true);}
-		if (boxRight) {boxRight.StartScrolling(sourceText.text, true);}
+		boxLeft.StartScrolling(sourceText.text, true);
+		boxRight.StartScrolling(sourceText.text, true);
 	}
 }
