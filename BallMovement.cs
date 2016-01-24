@@ -135,8 +135,7 @@ public class BallMovement : MonoBehaviour {
 		float dzr = Input.GetAxis("RightVertical");
 
 		// If right stick moved, shoot in that direction
-		if(dxr != 0 || dzr != 0)
-		{
+		if(dxr != 0 || dzr != 0) {
 			// Hide mouse cursor
 			fireCursorControl.SendMessage("HideCursor");
 
