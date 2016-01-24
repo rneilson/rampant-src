@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class RedCubeGroundControl : MonoBehaviour {
 
@@ -9,15 +10,12 @@ public class RedCubeGroundControl : MonoBehaviour {
 	private Vector3 currPos;
 	private Vector3 prevVel;
 	private Vector3 currVel;
-	//private Vector3 prevAccel;
 	private Vector3 currAccel;
 	// TODO: store averages as doubles
 	private float deltaTime;
 	private float avgDeltaTime;
-	//public Vector3 avgTurn;		// Public for debug
-	//public Vector3 lastTurn;	// Public for debug
-	public float avgSpeed;		// Public for debug
-	public Vector3 avgAccel;		// Public for debug
+	private float avgSpeed;
+	private Vector3 avgAccel;
 	private float maxSpeed;
 	private float maxAccel;
 	// TODO: modify weights at runtime to fine-tune prediction
@@ -30,10 +28,13 @@ public class RedCubeGroundControl : MonoBehaviour {
 	public bool debugInfo = false;
 
 	private Quaternion turnPrediction;
-	public Vector3[] posPredictions;	// Public for debug
-	public Vector3[] prevAccelVectors;	// Public for debug
+	private Vector3[] posPredictions;
+	private Vector3[] prevAccelVectors;
 
-	public float maxInterSpeed = 1.0f;	// Public for debug
+	private float maxInterSpeed = 1.0f;
+
+	// Enemy tracking/coordination
+	private EnemyList enemyList;
 
 	public bool DebugInfo {
 		get { return debugInfo; }
@@ -267,4 +268,43 @@ public class RedCubeGroundControl : MonoBehaviour {
 public enum PredictionMode : byte {
 	Linear = 0,
 	Triangular
+}
+
+// Might as well be its own class
+public class EnemyList {
+	// Carried across all instances
+	private static int enemyTypeIndex;						// Starting type number
+	private static List<EnemyType> enemyTypes;				// Master list
+	private static Dictionary<int, string> enemyTypeNames;	// Numbers->names
+	private static Dictionary<string, int> enemyTypeNums;	// Names->numbers
+
+	// Per instance (several reasons to use them, not all the same)
+
+	// Static constructor
+	static EnemyList () {
+		enemyTypeIndex = 0;
+		enemyTypes = new List<EnemyType>();
+		enemyTypeNames = new Dictionary<int, string>();
+		enemyTypeNums = new Dictionary<string, int>();
+	}
+}
+
+public struct EnemyType {
+	public int typeNum;
+	public string typeName;
+
+	public EnemyType (int typeNum, string typeName) {
+		this.typeNum = typeNum;
+		this.typeName = typeName;
+	}
+}
+
+public struct EnemyInst {
+	public int typeNum;
+	public GameObject gameObj;
+
+	public EnemyInst (int typeNum, GameObject gameObj) {
+		this.typeNum = typeNum;
+		this.gameObj = gameObj;
+	}
 }
