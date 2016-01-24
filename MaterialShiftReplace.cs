@@ -155,5 +155,10 @@ public class MaterialShiftReplace : MonoBehaviour {
 			rendControl.material.SetColor(emissionId, Color.Lerp(emissionMid, emissionTarget, phase));
 		}
 	}
+
+	// Placeholder
+	public void GameStarted () {
+
+	}
 }
 

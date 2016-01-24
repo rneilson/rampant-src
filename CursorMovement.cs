@@ -36,8 +36,7 @@ public class CursorMovement : MonoBehaviour {
 		zmove = Input.GetAxis("Mouse Y");
 
 		// If mouse moved, unhide cursor and move it around
-		if (xmove != 0.0f || zmove != 0.0f)
-		{
+		if (xmove != 0.0f || zmove != 0.0f) {
 			// Unhide cursor
 			UnhideCursor();
 

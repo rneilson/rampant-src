@@ -154,5 +154,10 @@ public class MaterialShift : MonoBehaviour {
 		// Lerp materials
 		rendControl.material.Lerp(materialBase, materialTarget, phase);
 	}
+
+	// Placeholder
+	public void GameStarted () {
+
+	}
 }
 

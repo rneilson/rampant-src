@@ -17,6 +17,7 @@ public class Scorer : MonoBehaviour {
 	private BallMovement playerControl;
 	private CameraMovement cameraFollower;
 	private bool isPaused = true;
+	private bool isStarted = false;
 	private int totalSpawned;
 	private string instructionsForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nQuit: Q";
 	private string instructionsNoForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nBomb: space/right mouse button\nBomb: left/right trigger\nQuit: Q";
@@ -70,7 +71,7 @@ public class Scorer : MonoBehaviour {
 	// Plane (etc) for color pulses and material shifts
 	public Color playerPulseColor = Color.white * 0.4f;
 	private Color currentPulseColor;
-	private List<MaterialPulse> arenaPulsers = new List<MaterialPulse>();
+	private List<GameObject> arenaPulsers = new List<GameObject>();
 	private List<GameObject> arenaShifters = new List<GameObject>();
 
 	public bool Respawn {
@@ -98,11 +99,17 @@ public class Scorer : MonoBehaviour {
 	public float PlayerBreakRadius {
 		get { return playerBreakRadius; }
 	}
-	public float PhaseIndex {
-		get { return phaseIndex; }
-	}
 	public float MaxDisplacement {
 		get { return maxDisplacement; }
+	}
+	public int PhaseIndex {
+		get { return phaseIndex; }
+	}
+	public bool IsPaused {
+		get { return isPaused; }
+	}
+	public bool IsStarted {
+		get { return isStarted; }
 	}
 
 	// Use this for initialization
@@ -151,12 +158,12 @@ public class Scorer : MonoBehaviour {
 		else {
 			instructions = instructionsNoForceBomb;
 		}
-		titleText.text = "A Plain Shooter";
+		titleText.text = "_rampant";
 		subtitleText.text = "Press start button/tab to begin\n" + instructions;
 
 		// Get pulsers
 		foreach (GameObject pulser in GameObject.FindGameObjectsWithTag("ArenaPulser")) {
-			arenaPulsers.Add(pulser.GetComponent<MaterialPulse>());
+			arenaPulsers.Add(pulser);
 		}
 		currentPulseColor = playerPulseColor;
 		// Get shifters
@@ -195,7 +202,7 @@ public class Scorer : MonoBehaviour {
 		
 		if (!isPaused) {
 			if (respawn == true) {
-				respawnCountdown -= Time.fixedDeltaTime;
+				respawnCountdown -= Time.deltaTime;
 				//cameraFollower.SendMessage("RespawnCountdown", respawnCountdown);
 				cameraFollower.RespawnCountdown(respawnCountdown);
 			}
@@ -438,6 +445,10 @@ public class Scorer : MonoBehaviour {
 		
 	void UnPauseGame () {
 		isPaused = false;
+		if (!isStarted) {
+			isStarted = true;
+			SendStartGame();
+		}
 		Time.timeScale = 1;
 		titleText.text = prevTitle;
 		subtitleText.text = prevSubtitle;
@@ -465,9 +476,9 @@ public class Scorer : MonoBehaviour {
 
 	public void FlashGrid (Color gridColor) {
 		// Update each flasher with new color (same times, though)
-		foreach (MaterialPulse pulser in arenaPulsers) {
+		foreach (GameObject pulser in arenaPulsers) {
 			if (pulser) {
-				pulser.NewPulse(gridColor);
+				pulser.SendMessage("NewPulseMsg", gridColor);
 			}
 		}
 	}
@@ -480,6 +491,19 @@ public class Scorer : MonoBehaviour {
 		foreach (GameObject shifter in arenaShifters) {
 			if (shifter) {
 				shifter.SendMessage("BeginShift", shiftIndex);
+			}
+		}
+	}
+
+	void SendStartGame () {
+		foreach (GameObject pulser in arenaPulsers) {
+			if (pulser) {
+				pulser.SendMessage("GameStarted");
+			}
+		}
+		foreach (GameObject shifter in arenaShifters) {
+			if (shifter) {
+				shifter.SendMessage("GameStarted");
 			}
 		}
 	}

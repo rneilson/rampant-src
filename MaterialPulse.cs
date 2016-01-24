@@ -12,6 +12,8 @@ public class MaterialPulse : MonoBehaviour {
 	public bool looping = false;
 	public bool debugInfo = false;
 	public PulseMode pulseMode = PulseMode.Sine;
+	public Color blendColor = Color.white;
+	public bool blendIncoming = true;
 
 	private Material matControl;
 	private int emissionId;
@@ -181,7 +183,7 @@ public class MaterialPulse : MonoBehaviour {
 			matControl.SetColor(emissionId, Color.Lerp(baseColor, targetColor, phase));
 		}
 		else if (pulseMode == PulseMode.Sine) {
-			matControl.SetColor(emissionId, Color.Lerp(baseColor, targetColor, Mathf.Sin(phase)));
+			matControl.SetColor(emissionId, Color.Lerp(baseColor, targetColor, Mathf.Sin(phase * halfPi)));
 		}
 	}
 
@@ -193,7 +195,7 @@ public class MaterialPulse : MonoBehaviour {
 			phase = 0.0f;
 			counter = 0.0f;
 			if (debugInfo) {
-				Debug.Log("Staring pulse, counter: " + counter.ToString() + ", phase: " 
+				Debug.Log("Starting pulse, counter: " + counter.ToString() + ", phase: " 
 					+ phase.ToString(), gameObject);
 				Debug.Log("Initial color: " + emissionInitial.ToString() 
 					+ ", Target color: " + emissionTarget.ToString()
@@ -253,6 +255,12 @@ public class MaterialPulse : MonoBehaviour {
 		NewPulse(targetColor, 1.0f, timeInitialTarget, emissionFinal, 1.0f, timeTargetFinal, looping);
 	}
 
+	// Wrapper function, for use with SendMessage(), because apparently it doesn't do overloaded methods
+	public void NewPulseMsg (Color targetColor) {
+		Color newTarget = (blendIncoming) ? blendColor * targetColor : targetColor;
+		NewPulse(newTarget, 1.0f, timeInitialTarget, emissionFinal, 1.0f, timeTargetFinal, looping);
+	}
+
 	// Starts a new pulse with no return/final value
 	public void NewPulseNoReturn (Color targetColor, float targetFraction, float timeToTarget) {
 		// Set initial to current color
@@ -279,4 +287,8 @@ public class MaterialPulse : MonoBehaviour {
 		NewPulseNoReturn(targetColor, 1.0f, timeInitialTarget);
 	}
 
+	// Placeholder
+	public void GameStarted () {
+
+	}
 }

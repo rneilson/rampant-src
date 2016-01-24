@@ -27,6 +27,7 @@ public class RedCubeBomb : MonoBehaviour {
 	public float bombPushRadius = 2.5f;
 	public float bombTriggerRadius = 0.75f;
 	public GameObject bombEffect;
+	public bool enableBombPush = false;
 
 	// Use this for initialization
 	void Start () {
@@ -106,6 +107,7 @@ public class RedCubeBomb : MonoBehaviour {
 		// Spawn effect
 		// At player position because it looks better
 		daBomb = Instantiate(bombEffect, pos, Quaternion.identity) as GameObject;
+		Destroy(daBomb, 1.0f);
 		// Turn down flash if dying quietly
 		if (!loud) {
 			daBomb.GetComponent<LightPulse>().ChangeTargetRelative(-1.5f);
@@ -127,19 +129,17 @@ public class RedCubeBomb : MonoBehaviour {
 				things[i].SendMessage("Die", false);
 			}
 			// Only push if dying loudly (shot or self-triggering)
-			else if ((loud) && (thingDist <= (bombPushRadius + thingSize))) {
+			else if ((enableBombPush) && (loud) && (thingDist <= (bombPushRadius + thingSize))) {
 				things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 			}
 		}
 		// Now check player distance and kill/push (only if loud)
-		// Temp debug only
-		//Debug.Log("Blowing up! Loud: " + loud.ToString() + ", target: " + target.ToString(), gameObject);
 		if ((loud) && (target)) {
 			thingDist = (target.transform.position - transform.position).magnitude;
 			if ((thingDist <= (bombKillRadius + thingSize))) {
 				target.SendMessage("Die", false);
 			}
-			else if (thingDist <= (bombPushRadius + thingSize)) {
+			else if ((enableBombPush) && (thingDist <= (bombPushRadius + thingSize))) {
 				target.GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 			}
 		}
