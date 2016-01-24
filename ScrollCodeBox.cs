@@ -99,7 +99,7 @@ public class ScrollCodeBox : MonoBehaviour {
 		// Set up source, split on newline
 		// We'll change this to a text asset later
 		// Or maybe have ScrollCode send us at intervals
-		int sourceLen = LoadNewSource(initialText);
+		int sourceLen = LoadNewSource(ParseSource(initialText));
 		if (debugInfo) {
 			Debug.Log("Loaded new source, " + sourceLen.ToString() + " lines", gameObject);
 		}
@@ -423,39 +423,43 @@ public class ScrollCodeBox : MonoBehaviour {
 	}
 
 	string[] ParseSource (string toParse) {
-		string[] splitter = {"\r\n", "\n"};
+		char[] splitter = {'\r', '\n'};
 		return toParse.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
 	}
 
-	int LoadNewSource (string toLoad) {
+	int LoadNewSource (string[] toLoad) {
 		sourcePos = 0;
 		sourceLine = 0;
-		sourceLines = ParseSource(toLoad);
+		//sourceLines = ParseSource(toLoad);
+		sourceLines = toLoad;
 		return sourceLines.Length;
 	}
 
-	public void ReplaceSource (string newSource) {
+	public void ReplaceSource (string[] newSource, int offset=0) {
 		// Doesn't call LoadNextSourceString() on purpose, because that way we can
 		// replace the source while running
 		int sourceLen = LoadNewSource(newSource);
+		if (offset < sourceLen) {
+			sourceLine = offset;
+		}
 		if (debugInfo) {
 			Debug.Log("Replaced source, " + sourceLen.ToString() + " lines", gameObject);
 		}
 	}
 
-	public void StartScrolling (string newSource, bool loopNewSource) {
+	public void StartScrolling (string[] newSource, bool loopNewSource, int offset=0) {
 		// Clear and reset display
 		ResetDisplay();
-		if (newSource != "") {
+		if (newSource.Length > 0) {
 			loopSource = loopNewSource;
 			// Load up new source
-			ReplaceSource(newSource);
+			ReplaceSource(newSource, offset);
 			LoadNextSourceString();
 			// Fire away
 			timer.NewPulse();
 		}
 		else {
-			Debug.LogWarning("StartScrolling() called with empty string!", gameObject);
+			Debug.LogWarning("StartScrolling() called with empty string array!", gameObject);
 		}
 	}
 

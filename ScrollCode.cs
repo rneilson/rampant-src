@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class ScrollCode : MonoBehaviour {
 
@@ -25,6 +26,8 @@ public class ScrollCode : MonoBehaviour {
 	private Color colorFinalRight;
 	private bool colorPulsing = false;
 
+	public bool debugInfo = false;
+
 	// Text things
 	private string initialText = 
 @"------------------------
@@ -33,7 +36,11 @@ public class ScrollCode : MonoBehaviour {
 
        _a_game_by
     _raymond_neilson";
+    private string[] initialLines;
     public TextAsset sourceText;
+    public TextAsset sourceOffsets;
+    private string[] sourceLines;
+    private int[] sourceLineNums;
 
 	// Use this for initialization
 	void Start () {
@@ -66,9 +73,23 @@ public class ScrollCode : MonoBehaviour {
 		colorTimer.NewPulse();
 		colorPulsing = true;
 
+		// Setup text
+		string[] splitLong = {"\r\n", "\n"};
+		char[] splitShort = {'\n'};
+		initialLines = ParseSource(initialText, splitLong);
+		sourceLines = ParseSource(sourceText.text, splitShort);
+		sourceLineNums = ParseOffsets(sourceOffsets.text);
+
+		if (debugInfo) {
+			Debug.LogFormat("Loaded source, {0} files, {1} lines", sourceLineNums.Length, sourceLines.Length);
+			for (int i=0; i < sourceLineNums.Length; i++) {
+				Debug.LogFormat("{0}] {1}", sourceLineNums[i], sourceLines[sourceLineNums[i]]);
+			}
+		}
+
 		// Start boxes scrolling with intro text
-		boxLeft.StartScrolling(initialText, false);
-		boxRight.StartScrolling(initialText, false);
+		boxLeft.StartScrolling(initialLines, false, 0);
+		boxRight.StartScrolling(initialLines, false, 0);
 
 		// Load sourcecode text asset
 		//sourceText = Resources.Load("sourcecode") as TextAsset;
@@ -124,8 +145,40 @@ public class ScrollCode : MonoBehaviour {
 
 	// Start boxes scrolling main text
 	public void GameStarted () {
-		// TODO: send sourcecode asset to boxes to scroll
-		boxLeft.StartScrolling(sourceText.text, true);
-		boxRight.StartScrolling(sourceText.text, true);
+		// Start each side at a different offset
+		int leftOffset = UnityEngine.Random.Range(0, sourceLineNums.Length);
+		int rightOffset = leftOffset;
+		while (rightOffset == leftOffset) {
+			rightOffset = UnityEngine.Random.Range(0, sourceLineNums.Length);
+		}
+		// Okay, now start
+		boxLeft.StartScrolling(sourceLines, true, sourceLineNums[leftOffset]);
+		boxRight.StartScrolling(sourceLines, true, sourceLineNums[rightOffset]);
 	}
+
+	string[] ParseSource (string toParse, char[] splitter) {
+		return toParse.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
+	}
+
+	string[] ParseSource (string toParse, string[] splitter) {
+		return toParse.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
+	}
+
+	int[] ParseOffsets (string toParse) {
+		char[] splitShort = {'\n'};
+
+		// Grab text representations
+		string[] tmpStrs = toParse.Split(splitShort, StringSplitOptions.RemoveEmptyEntries);
+
+		// Start array
+		int[] tmpInts = new int[tmpStrs.Length];
+
+		// Loop and convert
+		for (int i=0; i < tmpInts.Length; i++) {
+			tmpInts[i] = Int32.Parse(tmpStrs[i]);
+		}
+
+		return tmpInts;
+	}
+
 }
