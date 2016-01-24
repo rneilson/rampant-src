@@ -12,6 +12,8 @@ public class MaterialPulse : MonoBehaviour {
 	public bool looping = false;
 	public bool debugInfo = false;
 	public PulseMode pulseMode = PulseMode.Sine;
+	public Color blendColor = Color.white;
+	public bool blendIncoming = true;
 
 	private Material matControl;
 	private int emissionId;
@@ -255,7 +257,8 @@ public class MaterialPulse : MonoBehaviour {
 
 	// Wrapper function, for use with SendMessage(), because apparently it doesn't do overloaded methods
 	public void NewPulseMsg (Color targetColor) {
-		NewPulse(targetColor, 1.0f, timeInitialTarget, emissionFinal, 1.0f, timeTargetFinal, looping);
+		Color newTarget = (blendIncoming) ? blendColor * targetColor : targetColor;
+		NewPulse(newTarget, 1.0f, timeInitialTarget, emissionFinal, 1.0f, timeTargetFinal, looping);
 	}
 
 	// Starts a new pulse with no return/final value
