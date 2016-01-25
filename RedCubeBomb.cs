@@ -20,7 +20,12 @@ public class RedCubeBomb : MonoBehaviour {
 	//private AudioSource myAudioSource;
 	private Rigidbody myRigidbody;
 	
+	// Type/instance management stuff
+	private const string thisTypeName = "Bomber";
+	private static EnemyType thisType;
+	private EnemyInst thisInst;
 
+	// Public parameters
 	public float speed;
 	public float drag;
 	public GameObject burster;
@@ -33,6 +38,10 @@ public class RedCubeBomb : MonoBehaviour {
 	public GameObject bombEffect;
 	public bool enableBombPush = false;
 
+	static RedCubeBomb () {
+		thisType = EnemyList.AddOrGetType(thisTypeName);
+	}
+
 	// Use this for initialization
 	void Start () {
 		// Unity 5 API changes
@@ -44,6 +53,10 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 		myRigidbody.drag = drag;
 		armed = true;
+
+		// Add to control's list
+		thisInst = new EnemyInst(thisType.typeNum, gameObject);
+		controller.AddInstanceToList(thisInst);
 	}
 	
 	// Update is called once per frame
@@ -87,6 +100,9 @@ public class RedCubeBomb : MonoBehaviour {
 			scorer.AddKill();
 		}
 		KillRelatives(0.4f);
+		// Remove from control's list
+		controller.RemoveInstanceFromList(thisInst);
+		// Destroy ourselves
 		Destroy(gameObject);
 	}
 	

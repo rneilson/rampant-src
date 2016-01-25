@@ -29,6 +29,12 @@ public class RedCubeIntercept : MonoBehaviour {
 	//private AudioSource myAudioSource;
 	private Rigidbody myRigidbody;
 	
+	// Type/instance management stuff
+	private const string thisTypeName = "Interceptor";
+	private static EnemyType thisType;
+	private EnemyInst thisInst;
+
+	// Public parameters
 	public float speed;
 	public float drag;
 	public GameObject burster;
@@ -38,6 +44,10 @@ public class RedCubeIntercept : MonoBehaviour {
 	// Prefab detach & delay-kill
 	//public int numChildren;
 	//public GameObject[] allChildren;
+
+	static RedCubeIntercept () {
+		thisType = EnemyList.AddOrGetType(thisTypeName);
+	}
 
 	// Use this for initialization
 	void Start () {
@@ -55,6 +65,9 @@ public class RedCubeIntercept : MonoBehaviour {
 		debugInfo = controller.DebugInfo;
 		currPos = transform.position;
 
+		// Add to control's list
+		thisInst = new EnemyInst(thisType.typeNum, gameObject);
+		controller.AddInstanceToList(thisInst);
 		/*
 		// Some debug
 		if (transform.childCount > 0) {
@@ -133,6 +146,9 @@ public class RedCubeIntercept : MonoBehaviour {
 			scorer.AddKill();
 		}
 		KillRelatives(1.0f);
+		// Remove from control's list
+		controller.RemoveInstanceFromList(thisInst);
+		// Destroy ourselves
 		Destroy(gameObject);
 	}
 	

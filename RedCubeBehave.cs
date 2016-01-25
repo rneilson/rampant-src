@@ -15,12 +15,21 @@ public class RedCubeBehave : MonoBehaviour {
 	//private AudioSource myAudioSource;
 	private Rigidbody myRigidbody;
 	
+	// Type/instance management stuff
+	private const string thisTypeName = "Seeker";
+	private static EnemyType thisType;
+	private EnemyInst thisInst;
 
+	// Public parameters
 	public float speed;
 	public float drag;
 	public GameObject burster;
 	public GameObject bursterQuiet;
 	public GameObject deathFade;
+
+	static RedCubeBehave () {
+		thisType = EnemyList.AddOrGetType(thisTypeName);
+	}
 
 	// Use this for initialization
 	void Start () {
@@ -32,6 +41,10 @@ public class RedCubeBehave : MonoBehaviour {
 			FindControl(GameObject.FindGameObjectWithTag("GameController"));
 		}
 		myRigidbody.drag = drag;
+
+		// Add to control's list
+		thisInst = new EnemyInst(thisType.typeNum, gameObject);
+		controller.AddInstanceToList(thisInst);
 	}
 	
 	// Update is called once per frame
@@ -61,6 +74,9 @@ public class RedCubeBehave : MonoBehaviour {
 		if (dying != DeathType.Silently) {
 			scorer.AddKill();
 		}
+		// Remove from control's list
+		controller.RemoveInstanceFromList(thisInst);
+		// Destroy ourselves
 		Destroy(gameObject);
 	}
 	

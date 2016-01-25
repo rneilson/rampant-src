@@ -79,6 +79,9 @@ public class Scorer : MonoBehaviour {
 	// Global debug option
 	public bool globalDebug = false;
 
+	// Ground control co-component
+	private RedCubeGroundControl enemyControl;
+
 	public bool Respawn {
 		get { return respawn; }
 	}
@@ -172,6 +175,8 @@ public class Scorer : MonoBehaviour {
 		titleText.text = "_rampant";
 		subtitleText.text = "Press start button/tab to begin\n" + instructions;
 
+		// Get ground control
+		enemyControl = GetComponent<RedCubeGroundControl>();
 		// Get pulsers
 		foreach (GameObject pulser in GameObject.FindGameObjectsWithTag("ArenaPulser")) {
 			arenaPulsers.Add(pulser);
@@ -202,6 +207,12 @@ public class Scorer : MonoBehaviour {
 			else {
 				PauseGame();
 			}
+		}
+
+		// Check for debug capture
+		if (Input.GetButtonDown("DebugCapture")) {
+			Debug.Log("Debug capture:", gameObject);
+			enemyControl.DebugCap();
 		}
 
 		if (Cursor.lockState != desiredCursorMode) {
@@ -476,6 +487,9 @@ public class Scorer : MonoBehaviour {
 	}
 	
 	void NewTargets (GameObject player) {
+		// First give ground control the update
+		enemyControl.NewTarget(player);
+
 		GameObject[] enemies;
 		enemies = GameObject.FindGameObjectsWithTag("Enemy");
 		for (int i = 0; i < enemies.Length; i++) {

@@ -34,8 +34,11 @@ public class RedCubeGroundControl : MonoBehaviour {
 
 	private float maxInterSpeed = 1.0f;
 
+	// Scorer co-component
+	private Scorer scorer;
+
 	// Enemy tracking/coordination
-	private EnemyList enemyList;
+	private EnemyList enemyList = new EnemyList();
 
 	public bool DebugInfo {
 		get { return debugInfo; }
@@ -66,7 +69,15 @@ public class RedCubeGroundControl : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		// First, find a player
-		NewTarget(GameObject.FindGameObjectWithTag("Player"));
+		//NewTarget(GameObject.FindGameObjectWithTag("Player"));
+		// Disabled because there's never a player on startup
+
+		// Get scorer
+		scorer = GetComponent<Scorer>();
+
+		// Currently on initialization, not here
+		// Create (empty) enemy list
+		//enemyList = new EnemyList();
 
 		if (predictMode == PredictionMode.Linear) {
 			avgWeight = (float) (framesToAverage - 1) / (float) framesToAverage;
@@ -121,24 +132,10 @@ public class RedCubeGroundControl : MonoBehaviour {
 		}
 		else {
 			// Try and acquire new target
-			NewTarget(GameObject.FindGameObjectWithTag("Player"));
+			NewTarget(scorer.Player);
 		}
 	}
 	
-	void NewTarget (GameObject newTarget) {
-		target = newTarget;
-		// If new target acquired, reset tracking
-		if (target) {
-			currPos = target.transform.position;
-			currVel = Vector3.zero;
-			currAccel = Vector3.zero;
-			//avgTurn = Vector3.zero;
-			//lastTurn = Vector3.zero;
-			avgAccel = Vector3.zero;
-			avgSpeed = 0.0f;
-		}
-	}
-
 	void UpdateTracking(Vector3 pos, float dT) {
 		// First shift old current values to new previous (you know what I mean!)
 		prevPos = currPos;
@@ -204,6 +201,55 @@ public class RedCubeGroundControl : MonoBehaviour {
 		}
 
 	}
+
+	public void NewTarget (GameObject newTarget) {
+		target = newTarget;
+		// If new target acquired, reset tracking
+		if (target) {
+			currPos = target.transform.position;
+			currVel = Vector3.zero;
+			currAccel = Vector3.zero;
+			//avgTurn = Vector3.zero;
+			//lastTurn = Vector3.zero;
+			avgAccel = Vector3.zero;
+			avgSpeed = 0.0f;
+		}
+	}
+
+	public void DebugCap () {
+		if (scorer.GlobalDebug) {
+		// Temp, to make sure initialization works
+		Debug.Log(String.Format("Types in list: {0}", EnemyList.TypeCount), gameObject);
+		Debug.Log(String.Format("Nothing type is {0}", 
+			EnemyType.Nothing.ToString()), gameObject);
+		/*
+		EnemyType tmpType = EnemyList.GetType(0);
+		Debug.Log(String.Format("Type at index 0 is typeNum {0}, typeName {1}", 
+			tmpType.typeNum, tmpType.typeName), gameObject);
+		tmpType = EnemyList.GetType("Nothing");
+		Debug.Log(String.Format("Type at name \"Nothing\" is typeNum {0}, typeName {1}", 
+			tmpType.typeNum, tmpType.typeName), gameObject);
+		}
+		*/
+		Debug.Log("Current types:");
+		foreach (EnemyType x in EnemyList.TypeList) {
+			Debug.Log(x.ToString());
+		}
+
+		Debug.Log(String.Format("Current instances in total list: {0}", enemyList.Count), gameObject);
+		Debug.Log(String.Format("Number of per-type lists: {0}", enemyList.CountTypes), gameObject);
+
+		// TODO: moar
+		}
+	}
+
+	public bool AddInstanceToList (EnemyInst inst) {
+		return enemyList.Add(inst);
+	}
+
+	public bool RemoveInstanceFromList (EnemyInst inst) {
+		return enemyList.Remove(inst);
+	}
 }
 
 public enum PredictionMode : byte {
@@ -225,7 +271,6 @@ public class EnemyList {
 	// Static constructor
 	static EnemyList () {
 		// Set up containers
-		enemyTypeIndex = 0;
 		enemyTypeByNum = new Dictionary<int, EnemyType>();
 		enemyTypeByName = new Dictionary<string, EnemyType>();
 
@@ -233,6 +278,8 @@ public class EnemyList {
 		// This a) initializes the lists properly, and b) ensures proper lookups of EnemyType.Nothing
 		enemyTypeByNum.Add(EnemyType.Nothing.typeNum, EnemyType.Nothing);
 		enemyTypeByName.Add(EnemyType.Nothing.typeName, EnemyType.Nothing);
+		// EnemyType.Nothing should always be type 0, and everything else higher
+		enemyTypeIndex = EnemyType.Nothing.typeNum + 1;
 	}
 
 	// Instance constructors and helpers
@@ -265,15 +312,37 @@ public class EnemyList {
 		this.enemiesByType = new Dictionary<int, Dictionary<GameObject, EnemyInst>>();
 	}
 
-	// Static functions
+	// Static properties and functions
+
+	public static int TypeCount {
+		get {
+			// Just here for debug, really
+			if (enemyTypeByNum.Count != enemyTypeByName.Count) {
+				throw new ArgumentOutOfRangeException("Count", String.Format("ByNum count {0} != ByName count {1}!", 
+					enemyTypeByNum.Count, enemyTypeByName.Count));
+			}
+			return enemyTypeByNum.Count;
+		}
+	}
+
+	public static int TypeIndex {
+		get { return enemyTypeIndex; }
+	}
+
+	public static List<EnemyType> TypeList {
+		get {
+			// Could use either dict
+			return new List<EnemyType>(enemyTypeByNum.Values);
+		}
+	}
 
 	// Few checks -- use carefully
 	private static EnemyType AddType (int newNum, string newName) {
 		if (enemyTypeByNum.ContainsKey(newNum)) {
-			throw new ArgumentOutOfRangeException(String.Format("typeNum {0} already in use!", newNum), "newNum");
+			throw new ArgumentOutOfRangeException("newNum", String.Format("typeNum {0} already in use!", newNum));
 		}
 		if (enemyTypeByName.ContainsKey(newName)) {
-			throw new ArgumentOutOfRangeException(String.Format("typeName {0} already in use!", newName), "newName");
+			throw new ArgumentOutOfRangeException("newName", String.Format("typeName {0} already in use!", newName));
 		}
 		// Use given type index as num
 		EnemyType newType = new EnemyType(newNum, newName);
@@ -306,7 +375,7 @@ public class EnemyList {
 	// TODO: change to try/catch
 	public static EnemyType GetType (string typeName) {
 		if (typeName == "" ) {
-			throw new ArgumentNullException("Can't get unnamed enemy type", typeName);
+			throw new ArgumentNullException("typeName", "Can't get unnamed enemy type");
 		}
 		else if (TypeExists(typeName)) {
 			// Check if it's already in there, return that if it is
@@ -330,7 +399,7 @@ public class EnemyList {
 	public static EnemyType AddOrGetType (string typeName) {
 		// Null strings ain't gonna work
 		if (typeName == "") {
-			throw new ArgumentNullException("Can't add unnamed enemy type", typeName);
+			throw new ArgumentNullException("typeName", "Can't get unnamed enemy type");
 		}
 		else if (TypeExists(typeName)) {
 			// Check if it's already in there, return that if it is
@@ -342,7 +411,16 @@ public class EnemyList {
 		}
 	}
 
-	// Instance functions
+	// Instance properties and functions
+
+	public int Count {
+		get { return enemiesTotal.Count; }
+	}
+
+	public int CountTypes {
+		get { return enemiesByType.Count; }
+	}
+
 	public bool Add (EnemyInst inst) {
 		bool addedTotal = false, addedType = false;
 		// First, check type
@@ -378,6 +456,19 @@ public class EnemyList {
 
 		// Return true if added to either
 		return addedTotal || addedType;
+	}
+
+	public bool Remove (EnemyInst inst) {
+		bool removedTotal = false, removedType = false;
+		// This one's simple
+		removedTotal = enemiesTotal.Remove(inst.gameObj);
+		// This one's not -- gotta check if type key exists first
+		if (enemiesByType.ContainsKey(inst.typeNum)) {
+			removedType = enemiesByType[inst.typeNum].Remove(inst.gameObj);
+		}
+
+		// Return true if removed from either
+		return removedTotal || removedType;
 	}
 
 	public bool HasType (EnemyType enemyType) {
@@ -449,6 +540,10 @@ public struct EnemyType {
 	public static bool operator != (EnemyType lhs, EnemyType rhs) {
 		return !(lhs.Equals(rhs));
 	}
+
+	public override string ToString() {
+		return typeNum.ToString() + ": " + typeName.ToString();
+	}
 }
 
 public struct EnemyInst {
@@ -492,5 +587,9 @@ public struct EnemyInst {
 
 	public static bool operator != (EnemyInst lhs, EnemyInst rhs) {
 		return !(lhs.Equals(rhs));
+	}
+
+	public override string ToString() {
+		return typeNum.ToString() + ": " + gameObj.ToString();
 	}
 }
