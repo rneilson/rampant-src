@@ -20,7 +20,13 @@ public class EnemyPhase : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
+		// Find attached spawners
 		spawners = gameObject.GetComponents<EnemySpawner>();
+		// Send scorer
+		foreach (EnemySpawner spawner in spawners) {
+			spawner.FindControl(scorer.gameObject);
+		}
+
 		//countdown = initialDelay;
 		countdown = (scorer.PlayerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
 		waveNum = 0;

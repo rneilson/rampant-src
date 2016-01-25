@@ -74,6 +74,9 @@ public class Scorer : MonoBehaviour {
 	private List<GameObject> arenaPulsers = new List<GameObject>();
 	private List<GameObject> arenaShifters = new List<GameObject>();
 
+	// Global debug option
+	public bool globalDebug = false;
+
 	public bool Respawn {
 		get { return respawn; }
 	}
@@ -113,6 +116,9 @@ public class Scorer : MonoBehaviour {
 	}
 	public bool IsStarted {
 		get { return isStarted; }
+	}
+	public bool GlobalDebug {
+		get { return globalDebug; }
 	}
 
 	// Use this for initialization

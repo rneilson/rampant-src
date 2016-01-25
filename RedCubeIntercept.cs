@@ -48,6 +48,9 @@ public class RedCubeIntercept : MonoBehaviour {
 
 		if (!scorer) {
 			FindControl(GameObject.FindGameObjectWithTag("GameController"));
+			if (scorer.GlobalDebug) {
+				Debug.Log("Scorer not passed on spawn!", gameObject);
+			}
 		}
 		debugInfo = controller.DebugInfo;
 		currPos = transform.position;

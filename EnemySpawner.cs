@@ -19,6 +19,7 @@ public class EnemySpawner : MonoBehaviour {
 	public bool debugInfo = false;
 	
 	private Scorer scorer;
+	private RedCubeGroundControl controller;
 	private float countdown;
 	private bool counting;
 	private int roundCounter;
@@ -37,7 +38,10 @@ public class EnemySpawner : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		ResetWave();
-		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
+		if (!scorer) {
+			FindControl(GameObject.FindGameObjectWithTag("GameController"));
+		}
+		
 		//mask = 1 << LayerMask.NameToLayer("Spawn");
 		maxDisplacement = scorer.MaxDisplacement;
 
@@ -77,6 +81,11 @@ public class EnemySpawner : MonoBehaviour {
 				countdown -= Time.fixedDeltaTime;
 			}
 		}
+	}
+
+	public void FindControl (GameObject control) {
+		scorer = control.GetComponent<Scorer>();
+		controller = control.GetComponent<RedCubeGroundControl>();
 	}
 
 	// Reset to initial state
@@ -148,6 +157,7 @@ public class EnemySpawner : MonoBehaviour {
 
 			GameObject spawner = Instantiate(enemySpawn, spawnPos, Quaternion.Euler(0, 0, 0)) as GameObject;
 			spawner.SendMessage("SetPhaseIndex", scorer.PhaseIndex);
+			spawner.SendMessage("FindControl", scorer.gameObject);
 		}
 
 		// Play one instance only of spawn sound
