@@ -11,6 +11,10 @@ public class RedCubeBomb : MonoBehaviour {
 	private bool dead;
 	private bool loud;
 	private bool armed;
+	private const bool spin = true;
+	private Vector3 spinAxis = Vector3.right;
+	private Vector3 spinRef = Vector3.forward;
+	private float torque = 0.5f;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
@@ -52,12 +56,19 @@ public class RedCubeBomb : MonoBehaviour {
 	//Put movement in FixedUpdate
 	void FixedUpdate () {
 		if (target) {
+			// Get bearing
 			bearing = target.transform.position - transform.position;
+			// Blow up if we're in range
 			if (bearing.magnitude <= bombTriggerRadius) {
 				Die(true);
 			}
+			// Or try to get in range
 			else {
 				myRigidbody.AddForce(bearing.normalized * speed);
+			}
+			// Spin menacingly (if spinning enabled)
+			if (spin) {
+				myRigidbody.AddTorque(SpinVector(bearing) * torque);
 			}
 		}
 	}
@@ -76,11 +87,13 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 
 		scorer.AddKill();
+		KillRelatives(0.5f);
 		Destroy(gameObject);
 	}
 	
 	void Clear () {
 		Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 1);
+		KillRelatives(0.5f);
 		Destroy(gameObject);
 	}
 	
@@ -92,6 +105,25 @@ public class RedCubeBomb : MonoBehaviour {
 		//collider.enabled = false;
 	}
 	
+	void KillRelatives (float delay) {
+		// Detach from parent and/or children and destroy them after a delay
+		GameObject tmp;
+
+		// Parent first
+		if (transform.parent) {
+			tmp = transform.parent.gameObject;
+			Destroy(tmp, delay);
+		}
+
+		// Next the kids, if any
+		for (int i = transform.childCount - 1; i >= 0 ; i--) {
+			tmp = transform.GetChild(i).gameObject;
+			tmp.transform.parent = null;
+			Destroy(tmp, delay);
+		}
+
+	}
+
 	void ClearTarget () {
 		target  = null;
 	}
@@ -175,6 +207,11 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 		*/
 
+	}
+
+	Vector3 SpinVector (Vector3 bearingVec) {
+		Quaternion rot = Quaternion.FromToRotation(spinRef, bearingVec);
+		return rot * spinAxis;
 	}
 	
 	// On collision

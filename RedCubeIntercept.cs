@@ -21,6 +21,11 @@ public class RedCubeIntercept : MonoBehaviour {
 	private float avgWeight = 0.82f;
 	private float currWeight = 0.18f;
 
+	private const bool spin = true;
+	private Vector3 spinAxis = Vector3.forward;
+	private Vector3 spinRef = Vector3.forward;
+	private float torque = 0.01f;
+
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
 	private Rigidbody myRigidbody;
@@ -103,6 +108,10 @@ public class RedCubeIntercept : MonoBehaviour {
 			UpdateTracking();
 			//bearing = target.transform.position - transform.position;
 			myRigidbody.AddForce(bearing.normalized * speed);
+			// Spin menacingly (if spinning enabled)
+			if (spin) {
+				myRigidbody.AddTorque(SpinVector(bearing) * torque);
+			}
 		}
 		else {
 			// Try and acquire new target
@@ -121,27 +130,13 @@ public class RedCubeIntercept : MonoBehaviour {
 			Destroy(Instantiate(deathFade, transform.position, Quaternion.identity), 1.0f);
 		}
 		scorer.AddKill();
-
-		// Detach and kill children (delayed 1s)
-		GameObject childtmp;
-		for (int i = transform.childCount - 1; i >= 0 ; i--) {
-			childtmp = transform.GetChild(i).gameObject;
-			childtmp.transform.parent = null;
-			Destroy(childtmp, 1.0f);
-		}
+		KillRelatives(1.0f);
 		Destroy(gameObject);
 	}
 	
 	void Clear () {
 		Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 1);
-
-		// Detach and kill children (delayed 1s)
-		GameObject childtmp;
-		for (int i = transform.childCount - 1; i >= 0 ; i--) {
-			childtmp = transform.GetChild(i).gameObject;
-			childtmp.transform.parent = null;
-			Destroy(childtmp, 1.0f);
-		}
+		KillRelatives(0.5f);
 		Destroy(gameObject);
 	}
 	
@@ -153,6 +148,25 @@ public class RedCubeIntercept : MonoBehaviour {
 		else
 			loud = false;
 		//collider.enabled = false;
+	}
+
+	void KillRelatives (float delay) {
+		// Detach from parent and/or children and destroy them after a delay
+		GameObject tmp;
+
+		// Parent first
+		if (transform.parent) {
+			tmp = transform.parent.gameObject;
+			Destroy(tmp, delay);
+		}
+
+		// Next the kids, if any
+		for (int i = transform.childCount - 1; i >= 0 ; i--) {
+			tmp = transform.GetChild(i).gameObject;
+			tmp.transform.parent = null;
+			Destroy(tmp, delay);
+		}
+
 	}
 	
 	void ClearTarget () {
@@ -216,6 +230,11 @@ public class RedCubeIntercept : MonoBehaviour {
 		}
 	}
 
+	Vector3 SpinVector (Vector3 bearingVec) {
+		Quaternion rot = Quaternion.FromToRotation(spinRef, bearingVec);
+		return rot * spinAxis;
+	}
+	
 	// On collision
 	/* void OnCollisionEnter(Collision collision) {
 		GameObject thingHit = collision.gameObject;
