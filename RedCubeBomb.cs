@@ -14,7 +14,7 @@ public class RedCubeBomb : MonoBehaviour {
 	private const bool spin = true;
 	private Vector3 spinAxis = Vector3.right;
 	private Vector3 spinRef = Vector3.forward;
-	private float torque = 0.5f;
+	private float torque = 0.2f;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
@@ -87,13 +87,13 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 
 		scorer.AddKill();
-		KillRelatives(0.5f);
+		KillRelatives(0.4f);
 		Destroy(gameObject);
 	}
 	
 	void Clear () {
 		Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 1);
-		KillRelatives(0.5f);
+		KillRelatives(0.4f);
 		Destroy(gameObject);
 	}
 	

@@ -101,6 +101,8 @@ public class RedCubeGroundControl : MonoBehaviour {
 				+ ", should be " + (framesToPredict + 1).ToString(), gameObject);
 		}
 		*/
+
+
 	}
 	
 	// Update is called once per frame
@@ -201,68 +203,6 @@ public class RedCubeGroundControl : MonoBehaviour {
 			posPredictions[i] = posPredictions[i-1] + displace;	// Add rotated displacement
 		}
 
-		/* Old version
-		// First, find the rotation between last and current velocities
-		Quaternion lastRot = Quaternion.FromToRotation(prevVel, currVel);
-
-		// Next, get the euler-angle representation of that rotation for averaging
-		lastTurn = lastRot.eulerAngles;
-
-		// Gonna hafta correct for negative turns showing up as >180 deg
-		if (lastTurn.x > 180.0f)
-			lastTurn.x -= 360.0f;
-		if (lastTurn.y > 180.0f)
-			lastTurn.y -= 360.0f;
-		if (lastTurn.z > 180.0f)
-			lastTurn.z -= 360.0f;
-
-		if (debugInfo) {
-			// For debug, let's keep the last however many turns on file
-			int len = prevTurns.Length - 1;
-			for (int i=0; i < len; i++) {
-				prevTurns[i] = prevTurns[i + 1];
-			}
-			prevTurns[len] = lastTurn;
-		}
-
-		// Now weight-average everything
-		avgTurn = avgTurn * avgWeight + lastTurn * lastWeight;
-		// Last, turn it into a quaternion for iterating the position predictions
-		turnPrediction = Quaternion.Euler(avgTurn);
-
-		// I lied, *this* is the tricky part
-
-		// Take current velocity, normalize, then scale by avgSpeed and avgDeltaTime
-		// This gets the present course
-		Vector3 displace = currVel.normalized * avgSpeed * avgDeltaTime;
-
-		// Seed predictions array with current position
-		posPredictions[0] = currPos;
-
-		// Now iterate, rotating the added displacement each time
-		for (int i = 1; i < posPredictions.Length; i++) {
-
-			// Now find new displacement, rotating acceleration
-			displace = displace + (turnPrediction * (displace.normalized * avgAccel * avgDeltaTime));
-			// Scale to avg speed
-			displace = displace.normalized * avgSpeed * avgDeltaTime;
-
-			// Add rotated displacement to previous position
-			posPredictions[i] = posPredictions[i-1] + displace;
-		}
-		*/
-
-		/* Old version
-		// Take current velocity, normalize, then scale by avgSpeed and avgDeltaTime
-		Vector3 displace = currVel.normalized * avgSpeed * avgDeltaTime;
-		// Seed predictions array with current position
-		posPredictions[0] = currPos;
-		// Now iterate, rotating the added displacement each time
-		for (int i = 1; i < posPredictions.Length; i++) {
-			displace = turnPrediction * displace;	// Quaternion/vector multiplication ftw
-			posPredictions[i] = posPredictions[i-1] + displace;	// Add rotated displacement
-		}
-		*/
 	}
 }
 
