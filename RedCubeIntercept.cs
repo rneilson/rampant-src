@@ -6,8 +6,6 @@ public class RedCubeIntercept : MonoBehaviour {
 	private GameObject target;
 	private Scorer scorer;
 	public float deltaTime;	// Public for debug
-	private bool dead = false;
-	private bool loud = false;
 	private DeathType dying = DeathType.None;
 	public Vector3 bearing = Vector3.zero;	// Public for debug
 	public Vector3 closing = Vector3.zero;	// Public for debug
@@ -25,7 +23,7 @@ public class RedCubeIntercept : MonoBehaviour {
 	private const bool spin = true;
 	private Vector3 spinAxis = Vector3.forward;
 	private Vector3 spinRef = Vector3.forward;
-	private float torque = 0.02f;
+	private float torque = 0.015f;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
@@ -48,12 +46,11 @@ public class RedCubeIntercept : MonoBehaviour {
 		myRigidbody = GetComponent<Rigidbody>();
 		myRigidbody.drag = drag;
 
-		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
-		controller = scorer.GetComponent<RedCubeGroundControl>();
+		if (!scorer) {
+			FindControl(GameObject.FindGameObjectWithTag("GameController"));
+		}
 		debugInfo = controller.DebugInfo;
 		currPos = transform.position;
-
-		NewTarget(scorer.Player);
 
 		/*
 		// Some debug
@@ -172,6 +169,12 @@ public class RedCubeIntercept : MonoBehaviour {
 	
 	void NewTarget (GameObject newTarget) {
 		target = newTarget;
+	}
+
+	void FindControl (GameObject control) {
+		scorer = control.GetComponent<Scorer>();
+		controller = control.GetComponent<RedCubeGroundControl>();
+		NewTarget(scorer.Player);
 	}
 
 	void UpdateTracking() {

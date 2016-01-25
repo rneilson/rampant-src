@@ -9,8 +9,6 @@ public class RedCubeBomb : MonoBehaviour {
 	//private float speed = 10f;
 	//private float drag = 4f;
 	private Vector3 bearing;
-	private bool dead;
-	private bool loud;
 	private DeathType dying = DeathType.None;
 	private bool armed;
 	private const bool spin = true;
@@ -41,12 +39,10 @@ public class RedCubeBomb : MonoBehaviour {
 		//myAudioSource = GetComponent<AudioSource>();
 		myRigidbody = GetComponent<Rigidbody>();
 
-		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
-		controller = scorer.GetComponent<RedCubeGroundControl>();
-		target = scorer.Player;
+		if (!scorer) {
+			FindControl(GameObject.FindGameObjectWithTag("GameController"));
+		}
 		myRigidbody.drag = drag;
-		dead = false;
-		loud = false;
 		armed = true;
 	}
 	
@@ -132,6 +128,12 @@ public class RedCubeBomb : MonoBehaviour {
 		target = newTarget;
 	}
 
+	void FindControl (GameObject control) {
+		scorer = control.GetComponent<Scorer>();
+		controller = control.GetComponent<RedCubeGroundControl>();
+		NewTarget(scorer.Player);
+	}
+
 	void DropBomb (Vector3 pos) {
 		Vector3 bombPos = new Vector3 (pos.x, bombHeight, pos.z);
 		GameObject daBomb;
@@ -141,7 +143,7 @@ public class RedCubeBomb : MonoBehaviour {
 		daBomb = Instantiate(bombEffect, pos, Quaternion.identity) as GameObject;
 		Destroy(daBomb, 1.0f);
 		// Turn down flash if dying quietly
-		if (!loud) {
+		if (dying != DeathType.Loudly) {
 			daBomb.GetComponent<LightPulse>().ChangeTargetRelative(-1.5f);
 		}
 		
@@ -162,12 +164,12 @@ public class RedCubeBomb : MonoBehaviour {
 				things[i].SendMessage("Die", false);
 			}
 			// Only push if dying loudly (shot or self-triggering)
-			else if ((enableBombPush) && (loud) && (thingDist <= (bombPushRadius + thingExtent))) {
+			else if ((enableBombPush) && (dying == DeathType.Loudly) && (thingDist <= (bombPushRadius + thingExtent))) {
 				things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 			}
 		}
 		// Now check player distance and kill/push (only if loud)
-		if ((loud) && (target)) {
+		if ((dying == DeathType.Loudly) && (target)) {
 			thingDist = (target.transform.position - transform.position).magnitude;
 			if ((thingDist <= (bombKillRadius + playerExtent))) {
 				target.SendMessage("Die", false);

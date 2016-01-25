@@ -9,8 +9,6 @@ public class RedCubeBehave : MonoBehaviour {
 	//private float speed = 10f;
 	//private float drag = 4f;
 	private Vector3 bearing;
-	private bool dead;
-	private bool loud;
 	private DeathType dying = DeathType.None;
 
 	// Unity 5 API changes
@@ -30,12 +28,10 @@ public class RedCubeBehave : MonoBehaviour {
 		//myAudioSource = GetComponent<AudioSource>();
 		myRigidbody = GetComponent<Rigidbody>();
 
-		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
-		controller = scorer.GetComponent<RedCubeGroundControl>();
-		target = scorer.Player;
+		if (!scorer) {
+			FindControl(GameObject.FindGameObjectWithTag("GameController"));
+		}
 		myRigidbody.drag = drag;
-		dead = false;
-		loud = false;
 	}
 	
 	// Update is called once per frame
@@ -87,6 +83,12 @@ public class RedCubeBehave : MonoBehaviour {
 		target = newTarget;
 	}
 	
+	void FindControl (GameObject control) {
+		scorer = control.GetComponent<Scorer>();
+		controller = control.GetComponent<RedCubeGroundControl>();
+		NewTarget(scorer.Player);
+	}
+
 	// On collision
 	/* void OnCollisionEnter(Collision collision) {
 		GameObject thingHit = collision.gameObject;
