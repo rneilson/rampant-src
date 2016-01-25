@@ -5,11 +5,13 @@ public class RedCubeBehave : MonoBehaviour {
 	
 	private GameObject target;
 	private Scorer scorer;
+	private RedCubeGroundControl controller;
 	//private float speed = 10f;
 	//private float drag = 4f;
 	private Vector3 bearing;
 	private bool dead;
 	private bool loud;
+	private DeathType dying = DeathType.None;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
@@ -28,8 +30,9 @@ public class RedCubeBehave : MonoBehaviour {
 		//myAudioSource = GetComponent<AudioSource>();
 		myRigidbody = GetComponent<Rigidbody>();
 
-		target = GameObject.FindGameObjectWithTag("Player");
 		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
+		controller = scorer.GetComponent<RedCubeGroundControl>();
+		target = scorer.Player;
 		myRigidbody.drag = drag;
 		dead = false;
 		loud = false;
@@ -37,7 +40,7 @@ public class RedCubeBehave : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (dead)
+		if (dying != DeathType.None)
 			BlowUp();
 	}
 	
@@ -50,7 +53,7 @@ public class RedCubeBehave : MonoBehaviour {
 	}
 	
 	void BlowUp () {
-		if (loud) {
+		if (dying == DeathType.Loudly) {
 			Destroy(Instantiate(burster, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
 		}
 		else {
@@ -59,22 +62,20 @@ public class RedCubeBehave : MonoBehaviour {
 		if (deathFade) {
 			Destroy(Instantiate(deathFade, transform.position, Quaternion.identity), 1.0f);
 		}
-		scorer.AddKill();
+		if (dying != DeathType.Silently) {
+			scorer.AddKill();
+		}
 		Destroy(gameObject);
 	}
 	
 	void Clear () {
-		Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 1);
-		Destroy(gameObject);
+		dying = DeathType.Silently;
 	}
 	
 	void Die (bool loudly) {
-		if (!dead)
-			dead = true;
-		if (loudly)
-			loud = true;
-		else
-			loud = false;
+		if (dying == DeathType.None) {
+			dying = (loudly) ? DeathType.Loudly : DeathType.Quietly;
+		}
 		//collider.enabled = false;
 	}
 	

@@ -5,11 +5,13 @@ public class RedCubeBomb : MonoBehaviour {
 	
 	private GameObject target;
 	private Scorer scorer;
+	private RedCubeGroundControl controller;
 	//private float speed = 10f;
 	//private float drag = 4f;
 	private Vector3 bearing;
 	private bool dead;
 	private bool loud;
+	private DeathType dying = DeathType.None;
 	private bool armed;
 	private const bool spin = true;
 	private Vector3 spinAxis = Vector3.right;
@@ -39,8 +41,9 @@ public class RedCubeBomb : MonoBehaviour {
 		//myAudioSource = GetComponent<AudioSource>();
 		myRigidbody = GetComponent<Rigidbody>();
 
-		target = GameObject.FindGameObjectWithTag("Player");
 		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
+		controller = scorer.GetComponent<RedCubeGroundControl>();
+		target = scorer.Player;
 		myRigidbody.drag = drag;
 		dead = false;
 		loud = false;
@@ -49,7 +52,7 @@ public class RedCubeBomb : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (dead)
+		if (dying != DeathType.None)
 			BlowUp();
 	}
 	
@@ -74,33 +77,30 @@ public class RedCubeBomb : MonoBehaviour {
 	}
 	
 	void BlowUp () {
-		if (loud) {
+		if (dying == DeathType.Loudly) {
 			Destroy(Instantiate(burster, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
 		}
 		else {
 			Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
 		}
-
 		// Drop da bomb
 		if (armed) {
 			DropBomb(transform.position);
 		}
-
-		scorer.AddKill();
+		if (dying != DeathType.Silently) {
+			scorer.AddKill();
+		}
 		KillRelatives(0.4f);
 		Destroy(gameObject);
 	}
 	
 	void Clear () {
-		Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 1);
-		KillRelatives(0.4f);
-		Destroy(gameObject);
+		dying = DeathType.Silently;
 	}
 	
 	void Die (bool loudly) {
-		if (!dead) {
-			dead = true;
-			loud = loudly;
+		if (dying == DeathType.None) {
+			dying = (loudly) ? DeathType.Loudly : DeathType.Quietly;
 		}
 		//collider.enabled = false;
 	}

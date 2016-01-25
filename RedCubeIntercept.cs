@@ -8,6 +8,7 @@ public class RedCubeIntercept : MonoBehaviour {
 	public float deltaTime;	// Public for debug
 	private bool dead = false;
 	private bool loud = false;
+	private DeathType dying = DeathType.None;
 	public Vector3 bearing = Vector3.zero;	// Public for debug
 	public Vector3 closing = Vector3.zero;	// Public for debug
 	public float timeToIntercept = 0.0f;	// Public for debug
@@ -24,7 +25,7 @@ public class RedCubeIntercept : MonoBehaviour {
 	private const bool spin = true;
 	private Vector3 spinAxis = Vector3.forward;
 	private Vector3 spinRef = Vector3.forward;
-	private float torque = 0.01f;
+	private float torque = 0.02f;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
@@ -47,13 +48,12 @@ public class RedCubeIntercept : MonoBehaviour {
 		myRigidbody = GetComponent<Rigidbody>();
 		myRigidbody.drag = drag;
 
-		GameObject gamecontrol = GameObject.FindGameObjectWithTag("GameController");
-		scorer = gamecontrol.GetComponent<Scorer>();
-		controller = gamecontrol.GetComponent<RedCubeGroundControl>();
+		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
+		controller = scorer.GetComponent<RedCubeGroundControl>();
 		debugInfo = controller.DebugInfo;
 		currPos = transform.position;
 
-		NewTarget(GameObject.FindGameObjectWithTag("Player"));
+		NewTarget(scorer.Player);
 
 		/*
 		// Some debug
@@ -69,7 +69,7 @@ public class RedCubeIntercept : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (dead) {
+		if (dying != DeathType.None) {
 			BlowUp();
 		}
 		else if (debugInfo) {
@@ -115,12 +115,12 @@ public class RedCubeIntercept : MonoBehaviour {
 		}
 		else {
 			// Try and acquire new target
-			NewTarget(GameObject.FindGameObjectWithTag("Player"));
+			NewTarget(scorer.Player);
 		}
 	}
 	
 	void BlowUp () {
-		if (loud) {
+		if (dying == DeathType.Loudly) {
 			Destroy(Instantiate(burster, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
 		}
 		else {
@@ -129,24 +129,21 @@ public class RedCubeIntercept : MonoBehaviour {
 		if (deathFade) {
 			Destroy(Instantiate(deathFade, transform.position, Quaternion.identity), 1.0f);
 		}
-		scorer.AddKill();
+		if (dying != DeathType.Silently) {
+			scorer.AddKill();
+		}
 		KillRelatives(1.0f);
 		Destroy(gameObject);
 	}
 	
 	void Clear () {
-		Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 1);
-		KillRelatives(0.5f);
-		Destroy(gameObject);
+		dying = DeathType.Silently;
 	}
 	
 	void Die (bool loudly) {
-		if (!dead)
-			dead = true;
-		if (loudly)
-			loud = true;
-		else
-			loud = false;
+		if (dying == DeathType.None) {
+			dying = (loudly) ? DeathType.Loudly : DeathType.Quietly;
+		}
 		//collider.enabled = false;
 	}
 

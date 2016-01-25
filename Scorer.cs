@@ -90,6 +90,9 @@ public class Scorer : MonoBehaviour {
 			}
 		}
 	}
+	public GameObject Player {
+		get { return playerCurrent; }
+	}
 	public bool PlayerBreak {
 		get { return playerBreak; }
 	}
@@ -478,7 +481,7 @@ public class Scorer : MonoBehaviour {
 		// Update each flasher with new color (same times, though)
 		foreach (GameObject pulser in arenaPulsers) {
 			if (pulser) {
-				pulser.SendMessage("NewPulseMsg", gridColor);
+				pulser.SendMessage("NewPulseMsg", gridColor, SendMessageOptions.DontRequireReceiver);
 			}
 		}
 	}
@@ -490,7 +493,7 @@ public class Scorer : MonoBehaviour {
 	public void ShiftGrid (int shiftIndex) {
 		foreach (GameObject shifter in arenaShifters) {
 			if (shifter) {
-				shifter.SendMessage("BeginShift", shiftIndex);
+				shifter.SendMessage("BeginShift", shiftIndex, SendMessageOptions.DontRequireReceiver);
 			}
 		}
 	}
@@ -498,13 +501,20 @@ public class Scorer : MonoBehaviour {
 	void SendStartGame () {
 		foreach (GameObject pulser in arenaPulsers) {
 			if (pulser) {
-				pulser.SendMessage("GameStarted");
+				pulser.SendMessage("GameStarted", null, SendMessageOptions.DontRequireReceiver);
 			}
 		}
 		foreach (GameObject shifter in arenaShifters) {
 			if (shifter) {
-				shifter.SendMessage("GameStarted");
+				shifter.SendMessage("GameStarted", null, SendMessageOptions.DontRequireReceiver);
 			}
 		}
 	}
+}
+
+public enum DeathType : byte {
+	None = 0,
+	Silently,
+	Quietly,
+	Loudly
 }
