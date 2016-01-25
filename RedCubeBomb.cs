@@ -114,7 +114,8 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 		
 		// New bomb radius code
-		float thingSize = 0.2f;
+		float playerExtent = 0.1f;
+		float thingExtent = 0.1f;
 		float thingDist = 0.0f;
 
 		// We're dropping, make sure we're now disarmed
@@ -125,21 +126,21 @@ public class RedCubeBomb : MonoBehaviour {
 		// Iterate over and check distances to everyone, killing or pushing as required
 		for (int i = 0; i < things.Length; i++) {
 			thingDist = (things[i].transform.position - transform.position).magnitude;
-			if ((thingDist <= (bombKillRadius + thingSize)) && (things[i] != gameObject)) {
+			if ((thingDist <= (bombKillRadius + thingExtent)) && (things[i] != gameObject)) {
 				things[i].SendMessage("Die", false);
 			}
 			// Only push if dying loudly (shot or self-triggering)
-			else if ((enableBombPush) && (loud) && (thingDist <= (bombPushRadius + thingSize))) {
+			else if ((enableBombPush) && (loud) && (thingDist <= (bombPushRadius + thingExtent))) {
 				things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 			}
 		}
 		// Now check player distance and kill/push (only if loud)
 		if ((loud) && (target)) {
 			thingDist = (target.transform.position - transform.position).magnitude;
-			if ((thingDist <= (bombKillRadius + thingSize))) {
+			if ((thingDist <= (bombKillRadius + playerExtent))) {
 				target.SendMessage("Die", false);
 			}
-			else if ((enableBombPush) && (thingDist <= (bombPushRadius + thingSize))) {
+			else if ((enableBombPush) && (thingDist <= (bombPushRadius + playerExtent))) {
 				target.GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 			}
 		}
