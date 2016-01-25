@@ -26,7 +26,7 @@ public class SpawnPoint : MonoBehaviour {
 	void FixedUpdate () {
 		if (spawned == false && Time.fixedTime >= spawnTime) {
 			GetComponent<Collider>().enabled = false;
-			float spawnZ = Random.Range(0f, (phaseIndex * 10f) + 10f);
+			float spawnZ = Random.Range(0f, (phaseIndex * 5f));
 			float spawnY = Random.Range(0f, 360f);
 			GameObject spawn = Instantiate(enemyType, transform.position, Quaternion.Euler(spawnZ, 0, spawnY)) as GameObject;
 			if (scorer) {
