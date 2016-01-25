@@ -45,6 +45,8 @@ public class Scorer : MonoBehaviour {
 	public float playerBreakDelay = 1.0f;
 	public float playerBreakRadius = 1.0f;
 	private float maxDisplacement = 4.75f;
+	private Vector3 spawnPos = new Vector3 (0f, 1f, 0f);
+	private Vector3 bombPos = new Vector3 (0f, 0.6f, 0f);
 
 	// Player object and friends
 	public GameObject playerType;
@@ -361,23 +363,27 @@ public class Scorer : MonoBehaviour {
 		*/
 	}
 	
-	void SpawnBomb (Vector3 pos, float killRadius, float pushRadius) {
+	void SpawnBomb (Vector3 spawnAt, Vector3 bombAt, float killRadius, float pushRadius) {
+		// Spawn effect in center
+		Destroy(Instantiate(spawnEffect, spawnAt, Quaternion.Euler(-90, 0, 0)), 1f);
+		myAudioSource.PlayOneShot(spawnSound, 1.0f);
+
 		Collider[] enemies;
 		int mask = 1 << LayerMask.NameToLayer("Enemy");
 		//Debug.Log(mask);
 		
 		// Clear enemies
-		enemies = Physics.OverlapSphere(pos, killRadius, mask);
+		enemies = Physics.OverlapSphere(bombAt, killRadius, mask);
 		//Debug.Log(enemies.Length);
 		for (int i=0; i<enemies.Length; i++) {
 			enemies[i].SendMessage("Clear", false);
 		}
 		
 		// Push away remaining enemies
-		enemies = Physics.OverlapSphere(pos, pushRadius, mask);
+		enemies = Physics.OverlapSphere(bombAt, pushRadius, mask);
 		//Debug.Log(enemies.Length);
 		for (int i=0; i<enemies.Length; i++) {
-			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(500f, pos, 0);
+			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(500f, bombAt, 0);
 		}
 	}
 	
@@ -386,14 +392,8 @@ public class Scorer : MonoBehaviour {
 		titleText.text = "";
 		subtitleText.text = "";
 		
-		// Spawn effect in center
-		Vector3 spawnPos = new Vector3 (0f, 1f, 0f);
-		Vector3 bombPos = new Vector3 (0f, 0.6f, 0f);
-		Destroy(Instantiate(spawnEffect, spawnPos, Quaternion.Euler(-90, 0, 0)), 1f);
-		myAudioSource.PlayOneShot(spawnSound, 1.0f);
-		
 		// Bomb enemies near spawn point
-		SpawnBomb(bombPos, 2.0f, 5.0f);
+		SpawnBomb(spawnPos, bombPos, 2.0f, 5.0f);
 		
 		// Old bomb routine
 		/* GameObject[] enemies;

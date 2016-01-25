@@ -138,6 +138,7 @@ public class RedCubeIntercept : MonoBehaviour {
 	
 	void Clear () {
 		dying = DeathType.Silently;
+		BlowUp();
 	}
 	
 	void Die (bool loudly) {

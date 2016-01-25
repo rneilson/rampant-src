@@ -92,6 +92,7 @@ public class RedCubeBomb : MonoBehaviour {
 	
 	void Clear () {
 		dying = DeathType.Silently;
+		BlowUp();
 	}
 	
 	void Die (bool loudly) {
