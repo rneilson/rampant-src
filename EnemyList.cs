@@ -358,7 +358,7 @@ public class EnemyList : IEnumerable {
 
 }
 
-public struct EnemyType {
+public class EnemyType {
 	public readonly int typeNum;
 	public readonly string typeName;
 
@@ -406,7 +406,7 @@ public struct EnemyType {
 	}
 }
 
-public struct EnemyInst {
+public class EnemyInst {
 	public readonly int typeNum;
 	public readonly GameObject gameObj;
 
