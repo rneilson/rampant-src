@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class BallMovement : MonoBehaviour {
 	
@@ -38,6 +39,7 @@ public class BallMovement : MonoBehaviour {
 
 	private GameObject controller;
 	//private Scorer scorer;
+	private RedCubeGroundControl groundControl;
 
 	const float fireDist = 0.10f;
 	const float fireSpeed = 5.0f;
@@ -77,6 +79,7 @@ public class BallMovement : MonoBehaviour {
 		fireCursor = GameObject.Find("FireCursor");
 		fireCursorControl = fireCursor.GetComponent<CursorMovement>();
 		//scorer = controller.GetComponent<Scorer>();
+		groundControl = controller.GetComponent<RedCubeGroundControl>();
 	}
 	
 	// Update is called once per frame
@@ -307,6 +310,21 @@ public class BallMovement : MonoBehaviour {
 		// At player position because it looks better
 		Destroy(Instantiate(powerUpBoom, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
 		
+		/* New code
+		// Kill within inner radius
+		List<GameObject> enemies = groundControl.FindAllWithinRadius(transform.position, bombKillRadius, groundControl.Extent3D);
+		foreach (GameObject enemy in enemies) {
+			enemy.SendMessage("Die", false);
+		}
+
+		// Push within outer radius
+		enemies = groundControl.FindAllWithinRadius(transform.position, bombPushRadius, groundControl.Extent3D);
+		foreach (GameObject enemy in enemies) {
+			enemy.GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
+		}
+		*/
+
+		// Old code
 		Collider[] enemies;
 		int mask = 1 << LayerMask.NameToLayer("Enemy");
 		
@@ -323,6 +341,7 @@ public class BallMovement : MonoBehaviour {
 		for (int i=0; i<enemies.Length; i++) {
 			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 		}
+		//
 	}
 
 	public void Die (bool loudly) {
