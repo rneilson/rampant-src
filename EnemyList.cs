@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using System;
 
 // Might as well be its own class
+// TODO: switch inst and type to classes too
+// TODO: move type functions to type class
+// TODO: add constructor overloads to inst class
+// TODO: genericize
 public class EnemyList : IEnumerable {
 	// Shared between all instances (easier, frankly)
 	private static int enemyTypeIndex;						// Starting type number
