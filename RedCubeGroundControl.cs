@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 // TODO: add radius check methods (total and by-type)
 // TODO: add PID generator for each instance added
@@ -314,14 +315,14 @@ public class RedCubeGroundControl : MonoBehaviour {
 		if (scorer.GlobalDebug) {
 			/*
 			// Temp, to make sure initialization works
-			Debug.Log(System.String.Format("Types in list: {0}", EnemyList.TypeCount), gameObject);
-			Debug.Log(System.String.Format("Nothing type is {0}", 
+			Debug.Log(String.Format("Types in list: {0}", EnemyList.TypeCount), gameObject);
+			Debug.Log(String.Format("Nothing type is {0}", 
 				EnemyType.Nothing.ToString()), gameObject);
 			EnemyType tmpType = EnemyList.GetType(0);
-			Debug.Log(System.String.Format("Type at index 0 is typeNum {0}, typeName {1}", 
+			Debug.Log(String.Format("Type at index 0 is typeNum {0}, typeName {1}", 
 				tmpType.typeNum, tmpType.typeName), gameObject);
 			tmpType = EnemyList.GetType("Nothing");
-			Debug.Log(System.String.Format("Type at name \"Nothing\" is typeNum {0}, typeName {1}", 
+			Debug.Log(String.Format("Type at name \"Nothing\" is typeNum {0}, typeName {1}", 
 				tmpType.typeNum, tmpType.typeName), gameObject);
 			}
 			*/
@@ -330,23 +331,23 @@ public class RedCubeGroundControl : MonoBehaviour {
 			foreach (EnemyType x in EnemyList.TypeList) {
 				Debug.Log(x.ToString());
 			}
-			Debug.Log(System.String.Format("Current instances in total list: {0}", enemies.Count), gameObject);
-			Debug.Log(System.String.Format("Number of per-type lists: {0}", enemies.CountTypes), gameObject);
+			Debug.Log(String.Format("Current instances in total list: {0}", enemies.Count), gameObject);
+			Debug.Log(String.Format("Number of per-type lists: {0}", enemies.CountTypes), gameObject);
 			foreach (int x in enemies.TypesHeld) {
-				Debug.Log(System.String.Format("{0}s: {1}", EnemyList.GetTypeName(x), enemies.CountByType(x)), gameObject);
+				Debug.Log(String.Format("{0}s: {1}", EnemyList.GetTypeName(x), enemies.CountByType(x)), gameObject);
 			}
 
 			if (debugInfo) {
 				// Get all enemies to track/range
 				debugTracking = FindAllWithinRadius(target.transform.position, debugRadius, extent3d);
-				Debug.Log(System.String.Format("{0} instance(s) within {1}", debugTracking.Count, debugRadius), gameObject);
+				Debug.Log(String.Format("{0} instance(s) within {1}", debugTracking.Count, debugRadius), gameObject);
 				// Create new empty per-type dict
 				debugTrackByType = new Dictionary<int, List<GameObject>>();
 				// Get lists of each type and load into dict
 				foreach (int x in enemies.TypesHeld) {
 					List<GameObject> results = FindTypeWithinRadius(x, target.transform.position, debugRadius, extent3d);
 					debugTrackByType.Add(x, results);
-					Debug.Log(System.String.Format("{0} {1}(s) within {2}", 
+					Debug.Log(String.Format("{0} {1}(s) within {2}", 
 						debugTrackByType[x].Count, EnemyList.GetTypeName(x), debugRadius), gameObject);
 				}
 			}
