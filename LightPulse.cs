@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// TODO: make use PulseControl (or PulseTimer?)
 public class LightPulse : MonoBehaviour {
 
 	public float intensityTarget = 2.0f;

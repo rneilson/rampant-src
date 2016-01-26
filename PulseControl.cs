@@ -2,6 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 
+// TODO: add pulse pausing
+// TODO: add startup delay
+// TODO: move most functionality into a PulseTimer class for multi-component use
+// TODO: make PulseControl a wrapper for above
+// TODO: switch counter to double (?)
 public class PulseControl : MonoBehaviour {
 
 	public float timeToTarget = 0.5f;

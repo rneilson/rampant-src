@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// TODO: obsolete?
 public class MaterialShiftReplace : MonoBehaviour {
 
 	// Material list and parameters

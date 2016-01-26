@@ -2,6 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 
+// TODO: peel off pause menu into its own class (classes?)
+// TODO: corrupt title text
+// TODO: make one of the scrollboxes a log
+// TODO: add PID kill message to log on each kill
+// TODO: add something fun-sounding to log when bombing
+// TODO: add kernel oops message to log on death
+// TODO: add restart message on respawn
 public class Scorer : MonoBehaviour {
 	
 	private TextMesh scoreKills;
