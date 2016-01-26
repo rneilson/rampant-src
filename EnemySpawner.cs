@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// TODO: switch to cheating way of checking spawn point clearance
 // TODO: add safezone at end of predicted path
 // TODO: fold in SpawnPoint functionality (?)
 public class EnemySpawner : MonoBehaviour {
@@ -22,7 +21,7 @@ public class EnemySpawner : MonoBehaviour {
 	public bool debugInfo = false;
 	
 	private Scorer scorer;
-	private RedCubeGroundControl controller;
+	private RedCubeGroundControl control;
 	private float countdown;
 	private bool counting;
 	private int roundCounter;
@@ -34,6 +33,7 @@ public class EnemySpawner : MonoBehaviour {
 	private bool playerBreak;
 	private float maxSafeRadius = 4.75f;
 	private float maxDisplacement;
+	private int predictionFrames;
 
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
@@ -50,6 +50,9 @@ public class EnemySpawner : MonoBehaviour {
 
 		// Unity 5 API changes
 		myAudioSource = scorer.GetComponent<AudioSource>();
+
+		// Predictions frames ahead to use
+		predictionFrames = (control.PredictionLength > 25) ? 25 : control.PredictionLength;
 	}
 	
 	// Update is called once per frame
@@ -86,9 +89,9 @@ public class EnemySpawner : MonoBehaviour {
 		}
 	}
 
-	public void FindControl (GameObject control) {
-		scorer = control.GetComponent<Scorer>();
-		controller = control.GetComponent<RedCubeGroundControl>();
+	public void FindControl (GameObject controller) {
+		scorer = controller.GetComponent<Scorer>();
+		control = controller.GetComponent<RedCubeGroundControl>();
 	}
 
 	// Reset to initial state
@@ -139,12 +142,15 @@ public class EnemySpawner : MonoBehaviour {
 		// Begin wave spawn loop
 		GameObject player = GameObject.FindGameObjectWithTag("Player");
 		Vector3 playerPos = player.transform.position;
+		Vector3 predictPos = control.Prediction(predictionFrames);
 		Vector3 spawnPos;
 		Collider[] others;
 		bool clear = false;
 		// Expand safezone radius if player just respawned
 		float safeRadius = (playerBreak) ? Mathf.Min(safeZoneRadius + scorer.PlayerBreakRadius, maxSafeRadius) : 
 			Mathf.Min(safeZoneRadius, maxSafeRadius);
+		// Let's say the safe radius at the prediction point is lower
+		float predictRadius = safeRadius / 2.0f;
 
 		// Spawn loop
 		for	(int i = roundSizeCurrent; i > 0; i--) {
@@ -154,8 +160,11 @@ public class EnemySpawner : MonoBehaviour {
 				spawnPos = new Vector3(Random.Range(-maxDisplacement, maxDisplacement), 1f, 
 					Random.Range(-maxDisplacement, maxDisplacement));
 				others = Physics.OverlapSphere(spawnPos, 0.2f);
-				if (others.Length == 0 && ((spawnPos - playerPos).magnitude > safeRadius))
+				if ((others.Length == 0) 
+					&& ((spawnPos - playerPos).magnitude > safeRadius) 
+					&& ((spawnPos - predictPos).magnitude > predictRadius)) {
 					clear = true;
+				}
 			} while (!clear);
 
 			GameObject spawner = Instantiate(enemySpawn, spawnPos, Quaternion.Euler(0, 0, 0)) as GameObject;
