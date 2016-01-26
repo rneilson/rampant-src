@@ -482,7 +482,7 @@ public class Scorer : MonoBehaviour {
 		GameObject[] enemies;
 		enemies = GameObject.FindGameObjectsWithTag("Enemy");
 		for (int i = 0; i < enemies.Length; i++) {
-			enemies[i].SendMessage("ClearTarget");
+			enemies[i].SendMessage("ClearTarget", null, SendMessageOptions.DontRequireReceiver);
 		}
 	}
 	
@@ -493,7 +493,7 @@ public class Scorer : MonoBehaviour {
 		GameObject[] enemies;
 		enemies = GameObject.FindGameObjectsWithTag("Enemy");
 		for (int i = 0; i < enemies.Length; i++) {
-			enemies[i].SendMessage("NewTarget", player);
+			enemies[i].SendMessage("NewTarget", player, SendMessageOptions.DontRequireReceiver);
 		}
 	}
 

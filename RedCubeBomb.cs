@@ -178,21 +178,27 @@ public class RedCubeBomb : MonoBehaviour {
 		for (int i = 0; i < things.Length; i++) {
 			thingDist = (things[i].transform.position - transform.position).magnitude;
 			if ((thingDist <= (bombKillRadius + thingExtent)) && (things[i] != gameObject)) {
-				things[i].SendMessage("Die", false);
+				things[i].SendMessage("Die", false, SendMessageOptions.DontRequireReceiver);
 			}
 			// Only push if dying loudly (shot or self-triggering)
 			else if ((enableBombPush) && (dying == DeathType.Loudly) && (thingDist <= (bombPushRadius + thingExtent))) {
-				things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
+				Rigidbody targetRigid = things[i].GetComponent<Rigidbody>();
+				if (targetRigid) {
+					targetRigid.AddExplosionForce(bombForce, bombPos, 0f);
+				}
 			}
 		}
 		// Now check player distance and kill/push (only if loud)
 		if ((dying == DeathType.Loudly) && (target)) {
 			thingDist = (target.transform.position - transform.position).magnitude;
 			if ((thingDist <= (bombKillRadius + playerExtent))) {
-				target.SendMessage("Die", false);
+				target.SendMessage("Die", false, SendMessageOptions.DontRequireReceiver);
 			}
 			else if ((enableBombPush) && (thingDist <= (bombPushRadius + playerExtent))) {
-				target.GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
+				Rigidbody targetRigid = target.GetComponent<Rigidbody>();
+				if (targetRigid) {
+					targetRigid.AddExplosionForce(bombForce, bombPos, 0f);
+				}
 			}
 		}
 			
