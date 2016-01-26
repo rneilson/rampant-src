@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// TODO: add reset method
+// TODO: make use PulseControl (or PulseTimer?)
 public class MaterialPulse : MonoBehaviour {
 
 	public Color emissionColor = Color.white;

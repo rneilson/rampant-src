@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
+// TODO: add radius check methods (total and by-type)
+// TODO: add PID generator for each instance added
 public class RedCubeGroundControl : MonoBehaviour {
 
 	// Player tracking

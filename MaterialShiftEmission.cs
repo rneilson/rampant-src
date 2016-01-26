@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// TODO: add reset method
+// TODO: make use PulseControl (or PulseTimer?)
 public class MaterialShiftEmission : MonoBehaviour {
 
 	// Material list and parameters

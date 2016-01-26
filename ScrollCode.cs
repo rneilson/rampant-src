@@ -2,6 +2,7 @@
 using System.Collections;
 using System;
 
+// TODO: change source to string (along with ScrollCodeBox)
 public class ScrollCode : MonoBehaviour {
 
 	// Related things

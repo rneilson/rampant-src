@@ -5,9 +5,10 @@ using System;
 
 // Might as well be its own class
 // TODO: switch inst and type to classes too
+// TODO: add PID field to inst
 // TODO: move type functions to type class
 // TODO: add constructor overloads to inst class
-// TODO: genericize
+// TODO: genericize (make PID field a general inst descriptor field (also subclass the one with from the one without))
 public class EnemyList : IEnumerable {
 	// Shared between all instances (easier, frankly)
 	private static int enemyTypeIndex;						// Starting type number

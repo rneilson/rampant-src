@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// TODO: switch to cheating way of checking spawn point clearance
+// TODO: add safezone at end of predicted path
+// TODO: fold in SpawnPoint functionality (?)
 public class EnemySpawner : MonoBehaviour {
 	
 	public int roundSizeStart = 1; // Set to 0 if monotonically increasing size

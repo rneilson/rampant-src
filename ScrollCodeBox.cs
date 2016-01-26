@@ -5,6 +5,14 @@ using System.Globalization;
 using System.Text;
 using System;
 
+// TODO: increase columns to 25
+// TODO: change source from array to iterator over string
+// TODO: only advance line on newline in source
+// TODO: add source queue
+// TODO: add queue checks per frame
+// TODO: allow appending to current source line
+// TODO: add force-next-source-in-queue public method(s)
+// TODO: add interruptions
 public class ScrollCodeBox : MonoBehaviour {
 
 	// Components
