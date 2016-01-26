@@ -218,6 +218,7 @@ public class Scorer : MonoBehaviour {
 
 		// Check for debug capture
 		if (Input.GetButtonDown("DebugCapture")) {
+			PauseGame();
 			Debug.Log("Debug capture:", gameObject);
 			enemyControl.DebugCap();
 		}
