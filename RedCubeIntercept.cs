@@ -85,9 +85,9 @@ public class RedCubeIntercept : MonoBehaviour {
 		if (dying != DeathType.None) {
 			BlowUp();
 		}
-		else if (debugInfo) {
-			Debug.DrawLine(transform.position, closing + transform.position, Color.green);
-			Debug.DrawLine(closing + transform.position, bearing + transform.position, Color.yellow);
+		else if ((debugInfo) || (scorer.GlobalDebug)) {
+			Debug.DrawLine(transform.position, closing + transform.position, Color.magenta);
+			Debug.DrawLine(closing + transform.position, bearing + transform.position, Color.blue);
 		}
 	}
 	
