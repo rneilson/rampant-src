@@ -137,6 +137,15 @@ public class EnemyList : IEnumerable {
 		}
 	}
 
+	public static string GetTypeName (int typeNum) {
+		if (TypeExists(typeNum)) {
+			return enemyTypeByNum[typeNum].typeName;
+		}
+		else {
+			return EnemyType.Nothing.typeName;
+		}
+	}
+
 	public static bool TypeExists (int typeNum) {
 		return enemyTypeByNum.ContainsKey(typeNum);
 	}
@@ -172,26 +181,45 @@ public class EnemyList : IEnumerable {
 		return this.enemiesTotal.Values.GetEnumerator();
 	}
 
-	// Nested class for use with foreach when specifying type
+	// Returns nested class for use with foreach when specifying type
 	public EnemyListByType ByType (int index) {
 		if (this.HasType(index)) {
 			return new EnemyListByType(enemiesByType[index]);
 		}
 		else {
 			// Fail safely, if circuitously
-			return new EnemyListByType(new Dictionary<GameObject, EnemyInst>());
+			//return new EnemyListByType(new Dictionary<GameObject, EnemyInst>());
+			return new EnemyListByType();
 		}
 	}
 	public class EnemyListByType : IEnumerable {
-		readonly Dictionary<GameObject, EnemyInst> enemyList;
+		//readonly Dictionary<GameObject, EnemyInst> enemyList;
+		readonly IEnumerator<EnemyInst> enumerator;
 		internal EnemyListByType (Dictionary<GameObject, EnemyInst> enemies) {
-			enemyList = enemies;
+			//enemyList = enemies;
+			enumerator = enemies.Values.GetEnumerator();
+		}
+		internal EnemyListByType () {
+			enumerator = new EnemyListEmptyEnumerator();
 		}
 		IEnumerator IEnumerable.GetEnumerator() {
 			return (IEnumerator) GetEnumerator();
 		}
 		public IEnumerator<EnemyInst> GetEnumerator() {
-			return enemyList.Values.GetEnumerator();
+			return enumerator;
+		}
+	}
+	public class EnemyListEmptyEnumerator : IEnumerator<EnemyInst> {
+		// Seriously, this is just to return an empty enumerator as a fail-safe
+		public EnemyListEmptyEnumerator () {}
+		public bool MoveNext () { return false; }
+		public void Reset () {}
+		void IDisposable.Dispose() {}
+		public EnemyInst Current { 
+			get { throw new InvalidOperationException(); } 
+		}
+		object IEnumerator.Current {
+			get { return Current; }
 		}
 	}
 
