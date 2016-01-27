@@ -30,7 +30,8 @@ public class EnemySpawner : MonoBehaviour {
 	private bool playerBreak;
 	private float maxSafeRadius = 4.75f;
 	private float maxDisplacement;
-	private int predictionFrames;
+	//private int predictionFrames;
+	private int playerMask;
 
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
@@ -49,7 +50,9 @@ public class EnemySpawner : MonoBehaviour {
 		myAudioSource = scorer.GetComponent<AudioSource>();
 
 		// Predictions frames ahead to use
-		predictionFrames = (control.PredictionLength > 51) ? 50 : control.PredictionLength - 1;
+		//predictionFrames = (control.PredictionLength > 51) ? 50 : control.PredictionLength - 1;
+		
+		playerMask = 1 << LayerMask.NameToLayer("Player");
 	}
 	
 	// Update is called once per frame
@@ -128,17 +131,19 @@ public class EnemySpawner : MonoBehaviour {
 
 	void SpawnRound () {
 		// Begin wave spawn loop
-		GameObject player = GameObject.FindGameObjectWithTag("Player");
-		Vector3 playerPos = player.transform.position;
-		Vector3 predictPos = control.Prediction(predictionFrames);
+		//GameObject player = GameObject.FindGameObjectWithTag("Player");
+		//Vector3 playerPos = player.transform.position;
+		//Vector3 predictPos = control.Prediction(predictionFrames);
 		Vector3 spawnPos;
 		Collider[] others;
+		Collider[] playerCur;
+		//Collider[] playerPred;
 		bool clear = false;
 		// Expand safezone radius if player just respawned
 		float safeRadius = (playerBreak) ? Mathf.Min(safeZoneRadius + scorer.PlayerBreakRadius, maxSafeRadius) : 
 			Mathf.Min(safeZoneRadius, maxSafeRadius);
 		// Let's say the safe radius at the prediction point is lower
-		float predictRadius = safeRadius / 2.0f;
+		//float predictRadius = safeRadius / 2.0f;
 
 		// Spawn loop
 		for	(int i = roundSizeCurrent; i > 0; i--) {
@@ -148,9 +153,11 @@ public class EnemySpawner : MonoBehaviour {
 				spawnPos = new Vector3(Random.Range(-maxDisplacement, maxDisplacement), 1f, 
 					Random.Range(-maxDisplacement, maxDisplacement));
 				others = Physics.OverlapSphere(spawnPos, 0.2f);
-				if ((others.Length == 0) 
-					&& ((spawnPos - playerPos).magnitude > safeRadius) 
-					&& ((spawnPos - predictPos).magnitude > predictRadius)) {
+				playerCur = Physics.OverlapSphere(spawnPos, safeRadius, playerMask);
+				//playerPred = Physics.OverlapSphere(spawnPos, predictRadius, playerMask);
+				if ((others.Length == 0) && (playerCur.Length == 0)) {
+					//&& ((spawnPos - playerPos).magnitude > safeRadius)) {
+					//&& ((spawnPos - predictPos).magnitude > predictRadius)) {
 					clear = true;
 				}
 			} while (!clear);
