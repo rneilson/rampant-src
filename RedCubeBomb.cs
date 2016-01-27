@@ -158,7 +158,15 @@ public class RedCubeBomb : MonoBehaviour {
 		Destroy(daBomb, 1.0f);
 		// Turn down flash if dying quietly
 		if (dying != DeathType.Loudly) {
-			daBomb.GetComponent<LightPulse>().ChangeTargetRelative(-1.5f);
+			daBomb.GetComponent<LightPulse>().ChangeTargetRelative(-1.2f);
+		}
+		// Turn down volume if dying quietly
+		if (dying == DeathType.Quietly) {
+			daBomb.GetComponent<AudioSource>().volume *= 0.5f;
+		}
+		// Mute if dying silently
+		if (dying == DeathType.Silently) {
+			daBomb.GetComponent<AudioSource>().mute = true;
 		}
 		
 		// We're dropping, make sure we're now disarmed
