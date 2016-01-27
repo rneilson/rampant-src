@@ -1,21 +1,19 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// TODO: clean out old debug stuff
 public class RedCubeIntercept : MonoBehaviour {
 	
 	private GameObject target;
 	private Scorer scorer;
-	public float deltaTime;	// Public for debug
+	private float deltaTime;
 	private DeathType dying = DeathType.None;
-	public Vector3 bearing = Vector3.zero;	// Public for debug
-	public Vector3 closing = Vector3.zero;	// Public for debug
-	public float timeToIntercept = 0.0f;	// Public for debug
-	public Vector3 prevPos = Vector3.zero;	// Public for debug
-	public Vector3 currPos = Vector3.zero;	// Public for debug
-	public float currSpeed = 0.0f;	// Public for debug
-	//public float currSpeedFrame = 0.0f;	// Public for debug
-	public float avgSpeed = 0.0f;	// Public for debug
+	private Vector3 bearing = Vector3.zero;
+	private Vector3 closing = Vector3.zero;
+	private float timeToIntercept = 0.0f;
+	private Vector3 prevPos = Vector3.zero;
+	private Vector3 currPos = Vector3.zero;
+	private float currSpeed = 0.0f;
+	private float avgSpeed = 0.0f;
 	private RedCubeGroundControl control;
 	private bool debugInfo;
 	private float avgWeight = 0.82f;
@@ -100,23 +98,9 @@ public class RedCubeIntercept : MonoBehaviour {
 		currPos = transform.position;
 		Vector3 currVel = (currPos - prevPos) / deltaTime;
 		currSpeed = currVel.magnitude;
-		//currSpeedFrame = currSpeed * deltaTime;
 
 		// Average speed
 		avgSpeed = avgSpeed * avgWeight + currSpeed * currWeight;
-
-		/*
-		// Update control's max speed if req'd
-		if (currSpeed > control.MaxInterceptorSpeed) {
-			if (debugInfo) {
-				Debug.Log("Updating max speed, was " + control.MaxInterceptorSpeed.ToString() + ", now "
-					+ currSpeed.ToString(), gameObject);
-				Debug.Log("Previous position: " + prevPos.ToString() 
-					+ ", current position: " + currPos.ToString(), gameObject);
-			}
-			control.MaxInterceptorSpeed = currSpeed;
-		}
-		*/
 
 		if (target) {
 			UpdateTracking();
@@ -162,7 +146,6 @@ public class RedCubeIntercept : MonoBehaviour {
 		if (dying == DeathType.None) {
 			dying = (loudly) ? DeathType.Loudly : DeathType.Quietly;
 		}
-		//collider.enabled = false;
 	}
 
 	void KillRelatives (float delay) {
@@ -256,13 +239,4 @@ public class RedCubeIntercept : MonoBehaviour {
 		return rot * spinAxis;
 	}
 	
-	// On collision
-	/* void OnCollisionEnter(Collision collision) {
-		GameObject thingHit = collision.gameObject;
-		
-		if (thingHit.tag == "Bullet" && dead == false) {
-			dead = true;
-			BlowUp(true);
-		}
-	} */
 }

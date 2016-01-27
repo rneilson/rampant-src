@@ -7,8 +7,6 @@ public class RedCubeBehave : MonoBehaviour {
 	private GameObject target;
 	private Scorer scorer;
 	private RedCubeGroundControl control;
-	//private float speed = 10f;
-	//private float drag = 4f;
 	private Vector3 bearing;
 	private DeathType dying = DeathType.None;
 
@@ -96,7 +94,6 @@ public class RedCubeBehave : MonoBehaviour {
 		if (dying == DeathType.None) {
 			dying = (loudly) ? DeathType.Loudly : DeathType.Quietly;
 		}
-		//collider.enabled = false;
 	}
 	
 	void ClearTarget () {
@@ -155,13 +152,4 @@ public class RedCubeBehave : MonoBehaviour {
 		}
 	}
 
-	// On collision
-	/* void OnCollisionEnter(Collision collision) {
-		GameObject thingHit = collision.gameObject;
-		
-		if (thingHit.tag == "Bullet" && dead == false) {
-			dead = true;
-			BlowUp(true);
-		}
-	} */
 }
