@@ -5,7 +5,7 @@ public class RedCubeBomb : MonoBehaviour {
 	
 	private GameObject target;
 	private Scorer scorer;
-	private RedCubeGroundControl controller;
+	private RedCubeGroundControl control;
 	//private float speed = 10f;
 	//private float drag = 4f;
 	private Vector3 bearing;
@@ -56,7 +56,7 @@ public class RedCubeBomb : MonoBehaviour {
 
 		// Add to control's list
 		thisInst = new EnemyInst(thisType.typeNum, gameObject);
-		controller.AddInstanceToList(thisInst);
+		control.AddInstanceToList(thisInst);
 	}
 	
 	// Update is called once per frame
@@ -101,7 +101,7 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 		KillRelatives(0.4f);
 		// Remove from control's list
-		controller.RemoveInstanceFromList(thisInst);
+		control.RemoveInstanceFromList(thisInst);
 		// Destroy ourselves
 		Destroy(gameObject);
 	}
@@ -145,9 +145,9 @@ public class RedCubeBomb : MonoBehaviour {
 		target = newTarget;
 	}
 
-	void FindControl (GameObject control) {
-		scorer = control.GetComponent<Scorer>();
-		controller = control.GetComponent<RedCubeGroundControl>();
+	void FindControl (GameObject controller) {
+		scorer = controller.GetComponent<Scorer>();
+		control = controller.GetComponent<RedCubeGroundControl>();
 		NewTarget(scorer.Player);
 	}
 
@@ -164,13 +164,14 @@ public class RedCubeBomb : MonoBehaviour {
 			daBomb.GetComponent<LightPulse>().ChangeTargetRelative(-1.5f);
 		}
 		
+		// We're dropping, make sure we're now disarmed
+		armed = false;
+
+		/* Nope, not faster, not really
 		// New bomb radius code
 		float playerExtent = 0.1f;
 		float thingExtent = 0.1f;
 		float thingDist = 0.0f;
-
-		// We're dropping, make sure we're now disarmed
-		armed = false;
 
 		// Find list of enemies (probably faster than an OverlapSphere (or two))
 		GameObject[] things = GameObject.FindGameObjectsWithTag("Enemy");
@@ -201,13 +202,13 @@ public class RedCubeBomb : MonoBehaviour {
 				}
 			}
 		}
+		*/
 			
-		/* We're gonna do this differently -- physics was bogging down
 		int killmask, pushmask;
 		Collider[] things;
 		// If we're shooting the bomber or self-triggering, can kill player
-		if (loud) {
-			killmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Default"));
+		if (dying == DeathType.Loudly) {
+			killmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Player"));
 		}
 		else {
 			killmask = (1 << LayerMask.NameToLayer("Enemy"));
@@ -221,16 +222,15 @@ public class RedCubeBomb : MonoBehaviour {
 			}
 		}
 		
-		// Only push things if we're dying loudly (and don't push player)
-		if (loud) {
-			pushmask = (1 << LayerMask.NameToLayer("Enemy"));
+		// Only push things if we're dying loudly (do push player)
+		if (dying == DeathType.Loudly) {
+			pushmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Player"));
 			// Push things in outer radius
 			things = Physics.OverlapSphere(bombPos, bombPushRadius, pushmask);
 			for (int i=0; i<things.Length; i++) {
 				things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 			}
 		}
-		*/
 
 	}
 

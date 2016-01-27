@@ -15,7 +15,7 @@ public class RedCubeIntercept : MonoBehaviour {
 	public float currSpeed = 0.0f;	// Public for debug
 	//public float currSpeedFrame = 0.0f;	// Public for debug
 	public float avgSpeed = 0.0f;	// Public for debug
-	private RedCubeGroundControl controller;
+	private RedCubeGroundControl control;
 	private bool debugInfo;
 	private float avgWeight = 0.82f;
 	private float currWeight = 0.18f;
@@ -62,12 +62,12 @@ public class RedCubeIntercept : MonoBehaviour {
 				Debug.Log("Scorer not passed on spawn!", gameObject);
 			}
 		}
-		debugInfo = controller.DebugInfo;
+		debugInfo = control.DebugInfo;
 		currPos = transform.position;
 
 		// Add to control's list
 		thisInst = new EnemyInst(thisType.typeNum, gameObject);
-		controller.AddInstanceToList(thisInst);
+		control.AddInstanceToList(thisInst);
 		/*
 		// Some debug
 		if (transform.childCount > 0) {
@@ -105,15 +105,15 @@ public class RedCubeIntercept : MonoBehaviour {
 		avgSpeed = avgSpeed * avgWeight + currSpeed * currWeight;
 
 		/*
-		// Update controller's max speed if req'd
-		if (currSpeed > controller.MaxInterceptorSpeed) {
+		// Update control's max speed if req'd
+		if (currSpeed > control.MaxInterceptorSpeed) {
 			if (debugInfo) {
-				Debug.Log("Updating max speed, was " + controller.MaxInterceptorSpeed.ToString() + ", now "
+				Debug.Log("Updating max speed, was " + control.MaxInterceptorSpeed.ToString() + ", now "
 					+ currSpeed.ToString(), gameObject);
 				Debug.Log("Previous position: " + prevPos.ToString() 
 					+ ", current position: " + currPos.ToString(), gameObject);
 			}
-			controller.MaxInterceptorSpeed = currSpeed;
+			control.MaxInterceptorSpeed = currSpeed;
 		}
 		*/
 
@@ -147,7 +147,7 @@ public class RedCubeIntercept : MonoBehaviour {
 		}
 		KillRelatives(1.0f);
 		// Remove from control's list
-		controller.RemoveInstanceFromList(thisInst);
+		control.RemoveInstanceFromList(thisInst);
 		// Destroy ourselves
 		Destroy(gameObject);
 	}
@@ -191,9 +191,9 @@ public class RedCubeIntercept : MonoBehaviour {
 		target = newTarget;
 	}
 
-	void FindControl (GameObject control) {
-		scorer = control.GetComponent<Scorer>();
-		controller = control.GetComponent<RedCubeGroundControl>();
+	void FindControl (GameObject controller) {
+		scorer = controller.GetComponent<Scorer>();
+		control = controller.GetComponent<RedCubeGroundControl>();
 		NewTarget(scorer.Player);
 	}
 
@@ -202,21 +202,21 @@ public class RedCubeIntercept : MonoBehaviour {
 		Vector3 closingOption = Vector3.zero;
 		float closingDiff = 0.0f;
 		float diffOption = 0.0f;
-		float avgDeltaTime = controller.AvgDeltaTime;	// Public for debug
+		float avgDeltaTime = control.AvgDeltaTime;	// Public for debug
 		float frameSpeed = avgSpeed * avgDeltaTime;
 
 		// Next we'll default to heading straight for the target's position
-		bearing = controller.Prediction(0) - transform.position;
+		bearing = control.Prediction(0) - transform.position;
 		closing = Vector3.zero;
 		closingDiff = bearing.magnitude;
 		timeToIntercept = 0.0f;
 
 		// Then, we evaluate all predicted target positions and pick the one that gets us closest
-		for (int i = 1; i < controller.PredictionLength; i++) {
+		for (int i = 1; i < control.PredictionLength; i++) {
 			// Exclude positions out of bounds
-			if (InBounds(controller.Prediction(i))) {
+			if (InBounds(control.Prediction(i))) {
 				// Find vector to target position
-				bearingOption = controller.Prediction(i) - transform.position;
+				bearingOption = control.Prediction(i) - transform.position;
 				// Find how far we'll get towards that in the given time (well, number of (fixed) frames)
 				closingOption = (bearingOption.normalized * frameSpeed * (float) i);
 				// Check the distance between them

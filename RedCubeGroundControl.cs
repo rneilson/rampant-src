@@ -45,6 +45,13 @@ public class RedCubeGroundControl : MonoBehaviour {
 	private float extent1d;
 	private float extent2d;
 	private float extent3d;
+	private const string interceptorName = "Interceptor";
+	private const string bomberName = "Bomber";
+	private const string seekerName = "Seeker";
+	private const float interceptorWarnRadius = 1.0f;
+	private const float bomberWarnRadius = 1.0f;
+	public bool seekersAvoidInterceptors = false;
+	public bool bombersAvoidBombers = false;
 
 	// Enemy tracking/radius debug
 	private List<GameObject> debugTracking = new List<GameObject>();
@@ -85,6 +92,12 @@ public class RedCubeGroundControl : MonoBehaviour {
 	}
 	public float Extent3D {
 		get { return extent3d; }
+	}
+	public bool SeekersAvoidInterceptors {
+		get { return seekersAvoidInterceptors; }
+	}
+	public bool BombersAvoidBombers {
+		get { return bombersAvoidBombers; }
 	}
 
 	// Use this for initialization
@@ -166,6 +179,12 @@ public class RedCubeGroundControl : MonoBehaviour {
 	void FixedUpdate () {
 		if (target) {
 			UpdateTracking(target.transform.position, Time.fixedDeltaTime);
+			if (seekersAvoidInterceptors) {
+				InterceptorWarning();	
+			}
+			if (bombersAvoidBombers) {
+				BomberWarning();
+			}
 		}
 		else {
 			// Try and acquire new target
@@ -249,6 +268,41 @@ public class RedCubeGroundControl : MonoBehaviour {
 			posPredictions[i] = posPredictions[i-1] + displace;	// Add rotated displacement
 		}
 
+	}
+
+	void InterceptorWarning () {
+		Collider[] nearby;
+		int mask = 1 << LayerMask.NameToLayer("Enemy");
+		
+		foreach (EnemyInst interceptor in enemies.ByType(EnemyList.GetType(interceptorName).typeNum)) {
+			Vector3 warnPos = interceptor.gameObj.transform.position;
+			// Find enemies in warning radius
+			nearby = Physics.OverlapSphere(warnPos, interceptorWarnRadius, mask);
+			// Warn each
+			for (int i = 0; i < nearby.Length; i++) {
+				//nearby[i].SendMessage("InterceptorClose", interceptor.gameObj, SendMessageOptions.DontRequireReceiver);
+				// Gonna try something
+				// Yay it worked much faster
+				if (enemies.TypeByRef(nearby[i].gameObject).typeName == seekerName) {
+					nearby[i].GetComponent<RedCubeBehave>().InterceptorClose(interceptor.gameObj);
+				}
+			}
+		}
+	}
+
+	void BomberWarning () {
+		Collider[] nearby;
+		int mask = 1 << LayerMask.NameToLayer("Enemy");
+		
+		foreach (EnemyInst bomber in enemies.ByType(EnemyList.GetType(bomberName).typeNum)) {
+			Vector3 warnPos = bomber.gameObj.transform.position;
+			// Find enemies in warning radius
+			nearby = Physics.OverlapSphere(warnPos, bomberWarnRadius, mask);
+			// Warn each
+			for (int i = 0; i < nearby.Length; i++) {
+				nearby[i].SendMessage("BomberClose", bomber.gameObj, SendMessageOptions.DontRequireReceiver);
+			}
+		}
 	}
 
 	public void NewTarget (GameObject newTarget) {

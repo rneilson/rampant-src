@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class RedCubeBehave : MonoBehaviour {
 	
 	private GameObject target;
 	private Scorer scorer;
-	private RedCubeGroundControl controller;
+	private RedCubeGroundControl control;
 	//private float speed = 10f;
 	//private float drag = 4f;
 	private Vector3 bearing;
@@ -27,6 +28,10 @@ public class RedCubeBehave : MonoBehaviour {
 	public GameObject bursterQuiet;
 	public GameObject deathFade;
 
+	// Interceptor avoidance
+	private bool avoidInterceptors;
+	private List<GameObject> interceptorsClose = new List<GameObject>();
+
 	static RedCubeBehave () {
 		thisType = EnemyList.AddOrGetType(thisTypeName);
 	}
@@ -44,7 +49,8 @@ public class RedCubeBehave : MonoBehaviour {
 
 		// Add to control's list
 		thisInst = new EnemyInst(thisType.typeNum, gameObject);
-		controller.AddInstanceToList(thisInst);
+		control.AddInstanceToList(thisInst);
+		avoidInterceptors = control.SeekersAvoidInterceptors;
 	}
 	
 	// Update is called once per frame
@@ -56,8 +62,9 @@ public class RedCubeBehave : MonoBehaviour {
 	//Put movement in FixedUpdate
 	void FixedUpdate () {
 		if (target) {
-			bearing = target.transform.position - transform.position;
-			myRigidbody.AddForce(bearing.normalized * speed);
+			bearing = FindBearing(target.transform.position - transform.position);
+			// Normalized in FindBearing
+			myRigidbody.AddForce(bearing * speed);
 		}
 	}
 	
@@ -75,7 +82,7 @@ public class RedCubeBehave : MonoBehaviour {
 			scorer.AddKill();
 		}
 		// Remove from control's list
-		controller.RemoveInstanceFromList(thisInst);
+		control.RemoveInstanceFromList(thisInst);
 		// Destroy ourselves
 		Destroy(gameObject);
 	}
@@ -100,10 +107,52 @@ public class RedCubeBehave : MonoBehaviour {
 		target = newTarget;
 	}
 	
-	void FindControl (GameObject control) {
-		scorer = control.GetComponent<Scorer>();
-		controller = control.GetComponent<RedCubeGroundControl>();
+	void FindControl (GameObject controller) {
+		scorer = controller.GetComponent<Scorer>();
+		control = controller.GetComponent<RedCubeGroundControl>();
 		NewTarget(scorer.Player);
+	}
+
+	Vector3 FindBearing (Vector3 toTarget) {
+		// Start with a straight line to target
+		Vector3 curBearing = toTarget.normalized;
+
+		if (avoidInterceptors) {
+			// Now move away from each interceptor in turn
+			for (int i = 0; i < interceptorsClose.Count; i++) {
+				curBearing += AvoidInterceptor(interceptorsClose[i], toTarget);
+			}
+			// Clear out interceptor list for next frame
+			interceptorsClose.Clear();
+			// Renormalize
+			return curBearing.normalized;
+		}
+		else {
+			// Didn't add anything, return as-is
+			return curBearing;
+		}
+	}
+
+	Vector3 AvoidInterceptor (GameObject interceptor, Vector3 toTarget) {
+		// Set here as const, keep the namespace clean (it's not, but y'know)
+		const float avoidFactor = 1.0f;
+
+		// Check distance to interceptor
+		Vector3 interDist = transform.position - interceptor.transform.position;
+
+		// Only avoid if interceptor is closer than target
+		if (interDist.sqrMagnitude < toTarget.sqrMagnitude) {
+			return interDist.normalized * avoidFactor;
+		}
+		else {
+			return Vector3.zero;
+		}
+	}
+
+	public void InterceptorClose (GameObject interceptor) {
+		if (avoidInterceptors) {
+			interceptorsClose.Add(interceptor);
+		}
 	}
 
 	// On collision
