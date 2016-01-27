@@ -178,7 +178,7 @@ public class EnemyList : IEnumerable {
 		return (IEnumerator) GetEnumerator();
 	}
 	public IEnumerator<EnemyInst> GetEnumerator() {
-		return this.enemiesTotal.Values.GetEnumerator();
+		return enemiesTotal.Values.GetEnumerator();
 	}
 
 	// Returns nested class for use with foreach when specifying type
@@ -224,16 +224,16 @@ public class EnemyList : IEnumerable {
 	}
 
 	public int Count {
-		get { return this.enemiesTotal.Count; }
+		get { return enemiesTotal.Count; }
 	}
 
 	public int CountTypes {
-		get { return this.enemiesByType.Count; }
+		get { return enemiesByType.Count; }
 	}
 
 	// Fastest way, I think, to get the collection of types on board
 	public List<int> TypesHeld {
-		get { return new List<int>(this.enemiesByType.Keys); }
+		get { return new List<int>(enemiesByType.Keys); }
 	}
 
 	public bool HasType (EnemyType enemyType) {
@@ -243,7 +243,7 @@ public class EnemyList : IEnumerable {
 
 	public bool HasType (int typeNum) {
 		if (typeNum > 0) {
-			return this.enemiesByType.ContainsKey(typeNum);
+			return enemiesByType.ContainsKey(typeNum);
 		}
 		else {
 			return false;
@@ -263,7 +263,7 @@ public class EnemyList : IEnumerable {
 
 	public int CountByType (int index) {
 		if (TypeExists(index) && this.HasType(index)) {
-			return this.enemiesByType[index].Count;
+			return enemiesByType[index].Count;
 		}
 		else {
 			return 0;
@@ -272,7 +272,7 @@ public class EnemyList : IEnumerable {
 
 	public int CountByType (string index) {
 		if (TypeExists(index) && this.HasType(index)) {
-			return this.enemiesByType[GetType(index).typeNum].Count;
+			return enemiesByType[GetType(index).typeNum].Count;
 		}
 		else {
 			return 0;
@@ -323,19 +323,19 @@ public class EnemyList : IEnumerable {
 		// Type number exists (or it does now), now check if we have it on board
 		if (!this.HasType(inst.typeNum)) {
 			// Not already on board, add type num
-			this.enemiesByType.Add(inst.typeNum, new Dictionary<GameObject, EnemyInst>());
+			enemiesByType.Add(inst.typeNum, new Dictionary<GameObject, EnemyInst>());
 		}
 		// Check if we already have inst...
 		// ...in total?
-		if (!this.enemiesTotal.ContainsKey(inst.gameObj)) {
+		if (!enemiesTotal.ContainsKey(inst.gameObj)) {
 			// Add inst to overall dict
-			this.enemiesTotal.Add(inst.gameObj, inst);
+			enemiesTotal.Add(inst.gameObj, inst);
 			addedTotal = true;
 		}
 		// ...by type?
-		if (!this.enemiesByType[inst.typeNum].ContainsKey(inst.gameObj)) {
+		if (!enemiesByType[inst.typeNum].ContainsKey(inst.gameObj)) {
 			// Add inst to per-type dict
-			this.enemiesByType[inst.typeNum].Add(inst.gameObj, inst);
+			enemiesByType[inst.typeNum].Add(inst.gameObj, inst);
 			addedType = true;
 		}
 
@@ -346,14 +346,24 @@ public class EnemyList : IEnumerable {
 	public bool Remove (EnemyInst inst) {
 		bool removedTotal = false, removedType = false;
 		// This one's simple
-		removedTotal = this.enemiesTotal.Remove(inst.gameObj);
+		removedTotal = enemiesTotal.Remove(inst.gameObj);
 		// This one's not -- gotta check if type key exists first
 		if (enemiesByType.ContainsKey(inst.typeNum)) {
-			removedType = this.enemiesByType[inst.typeNum].Remove(inst.gameObj);
+			removedType = enemiesByType[inst.typeNum].Remove(inst.gameObj);
 		}
 
 		// Return true if removed from either
 		return removedTotal || removedType;
+	}
+
+	public EnemyType TypeByRef (GameObject obj) {
+		if (enemiesTotal.ContainsKey(obj)) {
+			EnemyInst inst = enemiesTotal[obj];
+			return EnemyList.GetType(inst.typeNum);
+		}
+		else {
+			return EnemyType.Nothing;
+		}
 	}
 
 }
