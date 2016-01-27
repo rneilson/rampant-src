@@ -8,10 +8,8 @@ public class BallMovement : MonoBehaviour {
 	public float dragNoInput;
 	public float dragInput;
 
-	private AudioSource myAudioSource;
-	public AudioClip bulletSound1;
-	public AudioClip bulletSound2;
-	public AudioClip bulletSound3;
+	public AudioClip bulletSound;
+	public AudioSource[] audioArray;
 	
 	private Rigidbody myRigidbody;
 	public Rigidbody bullet;
@@ -27,13 +25,13 @@ public class BallMovement : MonoBehaviour {
 	private GameObject bombBlinker;
 	private GameObject fireCursor;
 	private CursorMovement fireCursorControl;
-	//public AudioClip boomKillSound;
 	
-	private int fireMode = 1;
-	private int fireCycle = 0;
+	private int fireMode;
+	private int fireCycle;
+	private int audioCycle;
+	private int audioCycleMax;
 	private Vector3 firePosCurrent;
 	private Vector3 fireDirCurrent;
-	//private float bulletLifetime = 1.5f;
 	
 	private const float piOverFour = Mathf.PI / 4;
 
@@ -71,7 +69,7 @@ public class BallMovement : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		// Unity 5 API changes
-		myAudioSource = GetComponent<AudioSource>();
+		//myAudioSource = GetComponent<AudioSource>();
 		myRigidbody = GetComponent<Rigidbody>();
 
 		myRigidbody.drag=dragNoInput;
@@ -80,6 +78,12 @@ public class BallMovement : MonoBehaviour {
 		fireCursorControl = fireCursor.GetComponent<CursorMovement>();
 		//scorer = controller.GetComponent<Scorer>();
 		//groundControl = controller.GetComponent<RedCubeGroundControl>();
+
+		// Firing and audio cycle stuff
+		fireMode = 1;
+		fireCycle = 0;
+		audioCycle = 0;
+		audioCycleMax = audioArray.Length / 2;	// Should still work for Length=1, since cycle will always reset to 0
 	}
 	
 	// Update is called once per frame
@@ -178,16 +182,17 @@ public class BallMovement : MonoBehaviour {
 	}
 	
 	// Fire bullet
-	void FireBullet (Vector3 firePos, Vector3 fireDir, float speed, AudioClip fireSound) {
-		//alternating *= -1f;
-		//Vector3 dir = new Vector3(dirx, 0, dirz).normalized;
-		//Vector3 firePos = transform.position + (new Vector3(alternating*dirz, 0, alternating*dirx*-1f).normalized * 0.15f);
-
-		//Rigidbody bulletClone = (Rigidbody) Instantiate(bullet, firePos, transform.rotation);
+	void FireBullet (Vector3 firePos, Vector3 fireDir, float speed) {
+		// Create and launch bullet
 		Rigidbody bulletClone = Instantiate(bullet, firePos, transform.rotation) as Rigidbody;
-		//Destroy(bulletClone, bulletLifetime);
 		bulletClone.AddForce(fireDir * speed);
-		myAudioSource.PlayOneShot(fireSound, 1.0f);
+
+		// Play sound and advance/reset audio source counter
+		audioArray[audioCycle].PlayOneShot(bulletSound, 1.0f);
+		if (++audioCycle >= audioCycleMax) {
+			// This is to keep firemode 2 to the upper half of the array
+			audioCycle = audioArray.Length / 2;
+		}
 
 		// Muzzle flash
 		if (muzzleFlash) {
@@ -207,36 +212,19 @@ public class BallMovement : MonoBehaviour {
 		if (fireMode == 1) {
 			if (fireCycle == 0) {
 				firePosCurrent = transform.position + (fireDir * fireDist);
-				FireBullet(firePosCurrent, fireDir, fireSpeed, bulletSound1);
+				FireBullet(firePosCurrent, fireDir, fireSpeed);
 			}
 		}
 		else if (fireMode == 2) {
 			if (fireCycle == 0) {
-				//firePosCurrent = transform.position + (new Vector3(dzr, 0, -1f*dxr).normalized * 0.15f);
 				firePosCurrent  = transform.position + (RotateFortyFive(fireDir, 1.0f) * fireDist);
-				FireBullet(firePosCurrent, fireDir, fireSpeed, bulletSound2);
+				FireBullet(firePosCurrent, fireDir, fireSpeed);
 			}
 			else if (fireCycle == 3) {
-				//firePosCurrent = transform.position + (new Vector3(-1f*dzr, 0, dxr).normalized * 0.15f);
 				firePosCurrent  = transform.position + (RotateFortyFive(fireDir, -1.0f) * fireDist);
-				FireBullet(firePosCurrent, fireDir, fireSpeed, bulletSound3);
+				FireBullet(firePosCurrent, fireDir, fireSpeed);
 			}
 		}
-		// Removed while testing firemode 2 limit
-		/* else if (fireMode == 3) {
-			if (fireCycle == 0) {
-				firePosCurrent = transform.position + (new Vector3(dzr, 0, -1f*dxr).normalized * 0.15f);
-				FireBullet(firePosCurrent, fireDirCurrent, fireSpeed, bulletSound2);
-			}
-			else if (fireCycle == 2) {
-				firePosCurrent = transform.position + (new Vector3(dxr, 0, dzr).normalized * 0.15f);
-				FireBullet(firePosCurrent, fireDirCurrent, fireSpeed, bulletSound1);
-			}
-			else if (fireCycle == 4) {
-				firePosCurrent = transform.position + (new Vector3(-1f*dzr, 0, dxr).normalized * 0.15f);
-				FireBullet(firePosCurrent, fireDirCurrent, fireSpeed, bulletSound3);
-			}
-		} */
 		
 		// Advance firing cycle
 		fireCycle++;
@@ -248,6 +236,7 @@ public class BallMovement : MonoBehaviour {
 	public void FireFaster () {
 		if (fireMode < 2) {
 			fireMode++;
+			audioCycleMax = audioArray.Length;
 			PowerUp();
 		}
 		//else
