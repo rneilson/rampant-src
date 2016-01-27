@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-// TODO: add radius check methods (total and by-type)
 // TODO: add PID generator for each instance added
 public class RedCubeGroundControl : MonoBehaviour {
 

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// TODO: obsolete? (Is anything still using this?)
 public class MaterialShift : MonoBehaviour {
 
 	// Material list and parameters

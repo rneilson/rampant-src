@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-// Might as well be its own class
-// TODO: switch inst and type to classes too
 // TODO: add PID field to inst
 // TODO: move type functions to type class
 // TODO: add constructor overloads to inst class

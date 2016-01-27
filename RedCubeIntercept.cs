@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// TODO: clean out old debug stuff
 public class RedCubeIntercept : MonoBehaviour {
 	
 	private GameObject target;

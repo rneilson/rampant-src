@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// TODO: add safezone at end of predicted path
 // TODO: fold in SpawnPoint functionality (?)
 public class EnemySpawner : MonoBehaviour {
 	

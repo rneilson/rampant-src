@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Text;
 using System;
 
-// TODO: increase columns to 25
+// TODO: increase columns to 25 (or more?)
 // TODO: change source from array to iterator over string
 // TODO: only advance line on newline in source
 // TODO: add source queue

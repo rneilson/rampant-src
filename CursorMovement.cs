@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// TODO: don't unhide cursor until game started
 public class CursorMovement : MonoBehaviour {
 
 	// Max displacement values
