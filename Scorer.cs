@@ -5,7 +5,7 @@ using System.Collections.Generic;
 // TODO: change quit key to Esc
 // TODO: peel off pause menu into its own class (classes?)
 // TODO: corrupt title text
-// TODO: make one of the scrollboxes a log
+// TODO: make one of the scrollboxes a log (?)
 // TODO: add PID kill message to log on each kill
 // TODO: add something fun-sounding to log when bombing
 // TODO: add kernel oops message to log on death
@@ -57,6 +57,9 @@ public class Scorer : MonoBehaviour {
 	public GameObject playerType;
 	public GameObject spawnEffect;
 	public AudioClip spawnSound;
+	public AudioClip respawnSound;
+	public float respawnSoundDelay = 0.0f;
+	public float respawnSoundVol = 0.5f;
 
 	// Enemy phases (ie difficulty stuff)
 	public GameObject[] enemyPhases;
@@ -345,6 +348,16 @@ public class Scorer : MonoBehaviour {
 		titleText.text = kills.ToString() + " kills";
 		subtitleText.text = "Total deaths: " + totalDeaths.ToString() + "\nMost kills: " + maxKills.ToString();
 		ClearTargets();
+
+		// Play respawn countdown sound
+		if (respawnSound) {
+			if (respawnSoundDelay > 0.0f) {
+				StartCoroutine(PlayDelayedClip(respawnSound, respawnSoundDelay, respawnSoundVol));
+			}
+			else {
+				myAudioSource.PlayOneShot(respawnSound, respawnSoundVol);
+			}
+		}
 	}
 	
 	void SpawnBomb (Vector3 spawnAt, Vector3 bombAt, float killRadius, float pushRadius) {
@@ -479,6 +492,11 @@ public class Scorer : MonoBehaviour {
 				shifter.SendMessage("GameStarted", null, SendMessageOptions.DontRequireReceiver);
 			}
 		}
+	}
+
+	IEnumerator PlayDelayedClip (AudioClip toPlay, float delay, float volume) {
+		yield return new WaitForSeconds(delay);
+		myAudioSource.PlayOneShot(toPlay, volume);
 	}
 }
 
