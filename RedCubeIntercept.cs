@@ -9,7 +9,6 @@ public class RedCubeIntercept : MonoBehaviour {
 	private DeathType dying = DeathType.None;
 	private Vector3 bearing = Vector3.zero;
 	private Vector3 closing = Vector3.zero;
-	private float timeToIntercept = 0.0f;
 	private Vector3 prevPos = Vector3.zero;
 	private Vector3 currPos = Vector3.zero;
 	private float currSpeed = 0.0f;
@@ -193,7 +192,6 @@ public class RedCubeIntercept : MonoBehaviour {
 		bearing = control.Prediction(0) - transform.position;
 		closing = Vector3.zero;
 		closingDiff = bearing.magnitude;
-		timeToIntercept = 0.0f;
 
 		// Then, we evaluate all predicted target positions and pick the one that gets us closest
 		for (int i = 1; i < control.PredictionLength; i++) {
@@ -210,7 +208,6 @@ public class RedCubeIntercept : MonoBehaviour {
 					bearing = bearingOption;
 					closing = closingOption;
 					closingDiff = diffOption;
-					timeToIntercept = (float) i * avgDeltaTime;
 				}
 			}
 		}

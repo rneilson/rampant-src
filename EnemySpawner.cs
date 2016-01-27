@@ -26,9 +26,7 @@ public class EnemySpawner : MonoBehaviour {
 	private int roundCounter;
 	private int roundNumCurrent;
 	private int roundSizeCurrent;
-	private int increaseCounter;
 	private int waveCounter;
-	//private int mask;
 	private bool playerBreak;
 	private float maxSafeRadius = 4.75f;
 	private float maxDisplacement;
@@ -99,7 +97,6 @@ public class EnemySpawner : MonoBehaviour {
 		roundNumCurrent = roundNumStart;
 		roundCounter = 0;
 		waveCounter = 0;
-		increaseCounter = 0;
 		counting = false;
 		countdown = initialDelay;
 	}
@@ -108,13 +105,6 @@ public class EnemySpawner : MonoBehaviour {
 	public void StartWave (int wave, bool giveBreak) {
 		// Check if we should even be doing anything
 		if ((wave >= waveMin) && ((wave <= waveMax) || waveMax == 0)) {
-			/* [OLD] kept for reference
-			// If still more phase rounds to come, increase as per cycle
-			if (wave > waveMin) {
-				Increase();
-			}
-			*/
-
 			// Check cycle array, don't do anything if skipping this wave
 			WaveType currentWave = waveCycle[waveCounter];
 			if (currentWave != WaveType.None) {
@@ -125,7 +115,6 @@ public class EnemySpawner : MonoBehaviour {
 				counting = true;
 				roundCounter = 0;
 				playerBreak = giveBreak;
-				//countdown = (playerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
 				countdown = initialDelay; // PlayerBreakDelay only used in EnemyPhase
 			}
 
@@ -200,23 +189,6 @@ public class EnemySpawner : MonoBehaviour {
 	// Decrease number of rounds by step
 	void DecreaseNum () {
 		roundNumCurrent -= roundNumStep;
-	}
-
-	// Increase by whatever's in the queue
-	void Increase () {
-		IncreaseType increaseCurrent = increaseCycle[increaseCounter];
-
-		if ((increaseCurrent == IncreaseType.Size) || (increaseCurrent == IncreaseType.Both)) {
-			IncreaseSize();
-		}
-		if ((increaseCurrent == IncreaseType.Num) || (increaseCurrent == IncreaseType.Both)) {
-			IncreaseNum();
-		}
-
-		increaseCounter++;
-		if (increaseCounter >= increaseCycle.Length) {
-			increaseCounter = 0;
-		}
 	}
 
 	// Increase/decrease size/num/both/neither

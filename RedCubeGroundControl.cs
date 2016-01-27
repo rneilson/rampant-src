@@ -101,10 +101,6 @@ public class RedCubeGroundControl : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		// First, find a player
-		//NewTarget(GameObject.FindGameObjectWithTag("Player"));
-		// Disabled because there's never a player on startup
-
 		// Get scorer
 		scorer = GetComponent<Scorer>();
 
@@ -120,10 +116,6 @@ public class RedCubeGroundControl : MonoBehaviour {
 		debugColors["Extent"] = Color.white;
 		debugColors["Radius"] = Color.grey;
 		debugColors["OutOfRange"] = Color.black;
-
-		// Currently on initialization, not here
-		// Create (empty) enemy list
-		//enemies = new EnemyList();
 
 		if (predictMode == PredictionMode.Linear) {
 			avgWeight = (float) (framesToAverage - 1) / (float) framesToAverage;
@@ -152,12 +144,6 @@ public class RedCubeGroundControl : MonoBehaviour {
 		if (debugInfo) {
 			prevAccelVectors = new Vector3[framesToAverage];
 		}
-		/*
-		if (debugInfo) {
-			Debug.Log("Predictions Length is " + posPredictions.Length.ToString() 
-				+ ", should be " + (framesToPredict + 1).ToString(), gameObject);
-		}
-		*/
 
 	}
 	
@@ -311,8 +297,6 @@ public class RedCubeGroundControl : MonoBehaviour {
 			currPos = target.transform.position;
 			currVel = Vector3.zero;
 			currAccel = Vector3.zero;
-			//avgTurn = Vector3.zero;
-			//lastTurn = Vector3.zero;
 			avgAccel = Vector3.zero;
 			avgSpeed = 0.0f;
 		}
@@ -404,7 +388,6 @@ public class RedCubeGroundControl : MonoBehaviour {
 						debugTrackByType[x].Count, EnemyList.GetTypeName(x), debugRadius), gameObject);
 				}
 			}
-			// TODO: moar?
 		}
 	}
 

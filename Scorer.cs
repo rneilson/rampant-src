@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+// TODO: change quit key to Esc
 // TODO: peel off pause menu into its own class (classes?)
 // TODO: corrupt title text
 // TODO: make one of the scrollboxes a log
@@ -17,9 +18,7 @@ public class Scorer : MonoBehaviour {
 	private TextMesh scoreLevel;
 	private TextMesh titleText;
 	private TextMesh subtitleText;
-	//private Component[] spawners;
 	private float respawnCountdown;
-	//private bool respawn;
 	private GameObject playerCurrent;
 	private BallMovement playerControl;
 	private CameraMovement cameraFollower;
@@ -48,7 +47,6 @@ public class Scorer : MonoBehaviour {
 
 	private bool respawn;
 	private bool playerBreak = false;		// Should rename at some point
-	//public bool givePlayerBreak = true;	// unused
 	public float playerBreakDelay = 1.0f;
 	public float playerBreakRadius = 1.0f;
 	private float maxDisplacement = 4.75f;
@@ -142,7 +140,6 @@ public class Scorer : MonoBehaviour {
 		scoreLevel = GameObject.Find("Display-level").GetComponent<TextMesh>();
 		titleText = GameObject.Find("TitleText").GetComponent<TextMesh>();
 		subtitleText = GameObject.Find("SubtitleText").GetComponent<TextMesh>();
-		//spawners = gameObject.GetComponents(typeof(Spawner));
 		kills = 0;
 		level = 0;
 		maxKills = 0;
@@ -193,14 +190,6 @@ public class Scorer : MonoBehaviour {
 		foreach (GameObject shifter in GameObject.FindGameObjectsWithTag("ArenaShifter")) {
 			arenaShifters.Add(shifter);
 		}
-		/*
-		if (arenaPulsers.Length > 0) {
-			arenaPulseMats = new List<MaterialPulse>(arenaPulsers.Length);
-			foreach (GameObject pulser in arenaPulsers) {
-				arenaPulseMats.Add(pulser.GetComponent<MaterialPulse>());
-			}
-
-		}*/
 	}
 	
 	// Update is called once per frame
@@ -233,7 +222,6 @@ public class Scorer : MonoBehaviour {
 		if (!isPaused) {
 			if (respawn == true) {
 				respawnCountdown -= Time.deltaTime;
-				//cameraFollower.SendMessage("RespawnCountdown", respawnCountdown);
 				cameraFollower.RespawnCountdown(respawnCountdown);
 			}
 			if (respawnCountdown <= 0f) {
@@ -253,7 +241,7 @@ public class Scorer : MonoBehaviour {
 			kills++;
 			scoreKills.text = "Kills: " + kills.ToString();
 
-			/*
+			/* Decided not to do that every kill, only on death
 			// Update high score
 			if (kills > maxKills) {
 				maxKills = kills;
@@ -287,24 +275,6 @@ public class Scorer : MonoBehaviour {
 					}
 				}
 			}
-			
-			/* Old powerup code
-			int modKills = kills % 50;
-			//Debug.Log("Kills: " + kills.ToString() + ", spawned: " + totalSpawned.ToString());
-			if (kills >= 50) {
-				if (modKills == 40) {
-					if (playerCurrent != null)
-						playerCurrent.SendMessage("BombMinusTwo");
-				}
-				else if (modKills == 45) {
-					if (playerCurrent != null)
-						playerCurrent.SendMessage("BombMinusOne");
-				}
-				else if (modKills == 0) {
-					if (playerCurrent != null)
-						playerCurrent.SendMessage("FireFaster");
-				}
-			}*/
 		}
 	}
 	
@@ -375,11 +345,6 @@ public class Scorer : MonoBehaviour {
 		titleText.text = kills.ToString() + " kills";
 		subtitleText.text = "Total deaths: " + totalDeaths.ToString() + "\nMost kills: " + maxKills.ToString();
 		ClearTargets();
-		/*
-		for (int i =  0; i<spawners.Length; i++) {
-			spawners[i].SendMessage("ClearTargets");
-		}
-		*/
 	}
 	
 	void SpawnBomb (Vector3 spawnAt, Vector3 bombAt, float killRadius, float pushRadius) {
@@ -389,18 +354,15 @@ public class Scorer : MonoBehaviour {
 
 		Collider[] enemies;
 		int mask = 1 << LayerMask.NameToLayer("Enemy");
-		//Debug.Log(mask);
 		
 		// Clear enemies
 		enemies = Physics.OverlapSphere(bombAt, killRadius, mask);
-		//Debug.Log(enemies.Length);
 		for (int i=0; i<enemies.Length; i++) {
 			enemies[i].SendMessage("Clear", false);
 		}
 		
 		// Push away remaining enemies
 		enemies = Physics.OverlapSphere(bombAt, pushRadius, mask);
-		//Debug.Log(enemies.Length);
 		for (int i=0; i<enemies.Length; i++) {
 			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(500f, bombAt, 0);
 		}
@@ -413,17 +375,6 @@ public class Scorer : MonoBehaviour {
 		
 		// Bomb enemies near spawn point
 		SpawnBomb(spawnPos, bombPos, 2.0f, 5.0f);
-		
-		// Old bomb routine
-		/* GameObject[] enemies;
-		enemies = GameObject.FindGameObjectsWithTag("Enemy");
-		for (int i = 0; i < enemies.Length; i++) {
-			var enemy = enemies[i];
-			enemy.rigidbody.AddExplosionForce(1000f, spawnPos, 5.0f);
-			if ((enemy.transform.position - spawnPos).magnitude < 2.0f) {
-				enemy.SendMessage("BlowUp", false);
-			}
-		} */
 		
 		// Reset kills
 		kills = 0;
@@ -440,16 +391,10 @@ public class Scorer : MonoBehaviour {
 		// Spawn player, notify camera
 		playerCurrent = (GameObject) Instantiate(playerType, spawnPos, Quaternion.Euler(0, 0, 0));
 		playerControl = playerCurrent.GetComponent<BallMovement>();
-		//cameraFollower.SendMessage("NewPlayer", playerCurrent);
 		cameraFollower.NewPlayer(playerCurrent);
 		
 		// Assign new target
 		NewTargets(playerCurrent);
-		/*
-		for (int i =  0; i<spawners.Length; i++) {
-			spawners[i].SendMessage("NewTargets");
-		}
-		*/
 
 		// Flash grid
 		FlashGrid(currentPulseColor);
@@ -467,7 +412,6 @@ public class Scorer : MonoBehaviour {
 		titleText.text = "Paused";
 		subtitleText.text = instructions;
 		desiredCursorVisibility = true;
-		//Cursor.lockState = CursorLockMode.None;
 		desiredCursorMode = CursorLockMode.None;
 	}
 		
@@ -481,8 +425,6 @@ public class Scorer : MonoBehaviour {
 		titleText.text = prevTitle;
 		subtitleText.text = prevSubtitle;
 		desiredCursorVisibility = false;
-		//Cursor.lockState = CursorLockMode.Confined;
-		//Cursor.lockState = CursorLockMode.Locked;
 		desiredCursorMode = CursorLockMode.Locked;
 	}
 
