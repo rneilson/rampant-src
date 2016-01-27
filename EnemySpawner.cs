@@ -49,7 +49,7 @@ public class EnemySpawner : MonoBehaviour {
 		myAudioSource = scorer.GetComponent<AudioSource>();
 
 		// Predictions frames ahead to use
-		predictionFrames = (control.PredictionLength > 25) ? 25 : control.PredictionLength;
+		predictionFrames = (control.PredictionLength > 51) ? 50 : control.PredictionLength - 1;
 	}
 	
 	// Update is called once per frame

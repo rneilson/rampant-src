@@ -181,10 +181,10 @@ public class RedCubeGroundControl : MonoBehaviour {
 		if ((target) && (scorer)) {
 			if ((debugInfo)) {
 				// Draw radius spheres
-				Gizmos.color = Color.grey;
-				Gizmos.DrawWireSphere(target.transform.position, debugRadius);
 				Gizmos.color = Color.white;
-				Gizmos.DrawWireSphere(target.transform.position, debugRadius + extent3d);
+				Gizmos.DrawWireSphere(target.transform.position, debugRadius);
+				Gizmos.color = Color.grey;
+				Gizmos.DrawWireSphere(posPredictions[50], debugRadius / 2.0f);
 			}
 		}
 	}
