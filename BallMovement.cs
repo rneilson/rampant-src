@@ -33,13 +33,13 @@ public class BallMovement : MonoBehaviour {
 	private int fireCycle = 0;
 	private Vector3 firePosCurrent;
 	private Vector3 fireDirCurrent;
-	private float bulletLifetime = 1.5f;
+	//private float bulletLifetime = 1.5f;
 	
 	private const float piOverFour = Mathf.PI / 4;
 
 	private GameObject controller;
 	//private Scorer scorer;
-	private RedCubeGroundControl groundControl;
+	//private RedCubeGroundControl groundControl;
 
 	const float fireDist = 0.10f;
 	const float fireSpeed = 5.0f;
@@ -79,7 +79,7 @@ public class BallMovement : MonoBehaviour {
 		fireCursor = GameObject.Find("FireCursor");
 		fireCursorControl = fireCursor.GetComponent<CursorMovement>();
 		//scorer = controller.GetComponent<Scorer>();
-		groundControl = controller.GetComponent<RedCubeGroundControl>();
+		//groundControl = controller.GetComponent<RedCubeGroundControl>();
 	}
 	
 	// Update is called once per frame

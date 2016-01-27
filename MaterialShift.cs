@@ -18,7 +18,7 @@ public class MaterialShift : MonoBehaviour {
 	private PulseState currentState = PulseState.Stopped;
 	private bool isActive = false;
 	private int emissionId;
-	private Color emissionBase;
+	//private Color emissionBase;
 	private Color emissionTarget;
 
 	// Use this for initialization
@@ -28,7 +28,7 @@ public class MaterialShift : MonoBehaviour {
 		// Enable emissions, just in case
 		rendControl.material.EnableKeyword("_EMISSION");
 		emissionId = Shader.PropertyToID("_EmissionColor");
-		emissionBase = materialBase.GetColor(emissionId);
+		//emissionBase = materialBase.GetColor(emissionId);
 	
 		// Sanity check on materials array
 		if (materialTargetList.Length <= 0) {
