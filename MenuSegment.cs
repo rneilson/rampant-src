@@ -8,6 +8,17 @@ public class MenuSegment : MonoBehaviour {
 	private MenuLine parentLine;
 	private TextMesh displayText;
 
+	public string Text {
+		get {
+			if (displayText) {
+				return displayText.text;
+			}
+			else {
+				return "";
+			}
+		}
+	}
+
 	// Use this for initialization
 	void Start () {
 		parentLine = transform.parent.GetComponent<MenuLine>();
@@ -21,6 +32,10 @@ public class MenuSegment : MonoBehaviour {
 
 	void OnMouseEnter () {
 		parentLine.MouseEntered(segmentType);
+	}
+
+	void OnMouseExit () {
+		parentLine.MouseExited(segmentType);
 	}
 
 	public void Selected (FontStyle selectStyle) {
@@ -39,6 +54,10 @@ public class MenuSegment : MonoBehaviour {
 		if (segmentType != MenuSegmentType.Line) {
 			displayText.text = "";
 		}
+	}
+
+	public void UpdateText (string newText) {
+		displayText.text = newText;
 	}
 }
 

@@ -10,7 +10,7 @@ public class CameraMovement : MonoBehaviour {
 	public float trackFraction; // Fraction of player movement which camera follows
 	public float resetTime;		// Time before player respawn at which camera resets
 
-		// Use this for initialization
+	// Use this for initialization
 	void Start () {
 		//camera = GetComponent<Camera>();
 		startPos = transform.position;

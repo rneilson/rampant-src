@@ -89,6 +89,9 @@ public class Scorer : MonoBehaviour {
 	// Global debug option
 	public bool globalDebug = false;
 
+	// Camera tracking
+	public bool cameraTracking = false;
+
 	// Ground control co-component
 	private RedCubeGroundControl enemyControl;
 
@@ -136,9 +139,10 @@ public class Scorer : MonoBehaviour {
 		get { return globalDebug; }
 	}
 
+
 	// Use this for initialization
 	void Start () {
-		//cameraFollower = GameObject.Find("Camera").GetComponent<CameraMovement>();
+		cameraFollower = GameObject.Find("Camera").GetComponent<CameraMovement>();
 		scoreKills = GameObject.Find("Display-kills").GetComponent<TextMesh>();
 		scoreHigh = GameObject.Find("Display-high").GetComponent<TextMesh>();
 		scoreDeaths = GameObject.Find("Display-deaths").GetComponent<TextMesh>();
@@ -193,6 +197,8 @@ public class Scorer : MonoBehaviour {
 		foreach (GameObject shifter in GameObject.FindGameObjectsWithTag("ArenaShifter")) {
 			arenaShifters.Add(shifter);
 		}
+
+		// TODO: show menu root node at startup
 	}
 	
 	// Update is called once per frame
@@ -226,7 +232,7 @@ public class Scorer : MonoBehaviour {
 		if (!isPaused) {
 			if (respawn == true) {
 				respawnCountdown -= Time.deltaTime;
-				if (cameraFollower) {
+				if ((cameraFollower) && (cameraTracking)) {
 					cameraFollower.RespawnCountdown(respawnCountdown);
 				}
 			}
@@ -400,7 +406,7 @@ public class Scorer : MonoBehaviour {
 		// Spawn player, notify camera
 		playerCurrent = (GameObject) Instantiate(playerType, spawnPos, Quaternion.Euler(0, 0, 0));
 		playerControl = playerCurrent.GetComponent<BallMovement>();
-		if (cameraFollower) {
+		if ((cameraFollower) && (cameraTracking)) {
 			cameraFollower.NewPlayer(playerCurrent);
 		}
 		
@@ -420,7 +426,7 @@ public class Scorer : MonoBehaviour {
 		Time.timeScale = 0;
 
 		// Show menu
-		menu.ShowMenu();
+		menu.ShowMenu(menu.RootNode);
 
 		// Unhide cursor
 		desiredCursorVisibility = true;

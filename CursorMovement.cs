@@ -21,6 +21,11 @@ public class CursorMovement : MonoBehaviour {
 	// Scorer/input
 	private Scorer scorer;
 
+	public float MouseSpeed {
+		get { return mouseSpeed; }
+		set { mouseSpeed = value; }
+	}
+
 	// Use this for initialization
 	void Start () {
 		showLayer = LayerMask.NameToLayer("TransparentFX");
