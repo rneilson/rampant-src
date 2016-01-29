@@ -33,6 +33,10 @@ public class MenuControl : MonoBehaviour {
 	// Settings
 	private Dictionary<string, MenuSetting> settings = new Dictionary<string, MenuSetting>();
 
+	// Cursor state
+	private CursorLockMode desiredCursorMode;
+	private bool desiredCursorVisibility;
+
 	// Visibility layers
 	int showLayer;
 	int hideLayer;
@@ -97,6 +101,8 @@ public class MenuControl : MonoBehaviour {
 		// TODO: parse root menu
 
 		// TEMP
+		desiredCursorMode = Cursor.lockState;
+		desiredCursorVisibility = Cursor.visible;
 		// Show menu and select first line
 		ShowMenu(rootNode);
 
@@ -104,7 +110,14 @@ public class MenuControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	
+		// Only thing here is cursor stuff, I think
+		if (Cursor.lockState != desiredCursorMode) {
+			Cursor.lockState = desiredCursorMode;
+		}
+		if (Cursor.visible != desiredCursorVisibility) {
+			Cursor.visible = desiredCursorVisibility;
+		}
+		
 	}
 
 	public void SelectLine (int index) {
@@ -145,10 +158,18 @@ public class MenuControl : MonoBehaviour {
 		}
 		// Select first line
 		SelectLine(0);
+
+		// Unhide cursor
+		desiredCursorVisibility = true;
+		desiredCursorMode = CursorLockMode.None;
 	}
 
 	public void HideMenu () {
-		// Deselect current
+		// Hide cursor
+		desiredCursorVisibility = false;
+		desiredCursorMode = CursorLockMode.Locked;
+
+		// Deselect current line
 		DeselectLine(selectedLine);
 		// Hide lines
 		foreach (MenuLine line in menuLines) {

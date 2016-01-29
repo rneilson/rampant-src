@@ -26,10 +26,6 @@ public class Scorer : MonoBehaviour {
 	private string instructionsNoForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nBomb: space/right mouse button\nBomb: left/right trigger\nQuit: Q";
 	private string instructions;
 
-	// Cursor state
-	private CursorLockMode desiredCursorMode;
-	private bool desiredCursorVisibility;
-
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
 	
@@ -155,8 +151,6 @@ public class Scorer : MonoBehaviour {
 		respawn = true;
 		respawnCountdown = 0.0f;
 		myAudioSource = GetComponent<AudioSource>();
-		desiredCursorMode = Cursor.lockState;
-		desiredCursorVisibility = Cursor.visible;
 
 		// Start paused
 		/*
@@ -214,21 +208,15 @@ public class Scorer : MonoBehaviour {
 			}
 		}
 
-		// TODO: remove
+		/*
 		// Check for debug capture
 		if (Input.GetButtonDown("DebugCapture")) {
 			PauseGame();
 			Debug.Log("Debug capture:", gameObject);
 			enemyControl.DebugCap();
 		}
+		*/
 
-		if (Cursor.lockState != desiredCursorMode) {
-			Cursor.lockState = desiredCursorMode;
-		}
-		if (Cursor.visible != desiredCursorVisibility) {
-			Cursor.visible = desiredCursorVisibility;
-		}
-		
 		if (!isPaused) {
 			if (respawn == true) {
 				respawnCountdown -= Time.deltaTime;
@@ -427,10 +415,6 @@ public class Scorer : MonoBehaviour {
 
 		// Show menu
 		menu.ShowMenu(menu.RootNode);
-
-		// Unhide cursor
-		desiredCursorVisibility = true;
-		desiredCursorMode = CursorLockMode.None;
 	}
 		
 	void UnPauseGame () {
@@ -443,10 +427,6 @@ public class Scorer : MonoBehaviour {
 
 		// Hide menu
 		menu.HideMenu();
-
-		// Hide cursor
-		desiredCursorVisibility = false;
-		desiredCursorMode = CursorLockMode.Locked;
 	}
 
 	void ClearTargets () {
