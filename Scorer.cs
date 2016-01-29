@@ -20,14 +20,11 @@ public class Scorer : MonoBehaviour {
 	private bool isStarted = false;
 
 	// Title/menu stuff
-	private TextMesh titleText;
-	private TextMesh subtitleText;
+	private MenuControl menu;
 	private string gameTitle = "_rampant";
 	private string instructionsForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nQuit: Q";
 	private string instructionsNoForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nBomb: space/right mouse button\nBomb: left/right trigger\nQuit: Q";
 	private string instructions;
-	private string prevTitle;
-	private string prevSubtitle;
 
 	// Cursor state
 	private CursorLockMode desiredCursorMode;
@@ -141,13 +138,12 @@ public class Scorer : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		cameraFollower = GameObject.Find("Camera").GetComponent<CameraMovement>();
+		//cameraFollower = GameObject.Find("Camera").GetComponent<CameraMovement>();
 		scoreKills = GameObject.Find("Display-kills").GetComponent<TextMesh>();
 		scoreHigh = GameObject.Find("Display-high").GetComponent<TextMesh>();
 		scoreDeaths = GameObject.Find("Display-deaths").GetComponent<TextMesh>();
 		scoreLevel = GameObject.Find("Display-level").GetComponent<TextMesh>();
-		titleText = GameObject.Find("TitleText").GetComponent<TextMesh>();
-		//subtitleText = GameObject.Find("SubtitleText").GetComponent<TextMesh>();
+		menu = GameObject.Find("Menu").GetComponent<MenuControl>();
 		kills = 0;
 		level = 0;
 		maxKills = 0;
@@ -183,10 +179,8 @@ public class Scorer : MonoBehaviour {
 		else {
 			instructions = instructionsNoForceBomb;
 		}
-		titleText.text = gameTitle;
-		if (subtitleText) {
-			subtitleText.text = "Press start button/tab to begin\n" + instructions;
-		}
+		
+		menu.SetTitle(gameTitle);
 
 		// Get ground control
 		enemyControl = GetComponent<RedCubeGroundControl>();
@@ -214,6 +208,7 @@ public class Scorer : MonoBehaviour {
 			}
 		}
 
+		// TODO: remove
 		// Check for debug capture
 		if (Input.GetButtonDown("DebugCapture")) {
 			PauseGame();
@@ -252,7 +247,7 @@ public class Scorer : MonoBehaviour {
 			kills++;
 			scoreKills.text = "Kills: " + kills.ToString();
 
-			/* Decided not to do that every kill, only on death
+			/* Decided not to do this every kill, only on death
 			// Update high score
 			if (kills > maxKills) {
 				maxKills = kills;
@@ -349,12 +344,6 @@ public class Scorer : MonoBehaviour {
 		respawn = true;
 		playerBreak = true;
 		totalDeaths++;
-		/* Disabled this for now
-		titleText.text = kills.ToString() + " kills";
-		if (subtitleText) {
-			subtitleText.text = "Total deaths: " + totalDeaths.ToString() + "\nMost kills: " + maxKills.ToString();
-		}
-		*/
 		ClearTargets();
 
 		// Play respawn countdown sound
@@ -390,12 +379,8 @@ public class Scorer : MonoBehaviour {
 	}
 	
 	void NewPlayer () {
-		// TODO: change to menu hide method
-		// Clear title text
-		titleText.text = "";
-		if (subtitleText) {
-			subtitleText.text = "";
-		}
+		// Hide Menu
+		menu.HideMenu();
 		
 		// Bomb enemies near spawn point
 		SpawnBomb(spawnPos, bombPos, 2.0f, 5.0f);
@@ -434,13 +419,8 @@ public class Scorer : MonoBehaviour {
 		isPaused = true;
 		Time.timeScale = 0;
 
-		// TODO: change to menu show method
-		prevTitle = titleText.text;
-		if (subtitleText) {
-			prevSubtitle = subtitleText.text;
-			subtitleText.text = instructions;
-		}
-		titleText.text = gameTitle;
+		// Show menu
+		menu.ShowMenu();
 
 		// Unhide cursor
 		desiredCursorVisibility = true;
@@ -455,11 +435,8 @@ public class Scorer : MonoBehaviour {
 		}
 		Time.timeScale = 1;
 
-		// TODO: change to menu hide method
-		titleText.text = prevTitle;
-		if (subtitleText) {
-			subtitleText.text = prevSubtitle;
-		}
+		// Hide menu
+		menu.HideMenu();
 
 		// Hide cursor
 		desiredCursorVisibility = false;

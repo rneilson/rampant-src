@@ -45,6 +45,15 @@ public class MenuLine : MonoBehaviour {
 	
 	}
 
+	public void SetLayer (int layer) {
+		// Set our own layer
+		gameObject.layer = layer;
+		// Screw it, I'll just set the children's layers directly
+		line.gameObject.layer = layer;
+		left.gameObject.layer = layer;
+		right.gameObject.layer = layer;
+	}
+
 	public void MouseEntered (MenuSegmentType segType) {
 		//Debug.Log("Mouse entered " + gameObject.name + "'s " + segType.ToString(), gameObject);
 		menu.SelectLine(lineIndex);

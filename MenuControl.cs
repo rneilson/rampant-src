@@ -5,6 +5,10 @@ public class MenuControl : MonoBehaviour {
 
 	public bool debugInfo;
 
+	// Title text
+	private TextMesh titleMesh;
+	private string titleText;
+
 	// Menu lines
 	private MenuLine[] menuLines;
 	private int maxLines;
@@ -14,6 +18,10 @@ public class MenuControl : MonoBehaviour {
 	public string leftCapText = "[";
 	public string rightCapText = "]";
 	public FontStyle selectedStyle = FontStyle.Normal;
+
+	// Visibility layers
+	int showLayer;
+	int hideLayer;
 
 	public string LeftCapText {
 		get { return leftCapText; }
@@ -27,6 +35,9 @@ public class MenuControl : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		// Title init (assumes child 0)
+		titleMesh = transform.GetChild(0).GetComponent<TextMesh>();
+
 		// Line array init
 		menuLines = GetComponentsInChildren<MenuLine>();
 		maxLines = menuLines.Length;
@@ -43,6 +54,10 @@ public class MenuControl : MonoBehaviour {
 			menuLines[i].LineIndex = i;
 			menuLines[i].Deselect();
 		}
+
+		// Get layers
+		showLayer = LayerMask.NameToLayer("TransparentFX");
+		hideLayer = LayerMask.NameToLayer("Hidden");
 	}
 	
 	// Update is called once per frame
@@ -57,5 +72,28 @@ public class MenuControl : MonoBehaviour {
 			menuLines[index].Select();
 		}
 	}
+
+	public void SetTitle (string title) {
+		titleText = title;
+		titleMesh.text = title;
+	}
+
+	// TODO: pass in menu node (once I have menu nodes)
+	public void ShowMenu () {
+		foreach (MenuLine line in menuLines) {
+			line.SetLayer(showLayer);
+		}
+		titleMesh.gameObject.layer = showLayer;
+		menuLines[0].Select();
+	}
+
+	public void HideMenu () {
+		menuLines[selectedLine].Deselect();
+		titleMesh.gameObject.layer = hideLayer;
+		foreach (MenuLine line in menuLines) {
+			line.SetLayer(hideLayer);
+		}
+	}
+
 }
 
