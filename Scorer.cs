@@ -12,19 +12,17 @@ using System.Collections.Generic;
 // TODO: add restart message on respawn
 public class Scorer : MonoBehaviour {
 	
-	private TextMesh scoreKills;
-	private TextMesh scoreHigh;
-	private TextMesh scoreDeaths;
-	private TextMesh scoreLevel;
-	private TextMesh titleText;
-	private TextMesh subtitleText;
-	private float respawnCountdown;
+	// Game state
 	private GameObject playerCurrent;
 	private BallMovement playerControl;
 	private CameraMovement cameraFollower;
 	private bool isPaused = true;
 	private bool isStarted = false;
-	private int totalSpawned;
+
+	// Title/menu stuff
+	private TextMesh titleText;
+	private TextMesh subtitleText;
+	private string gameTitle = "_rampant";
 	private string instructionsForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nQuit: Q";
 	private string instructionsNoForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nBomb: space/right mouse button\nBomb: left/right trigger\nQuit: Q";
 	private string instructions;
@@ -38,17 +36,24 @@ public class Scorer : MonoBehaviour {
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
 	
+	// Score tracking
 	private int kills;
 	private int level;
 	private int maxKills;
 	private int maxLevel;
 	private int totalDeaths;
-	public float respawnTime;
+	private TextMesh scoreKills;
+	private TextMesh scoreHigh;
+	private TextMesh scoreDeaths;
+	private TextMesh scoreLevel;
 
-	private bool respawn;
-	private bool playerBreak = false;		// Should rename at some point
+	// Respawn parameters
+	public float respawnTime;
 	public float playerBreakDelay = 1.0f;
 	public float playerBreakRadius = 1.0f;
+	private bool respawn;
+	private float respawnCountdown;
+	private bool playerBreak = false;		// Should rename at some point
 	private float maxDisplacement = 4.75f;
 	private Vector3 spawnPos = new Vector3 (0f, 1f, 0f);
 	private Vector3 bombPos = new Vector3 (0f, 0.6f, 0f);
@@ -63,14 +68,14 @@ public class Scorer : MonoBehaviour {
 
 	// Enemy phases (ie difficulty stuff)
 	public GameObject[] enemyPhases;
+	public int terminalPhase;
 	private GameObject currentPhase;
 	private GameObject prevPhase;
 	private int phaseIndex;
 	private int phaseShift;
 	private int checkpoint;
-	public int terminalPhase;
 
-	// Powerup state tracking
+	// Powerup parameters and state tracking
 	public bool forceBombUse;
 	public int biggerGunAt;
 	public int giveBombEvery;
@@ -142,14 +147,13 @@ public class Scorer : MonoBehaviour {
 		scoreDeaths = GameObject.Find("Display-deaths").GetComponent<TextMesh>();
 		scoreLevel = GameObject.Find("Display-level").GetComponent<TextMesh>();
 		titleText = GameObject.Find("TitleText").GetComponent<TextMesh>();
-		subtitleText = GameObject.Find("SubtitleText").GetComponent<TextMesh>();
+		//subtitleText = GameObject.Find("SubtitleText").GetComponent<TextMesh>();
 		kills = 0;
 		level = 0;
 		maxKills = 0;
 		totalDeaths = 0;
 		respawn = true;
 		respawnCountdown = 0.0f;
-		totalSpawned = 0;
 		myAudioSource = GetComponent<AudioSource>();
 		desiredCursorMode = Cursor.lockState;
 		desiredCursorVisibility = Cursor.visible;
@@ -179,8 +183,10 @@ public class Scorer : MonoBehaviour {
 		else {
 			instructions = instructionsNoForceBomb;
 		}
-		titleText.text = "_rampant";
-		subtitleText.text = "Press start button/tab to begin\n" + instructions;
+		titleText.text = gameTitle;
+		if (subtitleText) {
+			subtitleText.text = "Press start button/tab to begin\n" + instructions;
+		}
 
 		// Get ground control
 		enemyControl = GetComponent<RedCubeGroundControl>();
@@ -225,7 +231,9 @@ public class Scorer : MonoBehaviour {
 		if (!isPaused) {
 			if (respawn == true) {
 				respawnCountdown -= Time.deltaTime;
-				cameraFollower.RespawnCountdown(respawnCountdown);
+				if (cameraFollower) {
+					cameraFollower.RespawnCountdown(respawnCountdown);
+				}
 			}
 			if (respawnCountdown <= 0f) {
 				respawnCountdown = respawnTime;
@@ -306,10 +314,6 @@ public class Scorer : MonoBehaviour {
 		AddLevel();
 	}
 	
-	public void AddSpawns (int spawns) {
-		totalSpawned += spawns;
-	}
-
 	public void NextPhase () {
 		// Deactivate current phase and slate for destruction
 		currentPhase.GetComponent<EnemyPhase>().StopPhase();
@@ -345,8 +349,12 @@ public class Scorer : MonoBehaviour {
 		respawn = true;
 		playerBreak = true;
 		totalDeaths++;
+		/* Disabled this for now
 		titleText.text = kills.ToString() + " kills";
-		subtitleText.text = "Total deaths: " + totalDeaths.ToString() + "\nMost kills: " + maxKills.ToString();
+		if (subtitleText) {
+			subtitleText.text = "Total deaths: " + totalDeaths.ToString() + "\nMost kills: " + maxKills.ToString();
+		}
+		*/
 		ClearTargets();
 
 		// Play respawn countdown sound
@@ -382,9 +390,12 @@ public class Scorer : MonoBehaviour {
 	}
 	
 	void NewPlayer () {
+		// TODO: change to menu hide method
 		// Clear title text
 		titleText.text = "";
-		subtitleText.text = "";
+		if (subtitleText) {
+			subtitleText.text = "";
+		}
 		
 		// Bomb enemies near spawn point
 		SpawnBomb(spawnPos, bombPos, 2.0f, 5.0f);
@@ -404,7 +415,9 @@ public class Scorer : MonoBehaviour {
 		// Spawn player, notify camera
 		playerCurrent = (GameObject) Instantiate(playerType, spawnPos, Quaternion.Euler(0, 0, 0));
 		playerControl = playerCurrent.GetComponent<BallMovement>();
-		cameraFollower.NewPlayer(playerCurrent);
+		if (cameraFollower) {
+			cameraFollower.NewPlayer(playerCurrent);
+		}
 		
 		// Assign new target
 		NewTargets(playerCurrent);
@@ -420,10 +433,16 @@ public class Scorer : MonoBehaviour {
 	void PauseGame () {
 		isPaused = true;
 		Time.timeScale = 0;
+
+		// TODO: change to menu show method
 		prevTitle = titleText.text;
-		prevSubtitle = subtitleText.text;
-		titleText.text = "Paused";
-		subtitleText.text = instructions;
+		if (subtitleText) {
+			prevSubtitle = subtitleText.text;
+			subtitleText.text = instructions;
+		}
+		titleText.text = gameTitle;
+
+		// Unhide cursor
 		desiredCursorVisibility = true;
 		desiredCursorMode = CursorLockMode.None;
 	}
@@ -435,8 +454,14 @@ public class Scorer : MonoBehaviour {
 			SendStartGame();
 		}
 		Time.timeScale = 1;
+
+		// TODO: change to menu hide method
 		titleText.text = prevTitle;
-		subtitleText.text = prevSubtitle;
+		if (subtitleText) {
+			subtitleText.text = prevSubtitle;
+		}
+
+		// Hide cursor
 		desiredCursorVisibility = false;
 		desiredCursorMode = CursorLockMode.Locked;
 	}
