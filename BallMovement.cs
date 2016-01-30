@@ -110,8 +110,8 @@ public class BallMovement : MonoBehaviour {
 		// Only move/shoot if input directed to game
 		if (scorer.InputTarget == InputMode.Game) {
 			// Get movement
-			float dx=Input.GetAxis("Horizontal");
-			float dz=Input.GetAxis("Vertical");
+			float dx=Input.GetAxis("MoveHorizontal");
+			float dz=Input.GetAxis("MoveVertical");
 			float ndx = 0.0f;
 			float ndz = 0.0f;
 			float normalFactor = Mathf.Sqrt(dx*dx + dz*dz); 
@@ -140,8 +140,8 @@ public class BallMovement : MonoBehaviour {
 			}
 			
 			// Get right stick input
-			float dxr = Input.GetAxis("RightHorizontal");
-			float dzr = Input.GetAxis("RightVertical");
+			float dxr = Input.GetAxis("FireHorizontal");
+			float dzr = Input.GetAxis("FireVertical");
 
 			// If right stick moved, shoot in that direction
 			if(dxr != 0 || dzr != 0) {
