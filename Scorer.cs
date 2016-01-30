@@ -2,72 +2,73 @@
 using System.Collections;
 using System.Collections.Generic;
 
+// TODO: change quit key to Esc
 // TODO: peel off pause menu into its own class (classes?)
 // TODO: corrupt title text
-// TODO: make one of the scrollboxes a log
+// TODO: make one of the scrollboxes a log (?)
 // TODO: add PID kill message to log on each kill
 // TODO: add something fun-sounding to log when bombing
 // TODO: add kernel oops message to log on death
 // TODO: add restart message on respawn
 public class Scorer : MonoBehaviour {
 	
-	private TextMesh scoreKills;
-	private TextMesh scoreHigh;
-	private TextMesh scoreDeaths;
-	private TextMesh scoreLevel;
-	private TextMesh titleText;
-	private TextMesh subtitleText;
-	//private Component[] spawners;
-	private float respawnCountdown;
-	//private bool respawn;
+	// Game state
 	private GameObject playerCurrent;
 	private BallMovement playerControl;
 	private CameraMovement cameraFollower;
 	private bool isPaused = true;
 	private bool isStarted = false;
-	private int totalSpawned;
+
+	// Title/menu stuff
+	private MenuControl menu;
+	private string gameTitle = "_rampant";
 	private string instructionsForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nQuit: Q";
 	private string instructionsNoForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nBomb: space/right mouse button\nBomb: left/right trigger\nQuit: Q";
 	private string instructions;
-	private string prevTitle;
-	private string prevSubtitle;
-
-	// Cursor state
-	private CursorLockMode desiredCursorMode;
-	private bool desiredCursorVisibility;
 
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
 	
+	// Score tracking
 	private int kills;
 	private int level;
 	private int maxKills;
 	private int maxLevel;
 	private int totalDeaths;
-	public float respawnTime;
+	private TextMesh scoreKills;
+	private TextMesh scoreHigh;
+	private TextMesh scoreDeaths;
+	private TextMesh scoreLevel;
 
-	private bool respawn;
-	private bool playerBreak = false;		// Should rename at some point
-	//public bool givePlayerBreak = true;	// unused
+	// Respawn parameters
+	public float respawnTime;
 	public float playerBreakDelay = 1.0f;
 	public float playerBreakRadius = 1.0f;
+	private bool respawn;
+	private float respawnCountdown;
+	private bool playerBreak = false;		// Should rename at some point
 	private float maxDisplacement = 4.75f;
+	private Vector3 spawnPos = new Vector3 (0f, 1f, 0f);
+	private Vector3 bombPos = new Vector3 (0f, 0.6f, 0f);
 
 	// Player object and friends
 	public GameObject playerType;
 	public GameObject spawnEffect;
 	public AudioClip spawnSound;
+	public AudioClip respawnSound;
+	public float respawnSoundDelay = 0.0f;
+	public float respawnSoundVol = 0.5f;
 
 	// Enemy phases (ie difficulty stuff)
 	public GameObject[] enemyPhases;
+	public int terminalPhase;
 	private GameObject currentPhase;
 	private GameObject prevPhase;
 	private int phaseIndex;
 	private int phaseShift;
 	private int checkpoint;
-	public int terminalPhase;
 
-	// Powerup state tracking
+	// Powerup parameters and state tracking
 	public bool forceBombUse;
 	public int biggerGunAt;
 	public int giveBombEvery;
@@ -80,6 +81,15 @@ public class Scorer : MonoBehaviour {
 	private Color currentPulseColor;
 	private List<GameObject> arenaPulsers = new List<GameObject>();
 	private List<GameObject> arenaShifters = new List<GameObject>();
+
+	// Global debug option
+	public bool globalDebug = false;
+
+	// Camera tracking
+	public bool cameraTracking = false;
+
+	// Ground control co-component
+	private RedCubeGroundControl enemyControl;
 
 	public bool Respawn {
 		get { return respawn; }
@@ -96,6 +106,9 @@ public class Scorer : MonoBehaviour {
 				return true;
 			}
 		}
+	}
+	public GameObject Player {
+		get { return playerCurrent; }
 	}
 	public bool PlayerBreak {
 		get { return playerBreak; }
@@ -118,6 +131,15 @@ public class Scorer : MonoBehaviour {
 	public bool IsStarted {
 		get { return isStarted; }
 	}
+	public bool GlobalDebug {
+		get { return globalDebug; }
+	}
+	public InputMode InputTarget {
+		get {
+			// Forward to menu
+			return menu.CurrentInput;
+		}
+	}
 
 	// Use this for initialization
 	void Start () {
@@ -126,19 +148,14 @@ public class Scorer : MonoBehaviour {
 		scoreHigh = GameObject.Find("Display-high").GetComponent<TextMesh>();
 		scoreDeaths = GameObject.Find("Display-deaths").GetComponent<TextMesh>();
 		scoreLevel = GameObject.Find("Display-level").GetComponent<TextMesh>();
-		titleText = GameObject.Find("TitleText").GetComponent<TextMesh>();
-		subtitleText = GameObject.Find("SubtitleText").GetComponent<TextMesh>();
-		//spawners = gameObject.GetComponents(typeof(Spawner));
+		menu = GameObject.Find("Menu").GetComponent<MenuControl>();
 		kills = 0;
 		level = 0;
 		maxKills = 0;
 		totalDeaths = 0;
 		respawn = true;
 		respawnCountdown = 0.0f;
-		totalSpawned = 0;
 		myAudioSource = GetComponent<AudioSource>();
-		desiredCursorMode = Cursor.lockState;
-		desiredCursorVisibility = Cursor.visible;
 
 		// Start paused
 		/*
@@ -165,9 +182,11 @@ public class Scorer : MonoBehaviour {
 		else {
 			instructions = instructionsNoForceBomb;
 		}
-		titleText.text = "_rampant";
-		subtitleText.text = "Press start button/tab to begin\n" + instructions;
+		
+		menu.SetTitle(gameTitle);
 
+		// Get ground control
+		enemyControl = GetComponent<RedCubeGroundControl>();
 		// Get pulsers
 		foreach (GameObject pulser in GameObject.FindGameObjectsWithTag("ArenaPulser")) {
 			arenaPulsers.Add(pulser);
@@ -177,20 +196,15 @@ public class Scorer : MonoBehaviour {
 		foreach (GameObject shifter in GameObject.FindGameObjectsWithTag("ArenaShifter")) {
 			arenaShifters.Add(shifter);
 		}
-		/*
-		if (arenaPulsers.Length > 0) {
-			arenaPulseMats = new List<MaterialPulse>(arenaPulsers.Length);
-			foreach (GameObject pulser in arenaPulsers) {
-				arenaPulseMats.Add(pulser.GetComponent<MaterialPulse>());
-			}
 
-		}*/
+		// TODO: show menu root node at startup
 	}
 	
 	// Update is called once per frame
 	void Update () {
 		
 		// if (Input.GetKeyDown(KeyCode.Escape)) {
+		//if ((Input.GetButtonDown("Pause")) || (Input.GetKeyDown(KeyCode.Escape))) {
 		if (Input.GetButtonDown("Pause")) {
 			if (isPaused) {
 				UnPauseGame();
@@ -200,18 +214,31 @@ public class Scorer : MonoBehaviour {
 			}
 		}
 
-		if (Cursor.lockState != desiredCursorMode) {
-			Cursor.lockState = desiredCursorMode;
+		// If we're not in the menu, then back will pause
+		if ((menu.CurrentInput == InputMode.Game) && (Input.GetButtonDown("Back"))) {
+			PauseGame();
 		}
-		if (Cursor.visible != desiredCursorVisibility) {
-			Cursor.visible = desiredCursorVisibility;
+
+		// Check if menu's exited
+		if ((isPaused) && (menu.CurrentInput == InputMode.Game)) {
+			UnPauseGame();
 		}
-		
+
+		/*
+		// Check for debug capture
+		if (Input.GetButtonDown("DebugCapture")) {
+			PauseGame();
+			Debug.Log("Debug capture:", gameObject);
+			enemyControl.DebugCap();
+		}
+		*/
+
 		if (!isPaused) {
 			if (respawn == true) {
 				respawnCountdown -= Time.deltaTime;
-				//cameraFollower.SendMessage("RespawnCountdown", respawnCountdown);
-				cameraFollower.RespawnCountdown(respawnCountdown);
+				if ((cameraFollower) && (cameraTracking)) {
+					cameraFollower.RespawnCountdown(respawnCountdown);
+				}
 			}
 			if (respawnCountdown <= 0f) {
 				respawnCountdown = respawnTime;
@@ -220,7 +247,8 @@ public class Scorer : MonoBehaviour {
 			}
 		}
 		else {
-			if (Input.GetKeyDown(KeyCode.Q))
+			if ((Input.GetKeyDown(KeyCode.Q)) 
+				&& ((Input.GetKey(KeyCode.LeftControl)) || (Input.GetKey(KeyCode.RightControl)) ) )
 				Application.Quit();
 		}
 	}
@@ -230,7 +258,7 @@ public class Scorer : MonoBehaviour {
 			kills++;
 			scoreKills.text = "Kills: " + kills.ToString();
 
-			/*
+			/* Decided not to do this every kill, only on death
 			// Update high score
 			if (kills > maxKills) {
 				maxKills = kills;
@@ -264,24 +292,6 @@ public class Scorer : MonoBehaviour {
 					}
 				}
 			}
-			
-			/* Old powerup code
-			int modKills = kills % 50;
-			//Debug.Log("Kills: " + kills.ToString() + ", spawned: " + totalSpawned.ToString());
-			if (kills >= 50) {
-				if (modKills == 40) {
-					if (playerCurrent != null)
-						playerCurrent.SendMessage("BombMinusTwo");
-				}
-				else if (modKills == 45) {
-					if (playerCurrent != null)
-						playerCurrent.SendMessage("BombMinusOne");
-				}
-				else if (modKills == 0) {
-					if (playerCurrent != null)
-						playerCurrent.SendMessage("FireFaster");
-				}
-			}*/
 		}
 	}
 	
@@ -310,10 +320,6 @@ public class Scorer : MonoBehaviour {
 		AddLevel();
 	}
 	
-	public void AddSpawns (int spawns) {
-		totalSpawned += spawns;
-	}
-
 	public void NextPhase () {
 		// Deactivate current phase and slate for destruction
 		currentPhase.GetComponent<EnemyPhase>().StopPhase();
@@ -349,60 +355,46 @@ public class Scorer : MonoBehaviour {
 		respawn = true;
 		playerBreak = true;
 		totalDeaths++;
-		titleText.text = kills.ToString() + " kills";
-		subtitleText.text = "Total deaths: " + totalDeaths.ToString() + "\nMost kills: " + maxKills.ToString();
 		ClearTargets();
-		/*
-		for (int i =  0; i<spawners.Length; i++) {
-			spawners[i].SendMessage("ClearTargets");
+
+		// Play respawn countdown sound
+		if (respawnSound) {
+			if (respawnSoundDelay > 0.0f) {
+				StartCoroutine(PlayDelayedClip(respawnSound, respawnSoundDelay, respawnSoundVol));
+			}
+			else {
+				myAudioSource.PlayOneShot(respawnSound, respawnSoundVol);
+			}
 		}
-		*/
 	}
 	
-	void SpawnBomb (Vector3 pos, float killRadius, float pushRadius) {
+	void SpawnBomb (Vector3 spawnAt, Vector3 bombAt, float killRadius, float pushRadius) {
+		// Spawn effect in center
+		Destroy(Instantiate(spawnEffect, spawnAt, Quaternion.Euler(-90, 0, 0)), 1f);
+		myAudioSource.PlayOneShot(spawnSound, 1.0f);
+
 		Collider[] enemies;
 		int mask = 1 << LayerMask.NameToLayer("Enemy");
-		//Debug.Log(mask);
 		
 		// Clear enemies
-		enemies = Physics.OverlapSphere(pos, killRadius, mask);
-		//Debug.Log(enemies.Length);
+		enemies = Physics.OverlapSphere(bombAt, killRadius, mask);
 		for (int i=0; i<enemies.Length; i++) {
 			enemies[i].SendMessage("Clear", false);
 		}
 		
 		// Push away remaining enemies
-		enemies = Physics.OverlapSphere(pos, pushRadius, mask);
-		//Debug.Log(enemies.Length);
+		enemies = Physics.OverlapSphere(bombAt, pushRadius, mask);
 		for (int i=0; i<enemies.Length; i++) {
-			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(500f, pos, 0);
+			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(500f, bombAt, 0);
 		}
 	}
 	
 	void NewPlayer () {
-		// Clear title text
-		titleText.text = "";
-		subtitleText.text = "";
-		
-		// Spawn effect in center
-		Vector3 spawnPos = new Vector3 (0f, 1f, 0f);
-		Vector3 bombPos = new Vector3 (0f, 0.6f, 0f);
-		Destroy(Instantiate(spawnEffect, spawnPos, Quaternion.Euler(-90, 0, 0)), 1f);
-		myAudioSource.PlayOneShot(spawnSound, 1.0f);
+		// Hide Menu
+		menu.HideMenu();
 		
 		// Bomb enemies near spawn point
-		SpawnBomb(bombPos, 2.0f, 5.0f);
-		
-		// Old bomb routine
-		/* GameObject[] enemies;
-		enemies = GameObject.FindGameObjectsWithTag("Enemy");
-		for (int i = 0; i < enemies.Length; i++) {
-			var enemy = enemies[i];
-			enemy.rigidbody.AddExplosionForce(1000f, spawnPos, 5.0f);
-			if ((enemy.transform.position - spawnPos).magnitude < 2.0f) {
-				enemy.SendMessage("BlowUp", false);
-			}
-		} */
+		SpawnBomb(spawnPos, bombPos, 2.0f, 5.0f);
 		
 		// Reset kills
 		kills = 0;
@@ -419,16 +411,12 @@ public class Scorer : MonoBehaviour {
 		// Spawn player, notify camera
 		playerCurrent = (GameObject) Instantiate(playerType, spawnPos, Quaternion.Euler(0, 0, 0));
 		playerControl = playerCurrent.GetComponent<BallMovement>();
-		//cameraFollower.SendMessage("NewPlayer", playerCurrent);
-		cameraFollower.NewPlayer(playerCurrent);
+		if ((cameraFollower) && (cameraTracking)) {
+			cameraFollower.NewPlayer(playerCurrent);
+		}
 		
 		// Assign new target
 		NewTargets(playerCurrent);
-		/*
-		for (int i =  0; i<spawners.Length; i++) {
-			spawners[i].SendMessage("NewTargets");
-		}
-		*/
 
 		// Flash grid
 		FlashGrid(currentPulseColor);
@@ -441,13 +429,9 @@ public class Scorer : MonoBehaviour {
 	void PauseGame () {
 		isPaused = true;
 		Time.timeScale = 0;
-		prevTitle = titleText.text;
-		prevSubtitle = subtitleText.text;
-		titleText.text = "Paused";
-		subtitleText.text = instructions;
-		desiredCursorVisibility = true;
-		//Cursor.lockState = CursorLockMode.None;
-		desiredCursorMode = CursorLockMode.None;
+
+		// Show menu
+		menu.ShowMenu(menu.RootNode);
 	}
 		
 	void UnPauseGame () {
@@ -457,27 +441,27 @@ public class Scorer : MonoBehaviour {
 			SendStartGame();
 		}
 		Time.timeScale = 1;
-		titleText.text = prevTitle;
-		subtitleText.text = prevSubtitle;
-		desiredCursorVisibility = false;
-		//Cursor.lockState = CursorLockMode.Confined;
-		//Cursor.lockState = CursorLockMode.Locked;
-		desiredCursorMode = CursorLockMode.Locked;
+
+		// Hide menu
+		menu.HideMenu();
 	}
 
 	void ClearTargets () {
 		GameObject[] enemies;
 		enemies = GameObject.FindGameObjectsWithTag("Enemy");
 		for (int i = 0; i < enemies.Length; i++) {
-			enemies[i].SendMessage("ClearTarget");
+			enemies[i].SendMessage("ClearTarget", null, SendMessageOptions.DontRequireReceiver);
 		}
 	}
 	
 	void NewTargets (GameObject player) {
+		// First give ground control the update
+		enemyControl.NewTarget(player);
+
 		GameObject[] enemies;
 		enemies = GameObject.FindGameObjectsWithTag("Enemy");
 		for (int i = 0; i < enemies.Length; i++) {
-			enemies[i].SendMessage("NewTarget", player);
+			enemies[i].SendMessage("NewTarget", player, SendMessageOptions.DontRequireReceiver);
 		}
 	}
 
@@ -485,7 +469,7 @@ public class Scorer : MonoBehaviour {
 		// Update each flasher with new color (same times, though)
 		foreach (GameObject pulser in arenaPulsers) {
 			if (pulser) {
-				pulser.SendMessage("NewPulseMsg", gridColor);
+				pulser.SendMessage("NewPulseMsg", gridColor, SendMessageOptions.DontRequireReceiver);
 			}
 		}
 	}
@@ -497,7 +481,7 @@ public class Scorer : MonoBehaviour {
 	public void ShiftGrid (int shiftIndex) {
 		foreach (GameObject shifter in arenaShifters) {
 			if (shifter) {
-				shifter.SendMessage("BeginShift", shiftIndex);
+				shifter.SendMessage("BeginShift", shiftIndex, SendMessageOptions.DontRequireReceiver);
 			}
 		}
 	}
@@ -505,13 +489,25 @@ public class Scorer : MonoBehaviour {
 	void SendStartGame () {
 		foreach (GameObject pulser in arenaPulsers) {
 			if (pulser) {
-				pulser.SendMessage("GameStarted");
+				pulser.SendMessage("GameStarted", null, SendMessageOptions.DontRequireReceiver);
 			}
 		}
 		foreach (GameObject shifter in arenaShifters) {
 			if (shifter) {
-				shifter.SendMessage("GameStarted");
+				shifter.SendMessage("GameStarted", null, SendMessageOptions.DontRequireReceiver);
 			}
 		}
 	}
+
+	IEnumerator PlayDelayedClip (AudioClip toPlay, float delay, float volume) {
+		yield return new WaitForSeconds(delay);
+		myAudioSource.PlayOneShot(toPlay, volume);
+	}
+}
+
+public enum DeathType : byte {
+	None = 0,
+	Silently,
+	Quietly,
+	Loudly
 }

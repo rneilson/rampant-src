@@ -1,8 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// TODO: switch to cheating way of checking spawn point clearance
-// TODO: add safezone at end of predicted path
 // TODO: fold in SpawnPoint functionality (?)
 public class EnemySpawner : MonoBehaviour {
 	
@@ -22,17 +20,18 @@ public class EnemySpawner : MonoBehaviour {
 	public bool debugInfo = false;
 	
 	private Scorer scorer;
+	private RedCubeGroundControl control;
 	private float countdown;
 	private bool counting;
 	private int roundCounter;
 	private int roundNumCurrent;
 	private int roundSizeCurrent;
-	private int increaseCounter;
 	private int waveCounter;
-	//private int mask;
 	private bool playerBreak;
 	private float maxSafeRadius = 4.75f;
 	private float maxDisplacement;
+	//private int predictionFrames;
+	private int playerMask;
 
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
@@ -40,12 +39,20 @@ public class EnemySpawner : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		ResetWave();
-		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
+		if (!scorer) {
+			FindControl(GameObject.FindGameObjectWithTag("GameController"));
+		}
+		
 		//mask = 1 << LayerMask.NameToLayer("Spawn");
 		maxDisplacement = scorer.MaxDisplacement;
 
 		// Unity 5 API changes
 		myAudioSource = scorer.GetComponent<AudioSource>();
+
+		// Predictions frames ahead to use
+		//predictionFrames = (control.PredictionLength > 51) ? 50 : control.PredictionLength - 1;
+		
+		playerMask = 1 << LayerMask.NameToLayer("Player");
 	}
 	
 	// Update is called once per frame
@@ -82,13 +89,17 @@ public class EnemySpawner : MonoBehaviour {
 		}
 	}
 
+	public void FindControl (GameObject controller) {
+		scorer = controller.GetComponent<Scorer>();
+		control = controller.GetComponent<RedCubeGroundControl>();
+	}
+
 	// Reset to initial state
 	public void ResetWave () {
 		roundSizeCurrent = roundSizeStart;
 		roundNumCurrent = roundNumStart;
 		roundCounter = 0;
 		waveCounter = 0;
-		increaseCounter = 0;
 		counting = false;
 		countdown = initialDelay;
 	}
@@ -97,13 +108,6 @@ public class EnemySpawner : MonoBehaviour {
 	public void StartWave (int wave, bool giveBreak) {
 		// Check if we should even be doing anything
 		if ((wave >= waveMin) && ((wave <= waveMax) || waveMax == 0)) {
-			/* [OLD] kept for reference
-			// If still more phase rounds to come, increase as per cycle
-			if (wave > waveMin) {
-				Increase();
-			}
-			*/
-
 			// Check cycle array, don't do anything if skipping this wave
 			WaveType currentWave = waveCycle[waveCounter];
 			if (currentWave != WaveType.None) {
@@ -114,7 +118,6 @@ public class EnemySpawner : MonoBehaviour {
 				counting = true;
 				roundCounter = 0;
 				playerBreak = giveBreak;
-				//countdown = (playerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
 				countdown = initialDelay; // PlayerBreakDelay only used in EnemyPhase
 			}
 
@@ -128,14 +131,19 @@ public class EnemySpawner : MonoBehaviour {
 
 	void SpawnRound () {
 		// Begin wave spawn loop
-		GameObject player = GameObject.FindGameObjectWithTag("Player");
-		Vector3 playerPos = player.transform.position;
+		//GameObject player = GameObject.FindGameObjectWithTag("Player");
+		//Vector3 playerPos = player.transform.position;
+		//Vector3 predictPos = control.Prediction(predictionFrames);
 		Vector3 spawnPos;
 		Collider[] others;
+		Collider[] playerCur;
+		//Collider[] playerPred;
 		bool clear = false;
 		// Expand safezone radius if player just respawned
 		float safeRadius = (playerBreak) ? Mathf.Min(safeZoneRadius + scorer.PlayerBreakRadius, maxSafeRadius) : 
 			Mathf.Min(safeZoneRadius, maxSafeRadius);
+		// Let's say the safe radius at the prediction point is lower
+		//float predictRadius = safeRadius / 2.0f;
 
 		// Spawn loop
 		for	(int i = roundSizeCurrent; i > 0; i--) {
@@ -145,12 +153,18 @@ public class EnemySpawner : MonoBehaviour {
 				spawnPos = new Vector3(Random.Range(-maxDisplacement, maxDisplacement), 1f, 
 					Random.Range(-maxDisplacement, maxDisplacement));
 				others = Physics.OverlapSphere(spawnPos, 0.2f);
-				if (others.Length == 0 && ((spawnPos - playerPos).magnitude > safeRadius))
+				playerCur = Physics.OverlapSphere(spawnPos, safeRadius, playerMask);
+				//playerPred = Physics.OverlapSphere(spawnPos, predictRadius, playerMask);
+				if ((others.Length == 0) && (playerCur.Length == 0)) {
+					//&& ((spawnPos - playerPos).magnitude > safeRadius)) {
+					//&& ((spawnPos - predictPos).magnitude > predictRadius)) {
 					clear = true;
+				}
 			} while (!clear);
 
 			GameObject spawner = Instantiate(enemySpawn, spawnPos, Quaternion.Euler(0, 0, 0)) as GameObject;
 			spawner.SendMessage("SetPhaseIndex", scorer.PhaseIndex);
+			spawner.SendMessage("FindControl", scorer.gameObject);
 		}
 
 		// Play one instance only of spawn sound
@@ -182,23 +196,6 @@ public class EnemySpawner : MonoBehaviour {
 	// Decrease number of rounds by step
 	void DecreaseNum () {
 		roundNumCurrent -= roundNumStep;
-	}
-
-	// Increase by whatever's in the queue
-	void Increase () {
-		IncreaseType increaseCurrent = increaseCycle[increaseCounter];
-
-		if ((increaseCurrent == IncreaseType.Size) || (increaseCurrent == IncreaseType.Both)) {
-			IncreaseSize();
-		}
-		if ((increaseCurrent == IncreaseType.Num) || (increaseCurrent == IncreaseType.Both)) {
-			IncreaseNum();
-		}
-
-		increaseCounter++;
-		if (increaseCounter >= increaseCycle.Length) {
-			increaseCounter = 0;
-		}
 	}
 
 	// Increase/decrease size/num/both/neither

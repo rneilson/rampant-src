@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class BallMovement : MonoBehaviour {
 	
@@ -7,10 +8,8 @@ public class BallMovement : MonoBehaviour {
 	public float dragNoInput;
 	public float dragInput;
 
-	private AudioSource myAudioSource;
-	public AudioClip bulletSound1;
-	public AudioClip bulletSound2;
-	public AudioClip bulletSound3;
+	public AudioClip bulletSound;
+	public AudioSource[] audioArray;
 	
 	private Rigidbody myRigidbody;
 	public Rigidbody bullet;
@@ -26,18 +25,19 @@ public class BallMovement : MonoBehaviour {
 	private GameObject bombBlinker;
 	private GameObject fireCursor;
 	private CursorMovement fireCursorControl;
-	//public AudioClip boomKillSound;
 	
-	private int fireMode = 1;
-	private int fireCycle = 0;
+	private int fireMode;
+	private int fireCycle;
+	private int audioCycle;
+	private int audioCycleMax;
 	private Vector3 firePosCurrent;
 	private Vector3 fireDirCurrent;
-	private float bulletLifetime = 1.5f;
 	
 	private const float piOverFour = Mathf.PI / 4;
 
-	private GameObject controller;
-	//private Scorer scorer;
+	//private GameObject controller;
+	private Scorer scorer;
+	//private RedCubeGroundControl groundControl;
 
 	const float fireDist = 0.10f;
 	const float fireSpeed = 5.0f;
@@ -69,20 +69,27 @@ public class BallMovement : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		// Unity 5 API changes
-		myAudioSource = GetComponent<AudioSource>();
+		//myAudioSource = GetComponent<AudioSource>();
 		myRigidbody = GetComponent<Rigidbody>();
 
 		myRigidbody.drag=dragNoInput;
-		controller = GameObject.FindGameObjectWithTag("GameController");
+		//controller = GameObject.FindGameObjectWithTag("GameController");
 		fireCursor = GameObject.Find("FireCursor");
 		fireCursorControl = fireCursor.GetComponent<CursorMovement>();
-		//scorer = controller.GetComponent<Scorer>();
+		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
+		//groundControl = controller.GetComponent<RedCubeGroundControl>();
+
+		// Firing and audio cycle stuff
+		fireMode = 1;
+		fireCycle = 0;
+		audioCycle = 0;
+		audioCycleMax = audioArray.Length / 2;	// Should still work for Length=1, since cycle will always reset to 0
 	}
 	
 	// Update is called once per frame
 	void Update () {
 		// Check if bomb triggered
-		if (hasBomb) {
+		if ((hasBomb) && (scorer.InputTarget == InputMode.Game)) {
 			if (Input.GetButtonDown("BombButton")) {
 				UseBomb();
 			}
@@ -100,91 +107,82 @@ public class BallMovement : MonoBehaviour {
 	
 	//Put everything in FixedUpdate
 	void FixedUpdate () {
-		// Get movement
-		float dx=Input.GetAxis("Horizontal");
-		float dz=Input.GetAxis("Vertical");
-		float ndx = 0.0f;
-		float ndz = 0.0f;
-		float normalFactor = Mathf.Sqrt(dx*dx + dz*dz); 
+		// Only move/shoot if input directed to game
+		if (scorer.InputTarget == InputMode.Game) {
+			// Get movement
+			float dx=Input.GetAxis("MoveHorizontal");
+			float dz=Input.GetAxis("MoveVertical");
+			float ndx = 0.0f;
+			float ndz = 0.0f;
+			float normalFactor = Mathf.Sqrt(dx*dx + dz*dz); 
 
-		//Normalize if input vector length > 1.0, keep within unit circle
-		if(normalFactor > 1.0f) {
-			ndx = (dx/normalFactor)*movementScale;
-			ndz = (dz/normalFactor)*movementScale;
-		}
-		//Otherwise use input vector as-is
-		else {
-			ndx = dx*movementScale;
-			ndz = dz*movementScale;
-		}
-		
-		if(dx == 0 && dz == 0) {
-			// Drag enabled
-			myRigidbody.drag = dragNoInput;
-		}
-		else {
-			// Drag enabled, but slower
-			myRigidbody.drag = dragInput;
-			// Give the ball a push
-			myRigidbody.AddForce(ndx, 0, ndz);
-
-		}
-		
-		// Get right stick input
-		float dxr = Input.GetAxis("RightHorizontal");
-		float dzr = Input.GetAxis("RightVertical");
-
-		// If right stick moved, shoot in that direction
-		if(dxr != 0 || dzr != 0) {
-			// Hide mouse cursor
-			fireCursorControl.SendMessage("HideCursor");
-
-			// Fire in given direction
-			//fireDirCurrent = new Vector3(dxr, 0, dzr).normalized;
-			FireGun(new Vector3(dxr, 0, dzr).normalized);
-		}
-		// Otherwise, check if left mouse pressed and fire towards cursor
-		else if (Input.GetButton("Fire")) {
-			// Show mouse cursor
-			fireCursorControl.SendMessage("UnhideCursor");
-
-			// Fire in given direction
-			FireGun(new Vector3((fireCursor.transform.position.x - transform.position.x), 0, 
-				(fireCursor.transform.position.z - transform.position.z)).normalized);
-		}
-
-		// Check if bomb triggered
-		/*if (hasBomb) {
-			if (Input.GetButton("BombButton")) {
-				UseBomb();
+			//Normalize if input vector length > 1.0, keep within unit circle
+			if(normalFactor > 1.0f) {
+				ndx = (dx/normalFactor)*movementScale;
+				ndz = (dz/normalFactor)*movementScale;
 			}
-			if (Mathf.Abs(Input.GetAxis("BombTrigger")) > 0.05f) {
-				UseBomb();
+			//Otherwise use input vector as-is
+			else {
+				ndx = dx*movementScale;
+				ndz = dz*movementScale;
 			}
-		}*/
-		
-		// Debug guitext
-		//xInput.text = dxr.ToString();
-		//zInput.text = dzr.ToString();
+			
+			if(dx == 0 && dz == 0) {
+				// Drag enabled
+				myRigidbody.drag = dragNoInput;
+			}
+			else {
+				// Drag enabled, but slower
+				myRigidbody.drag = dragInput;
+				// Give the ball a push
+				myRigidbody.AddForce(ndx, 0, ndz);
+
+			}
+			
+			// Get right stick input
+			float dxr = Input.GetAxis("FireHorizontal");
+			float dzr = Input.GetAxis("FireVertical");
+
+			// If right stick moved, shoot in that direction
+			if(dxr != 0 || dzr != 0) {
+				// Hide mouse cursor
+				fireCursorControl.HideCursor();
+
+				// Fire in given direction
+				//fireDirCurrent = new Vector3(dxr, 0, dzr).normalized;
+				FireGun(new Vector3(dxr, 0, dzr).normalized);
+			}
+			// Otherwise, check if left mouse pressed and fire towards cursor
+			else if (Input.GetButton("Fire")) {
+				// Show mouse cursor
+				fireCursorControl.UnhideCursor();
+
+				// Fire in given direction
+				FireGun(new Vector3((fireCursor.transform.position.x - transform.position.x), 0, 
+					(fireCursor.transform.position.z - transform.position.z)).normalized);
+			}
+
+		}
 	}
 	
 	void BlowUp () {
-		controller.SendMessage("PlayerDied");
+		scorer.SendMessage("PlayerDied");
 		Destroy(Instantiate(deathThroes, transform.position, Quaternion.Euler(-90, 0, 0)), 1f);
 		Destroy(gameObject);
 	}
 	
 	// Fire bullet
-	void FireBullet (Vector3 firePos, Vector3 fireDir, float speed, AudioClip fireSound) {
-		//alternating *= -1f;
-		//Vector3 dir = new Vector3(dirx, 0, dirz).normalized;
-		//Vector3 firePos = transform.position + (new Vector3(alternating*dirz, 0, alternating*dirx*-1f).normalized * 0.15f);
-
-		//Rigidbody bulletClone = (Rigidbody) Instantiate(bullet, firePos, transform.rotation);
+	void FireBullet (Vector3 firePos, Vector3 fireDir, float speed) {
+		// Create and launch bullet
 		Rigidbody bulletClone = Instantiate(bullet, firePos, transform.rotation) as Rigidbody;
-		//Destroy(bulletClone, bulletLifetime);
 		bulletClone.AddForce(fireDir * speed);
-		myAudioSource.PlayOneShot(fireSound, 1.0f);
+
+		// Play sound and advance/reset audio source counter
+		audioArray[audioCycle].PlayOneShot(bulletSound, 1.0f);
+		if (++audioCycle >= audioCycleMax) {
+			// This is to keep firemode 2 to the upper half of the array
+			audioCycle = audioArray.Length / 2;
+		}
 
 		// Muzzle flash
 		if (muzzleFlash) {
@@ -204,36 +202,19 @@ public class BallMovement : MonoBehaviour {
 		if (fireMode == 1) {
 			if (fireCycle == 0) {
 				firePosCurrent = transform.position + (fireDir * fireDist);
-				FireBullet(firePosCurrent, fireDir, fireSpeed, bulletSound1);
+				FireBullet(firePosCurrent, fireDir, fireSpeed);
 			}
 		}
 		else if (fireMode == 2) {
 			if (fireCycle == 0) {
-				//firePosCurrent = transform.position + (new Vector3(dzr, 0, -1f*dxr).normalized * 0.15f);
 				firePosCurrent  = transform.position + (RotateFortyFive(fireDir, 1.0f) * fireDist);
-				FireBullet(firePosCurrent, fireDir, fireSpeed, bulletSound2);
+				FireBullet(firePosCurrent, fireDir, fireSpeed);
 			}
 			else if (fireCycle == 3) {
-				//firePosCurrent = transform.position + (new Vector3(-1f*dzr, 0, dxr).normalized * 0.15f);
 				firePosCurrent  = transform.position + (RotateFortyFive(fireDir, -1.0f) * fireDist);
-				FireBullet(firePosCurrent, fireDir, fireSpeed, bulletSound3);
+				FireBullet(firePosCurrent, fireDir, fireSpeed);
 			}
 		}
-		// Removed while testing firemode 2 limit
-		/* else if (fireMode == 3) {
-			if (fireCycle == 0) {
-				firePosCurrent = transform.position + (new Vector3(dzr, 0, -1f*dxr).normalized * 0.15f);
-				FireBullet(firePosCurrent, fireDirCurrent, fireSpeed, bulletSound2);
-			}
-			else if (fireCycle == 2) {
-				firePosCurrent = transform.position + (new Vector3(dxr, 0, dzr).normalized * 0.15f);
-				FireBullet(firePosCurrent, fireDirCurrent, fireSpeed, bulletSound1);
-			}
-			else if (fireCycle == 4) {
-				firePosCurrent = transform.position + (new Vector3(-1f*dzr, 0, dxr).normalized * 0.15f);
-				FireBullet(firePosCurrent, fireDirCurrent, fireSpeed, bulletSound3);
-			}
-		} */
 		
 		// Advance firing cycle
 		fireCycle++;
@@ -245,6 +226,7 @@ public class BallMovement : MonoBehaviour {
 	public void FireFaster () {
 		if (fireMode < 2) {
 			fireMode++;
+			audioCycleMax = audioArray.Length;
 			PowerUp();
 		}
 		//else
@@ -307,6 +289,21 @@ public class BallMovement : MonoBehaviour {
 		// At player position because it looks better
 		Destroy(Instantiate(powerUpBoom, transform.position, Quaternion.Euler(0, 0, 0)), 1.0f);
 		
+		/* New code
+		// Kill within inner radius
+		List<GameObject> enemies = groundControl.FindAllWithinRadius(transform.position, bombKillRadius, groundControl.Extent3D);
+		foreach (GameObject enemy in enemies) {
+			enemy.SendMessage("Die", false);
+		}
+
+		// Push within outer radius
+		enemies = groundControl.FindAllWithinRadius(transform.position, bombPushRadius, groundControl.Extent3D);
+		foreach (GameObject enemy in enemies) {
+			enemy.GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
+		}
+		*/
+
+		// Old code
 		Collider[] enemies;
 		int mask = 1 << LayerMask.NameToLayer("Enemy");
 		
@@ -323,6 +320,7 @@ public class BallMovement : MonoBehaviour {
 		for (int i=0; i<enemies.Length; i++) {
 			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 		}
+		//
 	}
 
 	public void Die (bool loudly) {

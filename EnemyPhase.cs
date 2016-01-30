@@ -20,8 +20,13 @@ public class EnemyPhase : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
+		// Find attached spawners
 		spawners = gameObject.GetComponents<EnemySpawner>();
-		//countdown = initialDelay;
+		// Send scorer
+		foreach (EnemySpawner spawner in spawners) {
+			spawner.FindControl(scorer.gameObject);
+		}
+
 		countdown = (scorer.PlayerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
 		waveNum = 0;
 
@@ -61,10 +66,7 @@ public class EnemyPhase : MonoBehaviour {
 		countdown = waveInterval;
 
 		// Send color pulse if first wave of phase
-		//if ((wave == 1) && !(scorer.PlayerBreak)) {
 		if (wave == 1) {
-			//scorer.FlashGrid(pulseColor);
-			//scorer.NewRespawnColor(pulseColor);
 			scorer.StartNewPhase(pulseColor);
 		}
 		else {
@@ -78,7 +80,6 @@ public class EnemyPhase : MonoBehaviour {
 
 	// Reset phase to beginning
 	public void ResetPhase () {
-		//countdown = initialDelay;
 		countdown = (scorer.PlayerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
 		waveNum = 0;
 

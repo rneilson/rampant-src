@@ -5,26 +5,34 @@ public class RedCubeIntercept : MonoBehaviour {
 	
 	private GameObject target;
 	private Scorer scorer;
-	public float deltaTime;	// Public for debug
-	private bool dead = false;
-	private bool loud = false;
-	public Vector3 bearing = Vector3.zero;	// Public for debug
-	public Vector3 closing = Vector3.zero;	// Public for debug
-	public float timeToIntercept = 0.0f;	// Public for debug
-	public Vector3 prevPos = Vector3.zero;	// Public for debug
-	public Vector3 currPos = Vector3.zero;	// Public for debug
-	public float currSpeed = 0.0f;	// Public for debug
-	//public float currSpeedFrame = 0.0f;	// Public for debug
-	public float avgSpeed = 0.0f;	// Public for debug
-	private RedCubeGroundControl controller;
+	private float deltaTime;
+	private DeathType dying = DeathType.None;
+	private Vector3 bearing = Vector3.zero;
+	private Vector3 closing = Vector3.zero;
+	private Vector3 prevPos = Vector3.zero;
+	private Vector3 currPos = Vector3.zero;
+	private float currSpeed = 0.0f;
+	private float avgSpeed = 0.0f;
+	private RedCubeGroundControl control;
 	private bool debugInfo;
 	private float avgWeight = 0.82f;
 	private float currWeight = 0.18f;
+
+	private const bool spin = true;
+	private Vector3 spinAxis = Vector3.forward;
+	private Vector3 spinRef = Vector3.forward;
+	private float torque = 0.015f;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
 	private Rigidbody myRigidbody;
 	
+	// Type/instance management stuff
+	private const string thisTypeName = "Interceptor";
+	private static EnemyType thisType;
+	private EnemyInst thisInst;
+
+	// Public parameters
 	public float speed;
 	public float drag;
 	public GameObject burster;
@@ -35,6 +43,10 @@ public class RedCubeIntercept : MonoBehaviour {
 	//public int numChildren;
 	//public GameObject[] allChildren;
 
+	static RedCubeIntercept () {
+		thisType = EnemyList.AddOrGetType(thisTypeName);
+	}
+
 	// Use this for initialization
 	void Start () {
 		// Unity 5 API changes
@@ -42,14 +54,18 @@ public class RedCubeIntercept : MonoBehaviour {
 		myRigidbody = GetComponent<Rigidbody>();
 		myRigidbody.drag = drag;
 
-		GameObject gamecontrol = GameObject.FindGameObjectWithTag("GameController");
-		scorer = gamecontrol.GetComponent<Scorer>();
-		controller = gamecontrol.GetComponent<RedCubeGroundControl>();
-		debugInfo = controller.DebugInfo;
+		if (!scorer) {
+			FindControl(GameObject.FindGameObjectWithTag("GameController"));
+			if (scorer.GlobalDebug) {
+				Debug.Log("Scorer not passed on spawn!", gameObject);
+			}
+		}
+		debugInfo = control.DebugInfo;
 		currPos = transform.position;
 
-		NewTarget(GameObject.FindGameObjectWithTag("Player"));
-
+		// Add to control's list
+		thisInst = new EnemyInst(thisType.typeNum, gameObject);
+		control.AddInstanceToList(thisInst);
 		/*
 		// Some debug
 		if (transform.childCount > 0) {
@@ -64,12 +80,12 @@ public class RedCubeIntercept : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (dead) {
+		if (dying != DeathType.None) {
 			BlowUp();
 		}
-		else if (debugInfo) {
-			Debug.DrawLine(transform.position, closing + transform.position, Color.green);
-			Debug.DrawLine(closing + transform.position, bearing + transform.position, Color.yellow);
+		else if ((debugInfo) || (scorer.GlobalDebug)) {
+			Debug.DrawLine(transform.position, closing + transform.position, Color.magenta);
+			Debug.DrawLine(closing + transform.position, bearing + transform.position, Color.blue);
 		}
 	}
 	
@@ -81,37 +97,27 @@ public class RedCubeIntercept : MonoBehaviour {
 		currPos = transform.position;
 		Vector3 currVel = (currPos - prevPos) / deltaTime;
 		currSpeed = currVel.magnitude;
-		//currSpeedFrame = currSpeed * deltaTime;
 
 		// Average speed
 		avgSpeed = avgSpeed * avgWeight + currSpeed * currWeight;
-
-		/*
-		// Update controller's max speed if req'd
-		if (currSpeed > controller.MaxInterceptorSpeed) {
-			if (debugInfo) {
-				Debug.Log("Updating max speed, was " + controller.MaxInterceptorSpeed.ToString() + ", now "
-					+ currSpeed.ToString(), gameObject);
-				Debug.Log("Previous position: " + prevPos.ToString() 
-					+ ", current position: " + currPos.ToString(), gameObject);
-			}
-			controller.MaxInterceptorSpeed = currSpeed;
-		}
-		*/
 
 		if (target) {
 			UpdateTracking();
 			//bearing = target.transform.position - transform.position;
 			myRigidbody.AddForce(bearing.normalized * speed);
+			// Spin menacingly (if spinning enabled)
+			if (spin) {
+				myRigidbody.AddTorque(SpinVector(bearing) * torque);
+			}
 		}
 		else {
 			// Try and acquire new target
-			NewTarget(GameObject.FindGameObjectWithTag("Player"));
+			NewTarget(scorer.Player);
 		}
 	}
 	
 	void BlowUp () {
-		if (loud) {
+		if (dying == DeathType.Loudly) {
 			Destroy(Instantiate(burster, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
 		}
 		else {
@@ -120,39 +126,44 @@ public class RedCubeIntercept : MonoBehaviour {
 		if (deathFade) {
 			Destroy(Instantiate(deathFade, transform.position, Quaternion.identity), 1.0f);
 		}
-		scorer.AddKill();
-
-		// Detach and kill children (delayed 1s)
-		GameObject childtmp;
-		for (int i = transform.childCount - 1; i >= 0 ; i--) {
-			childtmp = transform.GetChild(i).gameObject;
-			childtmp.transform.parent = null;
-			Destroy(childtmp, 1.0f);
+		if (dying != DeathType.Silently) {
+			scorer.AddKill();
 		}
+		KillRelatives(1.0f);
+		// Remove from control's list
+		control.RemoveInstanceFromList(thisInst);
+		// Destroy ourselves
 		Destroy(gameObject);
 	}
 	
 	void Clear () {
-		Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 1);
-
-		// Detach and kill children (delayed 1s)
-		GameObject childtmp;
-		for (int i = transform.childCount - 1; i >= 0 ; i--) {
-			childtmp = transform.GetChild(i).gameObject;
-			childtmp.transform.parent = null;
-			Destroy(childtmp, 1.0f);
-		}
-		Destroy(gameObject);
+		dying = DeathType.Silently;
+		BlowUp();
 	}
 	
 	void Die (bool loudly) {
-		if (!dead)
-			dead = true;
-		if (loudly)
-			loud = true;
-		else
-			loud = false;
-		//collider.enabled = false;
+		if (dying == DeathType.None) {
+			dying = (loudly) ? DeathType.Loudly : DeathType.Quietly;
+		}
+	}
+
+	void KillRelatives (float delay) {
+		// Detach from parent and/or children and destroy them after a delay
+		GameObject tmp;
+
+		// Parent first
+		if (transform.parent) {
+			tmp = transform.parent.gameObject;
+			Destroy(tmp, delay);
+		}
+
+		// Next the kids, if any
+		for (int i = transform.childCount - 1; i >= 0 ; i--) {
+			tmp = transform.GetChild(i).gameObject;
+			tmp.transform.parent = null;
+			Destroy(tmp, delay);
+		}
+
 	}
 	
 	void ClearTarget () {
@@ -163,26 +174,31 @@ public class RedCubeIntercept : MonoBehaviour {
 		target = newTarget;
 	}
 
+	void FindControl (GameObject controller) {
+		scorer = controller.GetComponent<Scorer>();
+		control = controller.GetComponent<RedCubeGroundControl>();
+		NewTarget(scorer.Player);
+	}
+
 	void UpdateTracking() {
 		Vector3 bearingOption = Vector3.zero;
 		Vector3 closingOption = Vector3.zero;
 		float closingDiff = 0.0f;
 		float diffOption = 0.0f;
-		float avgDeltaTime = controller.AvgDeltaTime;	// Public for debug
+		float avgDeltaTime = control.AvgDeltaTime;	// Public for debug
 		float frameSpeed = avgSpeed * avgDeltaTime;
 
 		// Next we'll default to heading straight for the target's position
-		bearing = controller.Prediction(0) - transform.position;
+		bearing = control.Prediction(0) - transform.position;
 		closing = Vector3.zero;
 		closingDiff = bearing.magnitude;
-		timeToIntercept = 0.0f;
 
 		// Then, we evaluate all predicted target positions and pick the one that gets us closest
-		for (int i = 1; i < controller.PredictionLength; i++) {
+		for (int i = 1; i < control.PredictionLength; i++) {
 			// Exclude positions out of bounds
-			if (InBounds(controller.Prediction(i))) {
+			if (InBounds(control.Prediction(i))) {
 				// Find vector to target position
-				bearingOption = controller.Prediction(i) - transform.position;
+				bearingOption = control.Prediction(i) - transform.position;
 				// Find how far we'll get towards that in the given time (well, number of (fixed) frames)
 				closingOption = (bearingOption.normalized * frameSpeed * (float) i);
 				// Check the distance between them
@@ -192,7 +208,6 @@ public class RedCubeIntercept : MonoBehaviour {
 					bearing = bearingOption;
 					closing = closingOption;
 					closingDiff = diffOption;
-					timeToIntercept = (float) i * avgDeltaTime;
 				}
 			}
 		}
@@ -216,13 +231,9 @@ public class RedCubeIntercept : MonoBehaviour {
 		}
 	}
 
-	// On collision
-	/* void OnCollisionEnter(Collision collision) {
-		GameObject thingHit = collision.gameObject;
-		
-		if (thingHit.tag == "Bullet" && dead == false) {
-			dead = true;
-			BlowUp(true);
-		}
-	} */
+	Vector3 SpinVector (Vector3 bearingVec) {
+		Quaternion rot = Quaternion.FromToRotation(spinRef, bearingVec);
+		return rot * spinAxis;
+	}
+	
 }

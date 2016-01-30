@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-// TODO: add pulse pausing
+// TODO: add pulse pausing (or is that already doable with StopPulseCold(), and I just need a ResumePulse?)
 // TODO: add startup delay
 // TODO: move most functionality into a PulseTimer class for multi-component use
 // TODO: make PulseControl a wrapper for above

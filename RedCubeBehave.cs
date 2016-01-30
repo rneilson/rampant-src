@@ -1,26 +1,38 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class RedCubeBehave : MonoBehaviour {
 	
 	private GameObject target;
 	private Scorer scorer;
-	//private float speed = 10f;
-	//private float drag = 4f;
+	private RedCubeGroundControl control;
 	private Vector3 bearing;
-	private bool dead;
-	private bool loud;
+	private DeathType dying = DeathType.None;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
 	private Rigidbody myRigidbody;
 	
+	// Type/instance management stuff
+	private const string thisTypeName = "Seeker";
+	private static EnemyType thisType;
+	private EnemyInst thisInst;
 
+	// Public parameters
 	public float speed;
 	public float drag;
 	public GameObject burster;
 	public GameObject bursterQuiet;
 	public GameObject deathFade;
+
+	// Interceptor avoidance
+	private bool avoidInterceptors;
+	private List<GameObject> interceptorsClose = new List<GameObject>();
+
+	static RedCubeBehave () {
+		thisType = EnemyList.AddOrGetType(thisTypeName);
+	}
 
 	// Use this for initialization
 	void Start () {
@@ -28,29 +40,34 @@ public class RedCubeBehave : MonoBehaviour {
 		//myAudioSource = GetComponent<AudioSource>();
 		myRigidbody = GetComponent<Rigidbody>();
 
-		target = GameObject.FindGameObjectWithTag("Player");
-		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
+		if (!scorer) {
+			FindControl(GameObject.FindGameObjectWithTag("GameController"));
+		}
 		myRigidbody.drag = drag;
-		dead = false;
-		loud = false;
+
+		// Add to control's list
+		thisInst = new EnemyInst(thisType.typeNum, gameObject);
+		control.AddInstanceToList(thisInst);
+		avoidInterceptors = control.SeekersAvoidInterceptors;
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if (dead)
+		if (dying != DeathType.None)
 			BlowUp();
 	}
 	
 	//Put movement in FixedUpdate
 	void FixedUpdate () {
 		if (target) {
-			bearing = target.transform.position - transform.position;
-			myRigidbody.AddForce(bearing.normalized * speed);
+			bearing = FindBearing(target.transform.position - transform.position);
+			// Normalized in FindBearing
+			myRigidbody.AddForce(bearing * speed);
 		}
 	}
 	
 	void BlowUp () {
-		if (loud) {
+		if (dying == DeathType.Loudly) {
 			Destroy(Instantiate(burster, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
 		}
 		else {
@@ -59,23 +76,24 @@ public class RedCubeBehave : MonoBehaviour {
 		if (deathFade) {
 			Destroy(Instantiate(deathFade, transform.position, Quaternion.identity), 1.0f);
 		}
-		scorer.AddKill();
+		if (dying != DeathType.Silently) {
+			scorer.AddKill();
+		}
+		// Remove from control's list
+		control.RemoveInstanceFromList(thisInst);
+		// Destroy ourselves
 		Destroy(gameObject);
 	}
 	
 	void Clear () {
-		Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 1);
-		Destroy(gameObject);
+		dying = DeathType.Silently;
+		BlowUp();
 	}
 	
 	void Die (bool loudly) {
-		if (!dead)
-			dead = true;
-		if (loudly)
-			loud = true;
-		else
-			loud = false;
-		//collider.enabled = false;
+		if (dying == DeathType.None) {
+			dying = (loudly) ? DeathType.Loudly : DeathType.Quietly;
+		}
 	}
 	
 	void ClearTarget () {
@@ -86,13 +104,52 @@ public class RedCubeBehave : MonoBehaviour {
 		target = newTarget;
 	}
 	
-	// On collision
-	/* void OnCollisionEnter(Collision collision) {
-		GameObject thingHit = collision.gameObject;
-		
-		if (thingHit.tag == "Bullet" && dead == false) {
-			dead = true;
-			BlowUp(true);
+	void FindControl (GameObject controller) {
+		scorer = controller.GetComponent<Scorer>();
+		control = controller.GetComponent<RedCubeGroundControl>();
+		NewTarget(scorer.Player);
+	}
+
+	Vector3 FindBearing (Vector3 toTarget) {
+		// Start with a straight line to target
+		Vector3 curBearing = toTarget.normalized;
+
+		if (avoidInterceptors) {
+			// Now move away from each interceptor in turn
+			for (int i = 0; i < interceptorsClose.Count; i++) {
+				curBearing += AvoidInterceptor(interceptorsClose[i], toTarget);
+			}
+			// Clear out interceptor list for next frame
+			interceptorsClose.Clear();
+			// Renormalize
+			return curBearing.normalized;
 		}
-	} */
+		else {
+			// Didn't add anything, return as-is
+			return curBearing;
+		}
+	}
+
+	Vector3 AvoidInterceptor (GameObject interceptor, Vector3 toTarget) {
+		// Set here as const, keep the namespace clean (it's not, but y'know)
+		const float avoidFactor = 1.0f;
+
+		// Check distance to interceptor
+		Vector3 interDist = transform.position - interceptor.transform.position;
+
+		// Only avoid if interceptor is closer than target
+		if (interDist.sqrMagnitude < toTarget.sqrMagnitude) {
+			return interDist.normalized * avoidFactor;
+		}
+		else {
+			return Vector3.zero;
+		}
+	}
+
+	public void InterceptorClose (GameObject interceptor) {
+		if (avoidInterceptors) {
+			interceptorsClose.Add(interceptor);
+		}
+	}
+
 }

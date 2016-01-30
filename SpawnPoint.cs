@@ -10,6 +10,7 @@ public class SpawnPoint : MonoBehaviour {
 	private float spawnTime;
 	private bool spawned;
 	private float phaseIndex;
+	private Scorer scorer;
 
 	// Use this for initialization
 	void Start () {
@@ -25,9 +26,12 @@ public class SpawnPoint : MonoBehaviour {
 	void FixedUpdate () {
 		if (spawned == false && Time.fixedTime >= spawnTime) {
 			GetComponent<Collider>().enabled = false;
-			float spawnZ = Random.Range(0f, (phaseIndex * 10f) + 10f);
+			float spawnZ = Random.Range(0f, (phaseIndex * 5f));
 			float spawnY = Random.Range(0f, 360f);
-			Instantiate(enemyType, transform.position, Quaternion.Euler(spawnZ, 0, spawnY));
+			GameObject spawn = Instantiate(enemyType, transform.position, Quaternion.Euler(spawnZ, 0, spawnY)) as GameObject;
+			if (scorer) {
+				spawn.SendMessage("FindControl", scorer.gameObject);
+			}
 			if (postTime > 0)
 				Destroy(gameObject, postTime);
 			else
@@ -40,4 +44,7 @@ public class SpawnPoint : MonoBehaviour {
 		phaseIndex = phase;
 	}
 	
+	void FindControl (GameObject control) {
+		scorer = control.GetComponent<Scorer>();
+	}
 }
