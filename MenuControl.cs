@@ -38,8 +38,11 @@ public class MenuControl : MonoBehaviour {
 	private CursorLockMode desiredCursorMode;
 	private bool desiredCursorVisibility;
 	private InputMode currentInput;
-	private int readInputEvery = 20;
-	private int nextInputRead = 0;
+	private InputAxisTracker moveVert = new InputAxisTracker("MoveVertical");
+	private InputAxisTracker moveHori = new InputAxisTracker("MoveHorizontal");
+	private InputAxisTracker fireVert = new InputAxisTracker("FireVertical");
+	private InputAxisTracker fireHori = new InputAxisTracker("FireHorizontal");
+	private InputAxisTracker bombTrig = new InputAxisTracker("BombTrigger");
 
 	// Visibility layers
 	int showLayer;
@@ -120,6 +123,13 @@ public class MenuControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		// Capture input on axes
+		moveVert.Capture(Time.unscaledDeltaTime);
+		moveHori.Capture(Time.unscaledDeltaTime);
+		fireVert.Capture(Time.unscaledDeltaTime);
+		fireHori.Capture(Time.unscaledDeltaTime);
+		bombTrig.Capture(Time.unscaledDeltaTime);
+
 		// Only thing here is cursor stuff, I think
 		if (Cursor.lockState != desiredCursorMode) {
 			Cursor.lockState = desiredCursorMode;
@@ -174,8 +184,13 @@ public class MenuControl : MonoBehaviour {
 	// A big heap of ifs -- apologies, but I don't think there's another way to do it
 	// (Somewhere, somehow, buried perhaps, all input is a big heap of ifs)
 	MenuCommand ParseInput () {
-		// Reset input dT
-		nextInputRead = readInputEvery;
+		// Grab current axis readings
+		float moveVertVal = moveVert.Read();
+		float moveHoriVal = moveHori.Read();
+		float fireVertVal = fireVert.Read();
+		float fireHoriVal = fireHori.Read();
+		float bombTrigVal = bombTrig.Read();
+
 		// Pause first
 		// TODO: change button "Back" to send back command (once linked list in place)
 		if (Input.GetButtonDown("Back")) {
@@ -183,23 +198,23 @@ public class MenuControl : MonoBehaviour {
 		}
 		// Triggers/spacebar/return second
 		else if ((Input.GetButtonDown("BombButton")) 
-		//	|| (Mathf.Abs(Input.GetAxisRaw("BombTrigger")) > 0.05f)
+			|| ((bombTrigVal > 0.05f) || (bombTrigVal < -0.05f))
 			|| Input.GetKeyDown(KeyCode.Return)) {
 			// Just run selected
 			return new MenuCommand(MenuCommandType.RunCmdLine, "");
 		}
 		// Up next
-		//else if ((Input.GetAxisRaw("Vertical") > 0.05f) 
-		//	|| (Input.GetAxisRaw("RightVertical") > 0.05f)) {
-		else if ((Input.GetKeyDown(KeyCode.UpArrow))
-			|| (Input.GetKeyDown(KeyCode.W))) {
+		else if ((moveVertVal > 0.05f) 
+			|| (fireVertVal > 0.05f)) {
+		//else if ((Input.GetKeyDown(KeyCode.UpArrow))
+		//	|| (Input.GetKeyDown(KeyCode.W))) {
 			return new MenuCommand(MenuCommandType.SelectUp, "");
 		}
 		// Then down
-		//else if ((Input.GetAxisRaw("Vertical") < -0.05f) 
-		//	|| (Input.GetAxisRaw("RightVertical") < -0.05f)) {
-		else if ((Input.GetKeyDown(KeyCode.DownArrow))
-			|| (Input.GetKeyDown(KeyCode.S))) {
+		else if ((moveVertVal < -0.05f) 
+			|| (fireVertVal < -0.05f)) {
+		//else if ((Input.GetKeyDown(KeyCode.DownArrow))
+		//	|| (Input.GetKeyDown(KeyCode.S))) {
 			return new MenuCommand(MenuCommandType.SelectDown, "");
 		}
 		// Now right
@@ -385,6 +400,64 @@ public class MenuControl : MonoBehaviour {
 public enum InputMode : byte {
 	Game = 0,
 	Menu
+}
+
+// For checking an axis while timescale = 0
+public class InputAxisTracker {
+	private const float resetTime = 0.35f;
+	private const float threshold = 0.05f;
+	private float resetCountdown = 0.0f;
+	private bool wasCaptured = false;
+	private bool wasRead = false;
+	private float axisValue;
+	private string axisName;
+
+	public InputAxisTracker (string axisName) {
+		this.axisName = axisName;
+		this.axisValue = 0.0f;
+	}
+
+	void Set (float axisReading) {
+		axisValue = axisReading;
+		resetCountdown = resetTime;
+		wasCaptured = true;
+		wasRead = false;
+	}
+
+	void Reset () {
+		axisValue = 0.0f;
+		resetCountdown = 0.0f;
+		wasCaptured = false;
+		wasRead = false;
+	}
+
+	public void Capture (float deltaTime) {
+		// Get temp reading to check
+		float tempCap = Input.GetAxisRaw(axisName);
+		// If previously captured, test for axis return to 0 or reset time met
+		if (wasCaptured) {
+			resetCountdown -= deltaTime;
+			if (((tempCap < threshold) && (tempCap > -threshold)) || (resetCountdown <= 0.0f)) {
+				Reset();
+			}
+		}
+		// This is not an else statement -- we want the fall-through
+		if (!wasCaptured) {
+			if ((tempCap > threshold) || (tempCap < -threshold)) {
+				Set(tempCap);
+			}
+		}
+	}
+
+	public float Read () {
+		if (wasRead) {
+			return 0.0f;
+		}
+		else {
+			wasRead = true;
+			return axisValue;
+		}
+	}
 }
 
 // For passing commands up and down the tree
