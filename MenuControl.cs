@@ -404,13 +404,19 @@ public class MenuControl : MonoBehaviour {
 				SelectDown(selectedLine);
 				break;
 			case MenuCommandType.RunCmdLine:
-				ExecuteCommand(menuLines[selectedLine].CommandLine());
+				if (selectedLine >= 0) {
+					ExecuteCommand(menuLines[selectedLine].CommandLine());
+				}
 				break;
 			case MenuCommandType.RunCmdLeft:
-				ExecuteCommand(menuLines[selectedLine].CommandLeft());
+				if (selectedLine >= 0) {
+					ExecuteCommand(menuLines[selectedLine].CommandLeft());
+				}
 				break;
 			case MenuCommandType.RunCmdRight:
-				ExecuteCommand(menuLines[selectedLine].CommandRight());
+				if (selectedLine >= 0) {
+					ExecuteCommand(menuLines[selectedLine].CommandRight());
+				}
 				break;
 			case MenuCommandType.None:
 			default:
