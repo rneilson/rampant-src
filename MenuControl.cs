@@ -115,9 +115,6 @@ public class MenuControl : MonoBehaviour {
 			nodes[node.name] = node;
 		}
 
-		// TEMP
-		desiredCursorMode = Cursor.lockState;
-		desiredCursorVisibility = Cursor.visible;
 		// Show menu and select first line
 		ShowMenu(startNode);
 
@@ -135,13 +132,6 @@ public class MenuControl : MonoBehaviour {
 		
 		// Check for commands
 		if (currentInput == InputMode.Menu) {
-			// Capture input on axes
-			moveVert.Capture(Time.unscaledDeltaTime);
-			moveHori.Capture(Time.unscaledDeltaTime);
-			fireVert.Capture(Time.unscaledDeltaTime);
-			fireHori.Capture(Time.unscaledDeltaTime);
-			bombTrig.Capture(Time.unscaledDeltaTime);
-
 			// Check commands
 			MenuCommand cmd = ParseInput();
 			if (cmd.cmdType != MenuCommandType.None) {
@@ -152,6 +142,8 @@ public class MenuControl : MonoBehaviour {
 			}
 		}
 	}
+
+	// Internal methods
 
 	void LoadNode (string nodeName) {
 		MenuNode node = nodes[nodeName];
@@ -184,9 +176,60 @@ public class MenuControl : MonoBehaviour {
 		}
 	}
 
+	void SelectUp (int index) {
+		int newLine = (index < 0) ? 0 : index;
+		do {
+			newLine--;
+			if (newLine < 0) {
+				newLine = menuLines.Length - 1;
+			}
+		} while (!menuLines[newLine].Selectable);
+		SelectLine(newLine);
+	}
+
+	void SelectDown (int index) {
+		int newLine = (index < 0) ? 0 : index;
+		do {
+			newLine++;
+			if (newLine >= menuLines.Length) {
+				newLine = 0;
+			}
+		} while (!menuLines[newLine].Selectable);
+		SelectLine(newLine);
+	}
+
+	// For retrieving a command from the appropriate line when mouse clicked
+	MenuCommand ParseMouseClick () {
+		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+		RaycastHit hit;
+		// Cast a ray hitting only UI elements
+		if (Physics.Raycast(ray, out hit, 15f, (1 << showLayer))) {
+			// Only the menu line segments have colliders, so I think we can 
+			// get away with assuming we're hitting one of these
+			MenuSegment segment = hit.collider.GetComponent<MenuSegment>();
+			// Check anyways
+			if (segment) {
+				return segment.ClickedOn();
+			}
+			else {
+				return MenuCommand.None;
+			}
+		}
+		else {
+			return MenuCommand.None;
+		}
+	}
+
 	// A big heap of ifs -- apologies, but I don't think there's another way to do it
 	// (Somewhere, somehow, buried perhaps, all input is a big heap of ifs)
 	MenuCommand ParseInput () {
+		// Capture input on axes
+		moveVert.Capture(Time.unscaledDeltaTime);
+		moveHori.Capture(Time.unscaledDeltaTime);
+		fireVert.Capture(Time.unscaledDeltaTime);
+		fireHori.Capture(Time.unscaledDeltaTime);
+		bombTrig.Capture(Time.unscaledDeltaTime);
+
 		// Grab current axis readings
 		float moveVertVal = moveVert.Read();
 		float moveHoriVal = moveHori.Read();
@@ -199,7 +242,11 @@ public class MenuControl : MonoBehaviour {
 		if (Input.GetButtonDown("Back")) {
 			return new MenuCommand(MenuCommandType.ExitMenu, "");
 		}
-		// Triggers/spacebar/return second
+		// Mouse button second
+		else if (Input.GetMouseButtonDown(0)) {
+			return ParseMouseClick();
+		}
+		// Triggers/spacebar/return third
 		else if ((Input.GetButtonDown("BombButton")) 
 			|| ((bombTrigVal > 0.05f) || (bombTrigVal < -0.05f))
 			|| Input.GetKeyDown(KeyCode.Return)) {
@@ -296,6 +343,8 @@ public class MenuControl : MonoBehaviour {
 		}
 	}
 
+	// External methods
+
 	public void SelectLine (int index) {
 		if ((index < menuLines.Length) && (menuLines[index].Selectable)) {
 			if (selectedLine >= 0) {
@@ -314,28 +363,6 @@ public class MenuControl : MonoBehaviour {
 			selectedLine = -1;
 		}
 		// else do nothing
-	}
-
-	public void SelectUp (int index) {
-		int newLine = (index < 0) ? 0 : index;
-		do {
-			newLine--;
-			if (newLine < 0) {
-				newLine = menuLines.Length - 1;
-			}
-		} while (!menuLines[newLine].Selectable);
-		SelectLine(newLine);
-	}
-
-	public void SelectDown (int index) {
-		int newLine = (index < 0) ? 0 : index;
-		do {
-			newLine++;
-			if (newLine >= menuLines.Length) {
-				newLine = 0;
-			}
-		} while (!menuLines[newLine].Selectable);
-		SelectLine(newLine);
 	}
 
 	public void SetTitle (string title) {
@@ -363,8 +390,9 @@ public class MenuControl : MonoBehaviour {
 			// Select first line
 			SelectLine(0);
 
-			// Grab input
+			// Grab and reset input
 			currentInput = InputMode.Menu;
+			Input.ResetInputAxes();
 
 			// Unhide cursor
 			desiredCursorVisibility = true;
@@ -390,6 +418,7 @@ public class MenuControl : MonoBehaviour {
 
 		// Release input
 		currentInput = InputMode.Game;
+		Input.ResetInputAxes();
 
 	}
 

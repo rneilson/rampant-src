@@ -204,13 +204,19 @@ public class Scorer : MonoBehaviour {
 	void Update () {
 		
 		// if (Input.GetKeyDown(KeyCode.Escape)) {
-		if ((Input.GetButtonDown("Pause")) || (Input.GetKeyDown(KeyCode.Escape))) {
+		//if ((Input.GetButtonDown("Pause")) || (Input.GetKeyDown(KeyCode.Escape))) {
+		if (Input.GetButtonDown("Pause")) {
 			if (isPaused) {
 				UnPauseGame();
 			}
 			else {
 				PauseGame();
 			}
+		}
+
+		// If we're not in the menu, then back will pause
+		if ((menu.CurrentInput == InputMode.Game) && (Input.GetButtonDown("Back"))) {
+			PauseGame();
 		}
 
 		// Check if menu's exited

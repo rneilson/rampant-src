@@ -38,6 +38,31 @@ public class MenuSegment : MonoBehaviour {
 		parentLine.MouseExited(segmentType);
 	}
 
+	public MenuCommand ClickedOn () {
+		MenuCommand toRet;
+		// Switch on segment type (defaults to returning line cmd (only for mouseclicks))
+		switch (segmentType) {
+			case MenuSegmentType.Left:
+				toRet = parentLine.CommandLeft();
+				if (toRet.cmdType == MenuCommandType.None) {
+					goto default;
+				}
+				break;
+			case MenuSegmentType.Right:
+				toRet = parentLine.CommandRight();
+				if (toRet.cmdType == MenuCommandType.None) {
+					goto default;
+				}
+				break;
+			default:
+				// If clicked on line, or if cap and no cmd, return whatever the line cmd is
+				// (which can still be None, but at least we checked)
+				toRet = parentLine.CommandLine();
+				break;
+		}
+		return toRet;
+	}
+
 	public void Selected (FontStyle selectStyle) {
 		displayText.fontStyle = selectStyle;
 	}
