@@ -34,10 +34,12 @@ public class MenuControl : MonoBehaviour {
 	// Settings
 	private Dictionary<string, MenuSetting> settings = new Dictionary<string, MenuSetting>();
 
-	// Cursor and input state
+	// Cursor state
 	private CursorLockMode desiredCursorMode;
 	private bool desiredCursorVisibility;
 	private InputMode currentInput;
+
+	// Input axes
 	private InputAxisTracker moveVert = new InputAxisTracker("MoveVertical");
 	private InputAxisTracker moveHori = new InputAxisTracker("MoveHorizontal");
 	private InputAxisTracker fireVert = new InputAxisTracker("FireVertical");
@@ -123,14 +125,7 @@ public class MenuControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		// Capture input on axes
-		moveVert.Capture(Time.unscaledDeltaTime);
-		moveHori.Capture(Time.unscaledDeltaTime);
-		fireVert.Capture(Time.unscaledDeltaTime);
-		fireHori.Capture(Time.unscaledDeltaTime);
-		bombTrig.Capture(Time.unscaledDeltaTime);
-
-		// Only thing here is cursor stuff, I think
+		// Cursor state stuff
 		if (Cursor.lockState != desiredCursorMode) {
 			Cursor.lockState = desiredCursorMode;
 		}
@@ -140,6 +135,14 @@ public class MenuControl : MonoBehaviour {
 		
 		// Check for commands
 		if (currentInput == InputMode.Menu) {
+			// Capture input on axes
+			moveVert.Capture(Time.unscaledDeltaTime);
+			moveHori.Capture(Time.unscaledDeltaTime);
+			fireVert.Capture(Time.unscaledDeltaTime);
+			fireHori.Capture(Time.unscaledDeltaTime);
+			bombTrig.Capture(Time.unscaledDeltaTime);
+
+			// Check commands
 			MenuCommand cmd = ParseInput();
 			if (cmd.cmdType != MenuCommandType.None) {
 				if (debugInfo) {
@@ -218,17 +221,17 @@ public class MenuControl : MonoBehaviour {
 			return new MenuCommand(MenuCommandType.SelectDown, "");
 		}
 		// Now right
-		//else if ((Input.GetAxisRaw("Horizontal") > 0.05f) 
-		//	|| (Input.GetAxisRaw("RightHorizontal") > 0.05f)) {
-		else if ((Input.GetKeyDown(KeyCode.RightArrow))
-			|| (Input.GetKeyDown(KeyCode.D))) {
+		else if ((moveHoriVal > 0.05f) 
+			|| (fireHoriVal > 0.05f)) {
+		//else if ((Input.GetKeyDown(KeyCode.RightArrow))
+		//	|| (Input.GetKeyDown(KeyCode.D))) {
 			return new MenuCommand(MenuCommandType.RunCmdRight, "");
 		}
 		// Then left
-		//else if ((Input.GetAxisRaw("Horizontal") < -0.05f) 
-		//	|| (Input.GetAxisRaw("RightHorizontal") < -0.05f)) {
-		else if ((Input.GetKeyDown(KeyCode.LeftArrow))
-			|| (Input.GetKeyDown(KeyCode.A))) {
+		else if ((moveHoriVal < -0.05f) 
+			|| (fireHoriVal < -0.05f)) {
+		//else if ((Input.GetKeyDown(KeyCode.LeftArrow))
+		//	|| (Input.GetKeyDown(KeyCode.A))) {
 			return new MenuCommand(MenuCommandType.RunCmdLeft, "");
 		}
 		else {
