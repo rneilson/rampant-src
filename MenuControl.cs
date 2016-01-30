@@ -274,12 +274,8 @@ public class MenuControl : MonoBehaviour {
 	// A big heap of ifs -- apologies, but I don't think there's another way to do it
 	// (Somewhere, somehow, buried perhaps, all input is a big heap of ifs)
 	MenuCommand ParseInput () {
-		// Capture input on axes
-		moveVert.Capture(Time.unscaledDeltaTime);
-		moveHori.Capture(Time.unscaledDeltaTime);
-		fireVert.Capture(Time.unscaledDeltaTime);
-		fireHori.Capture(Time.unscaledDeltaTime);
-		bombTrig.Capture(Time.unscaledDeltaTime);
+		// Update input dT
+		InputAxisTracker.Update(Time.unscaledDeltaTime);
 
 		// Grab current axis readings
 		float moveVertVal = moveVert.Read();
@@ -478,6 +474,7 @@ public enum InputMode : byte {
 public class InputAxisTracker {
 	private const float resetTime = 0.35f;
 	private const float threshold = 0.05f;
+	private static float deltaTime;
 	private float resetCountdown = 0.0f;
 	private bool wasCaptured = false;
 	private bool wasRead = false;
@@ -503,7 +500,11 @@ public class InputAxisTracker {
 		wasRead = false;
 	}
 
-	public void Capture (float deltaTime) {
+	public static void Update (float dT) {
+		deltaTime = dT;
+	}
+
+	void Capture () {
 		// Get temp reading to check
 		float tempCap = Input.GetAxisRaw(axisName);
 		// If previously captured, test for axis return to 0 or reset time met
@@ -522,6 +523,9 @@ public class InputAxisTracker {
 	}
 
 	public float Read () {
+		// Capture input if possible
+		Capture();
+
 		if (wasRead) {
 			return 0.0f;
 		}
