@@ -29,13 +29,17 @@ public class MenuControl : MonoBehaviour {
 	public string rootNode;
 	public string startNode;
 	private Dictionary<string, MenuNode> nodes = new Dictionary<string, MenuNode>();
+	// TODO: linked list for node navigation
 
 	// Settings
 	private Dictionary<string, MenuSetting> settings = new Dictionary<string, MenuSetting>();
 
-	// Cursor state
+	// Cursor and input state
 	private CursorLockMode desiredCursorMode;
 	private bool desiredCursorVisibility;
+	private InputMode currentInput;
+	private int readInputEvery = 20;
+	private int nextInputRead = 0;
 
 	// Visibility layers
 	int showLayer;
@@ -69,6 +73,9 @@ public class MenuControl : MonoBehaviour {
 	public string RootNode {
 		get { return rootNode; }
 	}
+	public InputMode CurrentInput {
+		get { return currentInput; }
+	}
 
 	// Use this for initialization
 	void Start () {
@@ -99,12 +106,15 @@ public class MenuControl : MonoBehaviour {
 		settings["MouseSpeed"] = new MouseSpeedSetting("MouseSpeed", "FireCursor");
 
 		// TODO: parse root menu
+		foreach (MenuNode node in menuNodes) {
+			nodes[node.name] = node;
+		}
 
 		// TEMP
 		desiredCursorMode = Cursor.lockState;
 		desiredCursorVisibility = Cursor.visible;
 		// Show menu and select first line
-		ShowMenu(rootNode);
+		ShowMenu(startNode);
 
 	}
 	
@@ -118,6 +128,154 @@ public class MenuControl : MonoBehaviour {
 			Cursor.visible = desiredCursorVisibility;
 		}
 		
+		// Check for commands
+		if (currentInput == InputMode.Menu) {
+			MenuCommand cmd = ParseInput();
+			if (cmd.cmdType != MenuCommandType.None) {
+				if (debugInfo) {
+					Debug.Log("Caught input: " + cmd.cmdType.ToString(), gameObject);
+				}
+				ExecuteCommand(cmd);
+			}
+		}
+	}
+
+	void LoadNode (string nodeName) {
+		MenuNode node = nodes[nodeName];
+		if (debugInfo) {
+			Debug.Log("Loading node: " + node.name, gameObject);
+		}
+
+		// TODO: once linked list nav is in place, make the first line a back cmd
+		int i = 0;
+		// Configure listed lines
+		while ((i < node.lines.Length) && (i < menuLines.Length)) {
+			MenuNodeLine line = node.lines[i];
+			menuLines[i].ConfigureLine(line.lineType, line.label, line.target);
+
+			if (debugInfo) {
+				menuLines[i].DebugLineInfo();
+			}
+
+			i++;
+		}
+		// Configure remaining lines as blank
+		while (i < menuLines.Length) {
+			menuLines[i].ConfigureLine(MenuLineType.Text, "", "");
+
+			if (debugInfo) {
+				menuLines[i].DebugLineInfo();
+			}
+
+			i++;
+		}
+	}
+
+	// A big heap of ifs -- apologies, but I don't think there's another way to do it
+	// (Somewhere, somehow, buried perhaps, all input is a big heap of ifs)
+	MenuCommand ParseInput () {
+		// Reset input dT
+		nextInputRead = readInputEvery;
+		// Pause first
+		// TODO: change button "Back" to send back command (once linked list in place)
+		if (Input.GetButtonDown("Back")) {
+			return new MenuCommand(MenuCommandType.ExitMenu, "");
+		}
+		// Triggers/spacebar/return second
+		else if ((Input.GetButtonDown("BombButton")) 
+		//	|| (Mathf.Abs(Input.GetAxisRaw("BombTrigger")) > 0.05f)
+			|| Input.GetKeyDown(KeyCode.Return)) {
+			// Just run selected
+			return new MenuCommand(MenuCommandType.RunCmdLine, "");
+		}
+		// Up next
+		//else if ((Input.GetAxisRaw("Vertical") > 0.05f) 
+		//	|| (Input.GetAxisRaw("RightVertical") > 0.05f)) {
+		else if ((Input.GetKeyDown(KeyCode.UpArrow))
+			|| (Input.GetKeyDown(KeyCode.W))) {
+			return new MenuCommand(MenuCommandType.SelectUp, "");
+		}
+		// Then down
+		//else if ((Input.GetAxisRaw("Vertical") < -0.05f) 
+		//	|| (Input.GetAxisRaw("RightVertical") < -0.05f)) {
+		else if ((Input.GetKeyDown(KeyCode.DownArrow))
+			|| (Input.GetKeyDown(KeyCode.S))) {
+			return new MenuCommand(MenuCommandType.SelectDown, "");
+		}
+		// Now right
+		//else if ((Input.GetAxisRaw("Horizontal") > 0.05f) 
+		//	|| (Input.GetAxisRaw("RightHorizontal") > 0.05f)) {
+		else if ((Input.GetKeyDown(KeyCode.RightArrow))
+			|| (Input.GetKeyDown(KeyCode.D))) {
+			return new MenuCommand(MenuCommandType.RunCmdRight, "");
+		}
+		// Then left
+		//else if ((Input.GetAxisRaw("Horizontal") < -0.05f) 
+		//	|| (Input.GetAxisRaw("RightHorizontal") < -0.05f)) {
+		else if ((Input.GetKeyDown(KeyCode.LeftArrow))
+			|| (Input.GetKeyDown(KeyCode.A))) {
+			return new MenuCommand(MenuCommandType.RunCmdLeft, "");
+		}
+		else {
+			return MenuCommand.None;
+		}
+	}
+
+	void ExecuteCommand (MenuCommand cmd) {
+		if ((debugInfo) && (cmd.cmdType != MenuCommandType.None)) {
+			Debug.Log("Executing: " + cmd.cmdType.ToString(), gameObject);
+		}
+		// Awful big-ass switch ahoy!
+		// (Sorry)
+		switch (cmd.cmdType) {
+			case MenuCommandType.QuitApp:
+				Application.Quit();
+				break;
+			case MenuCommandType.ExitMenu:
+				HideMenu();
+				break;
+			case MenuCommandType.NodeGoto:
+				ShowMenu(cmd.cmdTarget);
+				break;
+			case MenuCommandType.SettingToggle:
+				if (settings.ContainsKey(cmd.cmdTarget)) {
+					settings[cmd.cmdTarget].Toggle();
+					menuLines[selectedLine].UpdateText();
+				}
+				break;
+			case MenuCommandType.SettingHigher:
+				if (settings.ContainsKey(cmd.cmdTarget)) {
+					settings[cmd.cmdTarget].Higher();
+					menuLines[selectedLine].UpdateText();
+				}
+				break;
+			case MenuCommandType.SettingLower:
+				if (settings.ContainsKey(cmd.cmdTarget)) {
+					settings[cmd.cmdTarget].Lower();
+					menuLines[selectedLine].UpdateText();
+				}
+				break;
+			case MenuCommandType.SelectUp:
+				SelectUp(selectedLine);
+				break;
+			case MenuCommandType.SelectDown:
+				SelectDown(selectedLine);
+				break;
+			case MenuCommandType.RunCmdLine:
+				ExecuteCommand(menuLines[selectedLine].CommandLine());
+				break;
+			case MenuCommandType.RunCmdLeft:
+				ExecuteCommand(menuLines[selectedLine].CommandLeft());
+				break;
+			case MenuCommandType.RunCmdRight:
+				ExecuteCommand(menuLines[selectedLine].CommandRight());
+				break;
+			// TODO: actually implement NodeBack...
+			case MenuCommandType.NodeBack:
+			case MenuCommandType.None:
+			default:
+				break;
+		}
 	}
 
 	public void SelectLine (int index) {
@@ -140,35 +298,63 @@ public class MenuControl : MonoBehaviour {
 		// else do nothing
 	}
 
+	public void SelectUp (int index) {
+		int newLine = (index < 0) ? 0 : index;
+		do {
+			newLine--;
+			if (newLine < 0) {
+				newLine = menuLines.Length - 1;
+			}
+		} while (!menuLines[newLine].Selectable);
+		SelectLine(newLine);
+	}
+
+	public void SelectDown (int index) {
+		int newLine = (index < 0) ? 0 : index;
+		do {
+			newLine++;
+			if (newLine >= menuLines.Length) {
+				newLine = 0;
+			}
+		} while (!menuLines[newLine].Selectable);
+		SelectLine(newLine);
+	}
+
 	public void SetTitle (string title) {
 		titleText = title;
 		titleMesh.text = titleText;
 	}
 
 	public void ShowMenu (string node) {
-		// TODO: get and parse node
-
-		// Show ourselves
-		gameObject.layer = showLayer;
-		// Show title
-		titleMesh.gameObject.layer = showLayer;
-		// Show lines
-		foreach (MenuLine line in menuLines) {
-			line.SetLayer(showLayer);
+		// Exit menu if node is empty string
+		if (node == "") {
+			HideMenu();
 		}
-		// Select first line
-		SelectLine(0);
+		// Otherwise, get and parse node
+		else if (nodes.ContainsKey(node)) {
+			LoadNode(node);
 
-		// Unhide cursor
-		desiredCursorVisibility = true;
-		desiredCursorMode = CursorLockMode.None;
+			// Show ourselves
+			gameObject.layer = showLayer;
+			// Show title
+			titleMesh.gameObject.layer = showLayer;
+			// Show lines
+			foreach (MenuLine line in menuLines) {
+				line.SetLayer(showLayer);
+			}
+			// Select first line
+			SelectLine(0);
+
+			// Grab input
+			currentInput = InputMode.Menu;
+
+			// Unhide cursor
+			desiredCursorVisibility = true;
+			desiredCursorMode = CursorLockMode.None;
+		}
 	}
 
 	public void HideMenu () {
-		// Hide cursor
-		desiredCursorVisibility = false;
-		desiredCursorMode = CursorLockMode.Locked;
-
 		// Deselect current line
 		DeselectLine(selectedLine);
 		// Hide lines
@@ -179,12 +365,26 @@ public class MenuControl : MonoBehaviour {
 		titleMesh.gameObject.layer = hideLayer;
 		// Hide ourselves
 		gameObject.layer = hideLayer;
+
+		// Hide cursor
+		desiredCursorVisibility = false;
+		desiredCursorMode = CursorLockMode.Locked;
+
+		// Release input
+		currentInput = InputMode.Game;
+
 	}
 
 	public string GetSetting (string settingName) {
 		return settings[settingName].Value;
-	}
+	} 
 
+}
+
+// For directing input to us, or to the game
+public enum InputMode : byte {
+	Game = 0,
+	Menu
 }
 
 // For passing commands up and down the tree
@@ -192,7 +392,8 @@ public enum MenuCommandType : byte {
 	None = 0,
 	QuitApp,
 	ExitMenu,
-	GotoNode,
+	NodeGoto,
+	NodeBack,
 	SettingToggle,
 	SettingHigher,
 	SettingLower,
@@ -217,12 +418,14 @@ public struct MenuCommand {
 }
 
 // For menu setup
-public struct MenuNodeLine {
+[System.Serializable]
+public class MenuNodeLine {
 	public MenuLineType lineType;
 	public string label;
 	public string target;
 }
-public struct MenuNode {
+[System.Serializable]
+public class MenuNode {
 	public string name;
 	public MenuNodeLine[] lines;
 }

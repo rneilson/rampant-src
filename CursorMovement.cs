@@ -48,8 +48,8 @@ public class CursorMovement : MonoBehaviour {
 	}
 
 	void LateUpdate () {
-		// Only move if game running (may change depending on (forthcoming) input class)
-		if ((!scorer.IsPaused) && (scorer.IsStarted)) {
+		// Only move if input directed to game
+		if (scorer.InputTarget == InputMode.Game) {
 			float xmove, zmove, xpos, zpos;
 
 			// Get input
@@ -85,11 +85,11 @@ public class CursorMovement : MonoBehaviour {
 		}
 	}
 
-	void HideCursor () {
+	public void HideCursor () {
 		gameObject.layer = hideLayer;
 	}
 
-	void UnhideCursor () {
+	public void UnhideCursor () {
 		gameObject.layer = showLayer;
 	}
 }

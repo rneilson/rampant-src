@@ -134,7 +134,12 @@ public class Scorer : MonoBehaviour {
 	public bool GlobalDebug {
 		get { return globalDebug; }
 	}
-
+	public InputMode InputTarget {
+		get {
+			// Forward to menu
+			return menu.CurrentInput;
+		}
+	}
 
 	// Use this for initialization
 	void Start () {
@@ -199,13 +204,18 @@ public class Scorer : MonoBehaviour {
 	void Update () {
 		
 		// if (Input.GetKeyDown(KeyCode.Escape)) {
-		if (Input.GetButtonDown("Pause")) {
+		if ((Input.GetButtonDown("Pause")) || (Input.GetKeyDown(KeyCode.Escape))) {
 			if (isPaused) {
 				UnPauseGame();
 			}
 			else {
 				PauseGame();
 			}
+		}
+
+		// Check if menu's exited
+		if ((isPaused) && (menu.CurrentInput == InputMode.Game)) {
+			UnPauseGame();
 		}
 
 		/*
@@ -231,7 +241,8 @@ public class Scorer : MonoBehaviour {
 			}
 		}
 		else {
-			if (Input.GetKeyDown(KeyCode.Q))
+			if ((Input.GetKeyDown(KeyCode.Q)) 
+				&& ((Input.GetKey(KeyCode.LeftControl)) || (Input.GetKey(KeyCode.RightControl)) ) )
 				Application.Quit();
 		}
 	}

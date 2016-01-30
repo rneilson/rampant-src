@@ -107,6 +107,23 @@ public class MenuLine : MonoBehaviour {
 			line.UpdateText(command.Label);
 		}
 	}
+
+	public void DebugLineInfo () {
+		Debug.Log("Line " + lineIndex + ": type " + command.CommandLine().ToString() 
+			+ ", label " + command.Label + ", target " + command.Target, gameObject);
+	}
+
+	// Teh Commands!
+	public MenuCommand CommandLine () {
+		return command.CommandLine();
+	}
+	public MenuCommand CommandLeft () {
+		return command.CommandLeft();
+	}
+	public MenuCommand CommandRight () {
+		return command.CommandRight();
+	}
+
 }
 
 // This here enum is mostly a way to pass types through Unity's inspector
@@ -148,7 +165,8 @@ public class MenuLineCommand {
 		this.cmdRight = MenuCommandType.None;
 	}
 
-	public MenuLineCommand (bool selectable, bool updateable, string label, string target, string capLeft, string capRight,
+	public MenuLineCommand (bool selectable, bool updateable, string label, 
+		string target, string capLeft, string capRight,
 		MenuCommandType cmdLine, MenuCommandType cmdLeft, MenuCommandType cmdRight) {
 		// Pretty standard fare
 		this.selectable = selectable;
@@ -209,13 +227,13 @@ public class MenuLineCommand {
 				break;
 			case MenuLineType.Quit:
 				this.cmdLine = MenuCommandType.QuitApp;
-				this.cmdLeft = MenuCommandType.QuitApp;
-				this.cmdRight = MenuCommandType.QuitApp;
+				this.cmdLeft = MenuCommandType.None;
+				this.cmdRight = MenuCommandType.None;
 				break;
 			case MenuLineType.Goto:
-				this.cmdLine = MenuCommandType.GotoNode;
-				this.cmdLeft = MenuCommandType.GotoNode;
-				this.cmdRight = MenuCommandType.GotoNode;
+				this.cmdLine = MenuCommandType.NodeGoto;
+				this.cmdLeft = MenuCommandType.None;
+				this.cmdRight = MenuCommandType.None;
 				break;
 			case MenuLineType.Number:
 				this.cmdLine = MenuCommandType.SettingToggle;

@@ -35,8 +35,8 @@ public class BallMovement : MonoBehaviour {
 	
 	private const float piOverFour = Mathf.PI / 4;
 
-	private GameObject controller;
-	//private Scorer scorer;
+	//private GameObject controller;
+	private Scorer scorer;
 	//private RedCubeGroundControl groundControl;
 
 	const float fireDist = 0.10f;
@@ -73,10 +73,10 @@ public class BallMovement : MonoBehaviour {
 		myRigidbody = GetComponent<Rigidbody>();
 
 		myRigidbody.drag=dragNoInput;
-		controller = GameObject.FindGameObjectWithTag("GameController");
+		//controller = GameObject.FindGameObjectWithTag("GameController");
 		fireCursor = GameObject.Find("FireCursor");
 		fireCursorControl = fireCursor.GetComponent<CursorMovement>();
-		//scorer = controller.GetComponent<Scorer>();
+		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
 		//groundControl = controller.GetComponent<RedCubeGroundControl>();
 
 		// Firing and audio cycle stuff
@@ -89,7 +89,7 @@ public class BallMovement : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		// Check if bomb triggered
-		if (hasBomb) {
+		if ((hasBomb) && (scorer.InputTarget == InputMode.Game)) {
 			if (Input.GetButtonDown("BombButton")) {
 				UseBomb();
 			}
@@ -107,76 +107,66 @@ public class BallMovement : MonoBehaviour {
 	
 	//Put everything in FixedUpdate
 	void FixedUpdate () {
-		// Get movement
-		float dx=Input.GetAxis("Horizontal");
-		float dz=Input.GetAxis("Vertical");
-		float ndx = 0.0f;
-		float ndz = 0.0f;
-		float normalFactor = Mathf.Sqrt(dx*dx + dz*dz); 
+		// Only move/shoot if input directed to game
+		if (scorer.InputTarget == InputMode.Game) {
+			// Get movement
+			float dx=Input.GetAxis("Horizontal");
+			float dz=Input.GetAxis("Vertical");
+			float ndx = 0.0f;
+			float ndz = 0.0f;
+			float normalFactor = Mathf.Sqrt(dx*dx + dz*dz); 
 
-		//Normalize if input vector length > 1.0, keep within unit circle
-		if(normalFactor > 1.0f) {
-			ndx = (dx/normalFactor)*movementScale;
-			ndz = (dz/normalFactor)*movementScale;
-		}
-		//Otherwise use input vector as-is
-		else {
-			ndx = dx*movementScale;
-			ndz = dz*movementScale;
-		}
-		
-		if(dx == 0 && dz == 0) {
-			// Drag enabled
-			myRigidbody.drag = dragNoInput;
-		}
-		else {
-			// Drag enabled, but slower
-			myRigidbody.drag = dragInput;
-			// Give the ball a push
-			myRigidbody.AddForce(ndx, 0, ndz);
-
-		}
-		
-		// Get right stick input
-		float dxr = Input.GetAxis("RightHorizontal");
-		float dzr = Input.GetAxis("RightVertical");
-
-		// If right stick moved, shoot in that direction
-		if(dxr != 0 || dzr != 0) {
-			// Hide mouse cursor
-			fireCursorControl.SendMessage("HideCursor");
-
-			// Fire in given direction
-			//fireDirCurrent = new Vector3(dxr, 0, dzr).normalized;
-			FireGun(new Vector3(dxr, 0, dzr).normalized);
-		}
-		// Otherwise, check if left mouse pressed and fire towards cursor
-		else if (Input.GetButton("Fire")) {
-			// Show mouse cursor
-			fireCursorControl.SendMessage("UnhideCursor");
-
-			// Fire in given direction
-			FireGun(new Vector3((fireCursor.transform.position.x - transform.position.x), 0, 
-				(fireCursor.transform.position.z - transform.position.z)).normalized);
-		}
-
-		// Check if bomb triggered
-		/*if (hasBomb) {
-			if (Input.GetButton("BombButton")) {
-				UseBomb();
+			//Normalize if input vector length > 1.0, keep within unit circle
+			if(normalFactor > 1.0f) {
+				ndx = (dx/normalFactor)*movementScale;
+				ndz = (dz/normalFactor)*movementScale;
 			}
-			if (Mathf.Abs(Input.GetAxis("BombTrigger")) > 0.05f) {
-				UseBomb();
+			//Otherwise use input vector as-is
+			else {
+				ndx = dx*movementScale;
+				ndz = dz*movementScale;
 			}
-		}*/
-		
-		// Debug guitext
-		//xInput.text = dxr.ToString();
-		//zInput.text = dzr.ToString();
+			
+			if(dx == 0 && dz == 0) {
+				// Drag enabled
+				myRigidbody.drag = dragNoInput;
+			}
+			else {
+				// Drag enabled, but slower
+				myRigidbody.drag = dragInput;
+				// Give the ball a push
+				myRigidbody.AddForce(ndx, 0, ndz);
+
+			}
+			
+			// Get right stick input
+			float dxr = Input.GetAxis("RightHorizontal");
+			float dzr = Input.GetAxis("RightVertical");
+
+			// If right stick moved, shoot in that direction
+			if(dxr != 0 || dzr != 0) {
+				// Hide mouse cursor
+				fireCursorControl.HideCursor();
+
+				// Fire in given direction
+				//fireDirCurrent = new Vector3(dxr, 0, dzr).normalized;
+				FireGun(new Vector3(dxr, 0, dzr).normalized);
+			}
+			// Otherwise, check if left mouse pressed and fire towards cursor
+			else if (Input.GetButton("Fire")) {
+				// Show mouse cursor
+				fireCursorControl.UnhideCursor();
+
+				// Fire in given direction
+				FireGun(new Vector3((fireCursor.transform.position.x - transform.position.x), 0, 
+					(fireCursor.transform.position.z - transform.position.z)).normalized);
+			}
+
+		}
 	}
 	
 	void BlowUp () {
-		controller.SendMessage("PlayerDied");
+		scorer.SendMessage("PlayerDied");
 		Destroy(Instantiate(deathThroes, transform.position, Quaternion.Euler(-90, 0, 0)), 1f);
 		Destroy(gameObject);
 	}
