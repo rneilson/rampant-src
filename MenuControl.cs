@@ -265,7 +265,7 @@ public class MenuControl : MonoBehaviour {
 	}
 
 	void SelectDown (int index) {
-		int newLine = (index < 0) ? 0 : index;
+		int newLine = (index < -1) ? -1 : index;
 		do {
 			newLine++;
 			if (newLine >= menuLines.Length) {
