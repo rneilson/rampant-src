@@ -174,6 +174,9 @@ public class MenuControl : MonoBehaviour {
 			backName = "Back";
 		}
 		menuLines[0].ConfigureLine(MenuLineType.Back, backName, "");
+		if (debugInfo) {
+			menuLines[0].DebugLineInfo();
+		}
 
 		// Configure listed lines
 		// TODO: don't skip first line
