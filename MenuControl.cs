@@ -9,6 +9,8 @@ public class MenuControl : MonoBehaviour {
 
 	public bool debugInfo;
 
+	private Scorer scorer;
+
 	// Title text
 	private TextMesh titleMesh;
 	private string titleText;
@@ -27,7 +29,6 @@ public class MenuControl : MonoBehaviour {
 	// Menu node list and navigation
 	public MenuNode[] menuNodes;
 	public string rootNode;
-	public string startNode;
 	private Dictionary<string, MenuNode> nodes = new Dictionary<string, MenuNode>();
 	private MenuNodePath currNode = MenuNodePath.None;
 
@@ -84,6 +85,9 @@ public class MenuControl : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		// Get scorer
+		scorer = GameObject.Find("Scorekeeper").GetComponent<Scorer>();
+
 		// Title init (assumes child 0)
 		titleMesh = transform.GetChild(0).GetComponent<TextMesh>();
 
@@ -116,7 +120,7 @@ public class MenuControl : MonoBehaviour {
 		}
 
 		// Show menu and select first line
-		ShowMenu(startNode);
+		ShowMenu(rootNode);
 
 	}
 	
@@ -151,28 +155,47 @@ public class MenuControl : MonoBehaviour {
 			Debug.Log("Loading node: " + node.name, gameObject);
 		}
 
-		// TODO: once linked list nav is in place, make the first line a back cmd
-		int i = 0;
+		// Make the first line a back cmd
+		string backName;
+		// Check if there's a previous node
+		if ((currNode.Prev == null) || (currNode.Prev.Name == "")) {
+			// Check if game's started
+			if (scorer.IsStarted) {
+				backName = "Resume";
+			}
+			else {
+				backName = "Start";
+			}
+		}
+		// Otherwise, use the generic "back"
+		// Could use prev node name, but that'll have to wait
+		// until I change nodes to have display names
+		else {
+			backName = "Back";
+		}
+		menuLines[0].ConfigureLine(MenuLineType.Back, backName, "");
+
 		// Configure listed lines
-		while ((i < node.lines.Length) && (i < menuLines.Length)) {
+		// TODO: don't skip first line
+		int i = 0;
+		while ((i < node.lines.Length) && (i < menuLines.Length - 1)) {
 			MenuNodeLine line = node.lines[i];
-			menuLines[i].ConfigureLine(line.lineType, line.label, line.target);
+			menuLines[i+1].ConfigureLine(line.lineType, line.label, line.target);
 
 			if (debugInfo) {
-				menuLines[i].DebugLineInfo();
+				menuLines[i+1].DebugLineInfo();
 			}
 
 			i++;
 		}
 		// Configure remaining lines as blank
-		while (i < menuLines.Length) {
+		while (++i < menuLines.Length) {
 			menuLines[i].ConfigureLine(MenuLineType.Text, "", "");
 
 			if (debugInfo) {
 				menuLines[i].DebugLineInfo();
 			}
 
-			i++;
 		}
 	}
 
