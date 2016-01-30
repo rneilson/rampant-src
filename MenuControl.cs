@@ -29,7 +29,7 @@ public class MenuControl : MonoBehaviour {
 	public string rootNode;
 	public string startNode;
 	private Dictionary<string, MenuNode> nodes = new Dictionary<string, MenuNode>();
-	// TODO: linked list for node navigation
+	private MenuNodePath currNode = MenuNodePath.None;
 
 	// Settings
 	private Dictionary<string, MenuSetting> settings = new Dictionary<string, MenuSetting>();
@@ -176,6 +176,57 @@ public class MenuControl : MonoBehaviour {
 		}
 	}
 
+	void ShowMenu (MenuNodePath node) {
+		// Exit menu if node is null/none (empty string)
+		if (node.Name == "") {
+			HideMenu();
+		}
+		// Otherwise, get and parse node
+		else if (nodes.ContainsKey(node.Name)) {
+			if (debugInfo) {
+				Debug.Log("Going forward to " + node.Name, gameObject);
+			}
+
+			// Save current line and set new current node
+			currNode.Line = selectedLine;
+			currNode = node;
+
+			// Load up node lines
+			LoadNode(node.Name);
+
+			// Show ourselves
+			gameObject.layer = showLayer;
+			// Show title
+			titleMesh.gameObject.layer = showLayer;
+			// Show lines
+			foreach (MenuLine line in menuLines) {
+				line.SetLayer(showLayer);
+			}
+			// Select saved/first line
+			if (node.Line >= 0) {
+				SelectLine(node.Line);
+			}
+			else {
+				SelectLine(0);
+			}
+
+			// Grab and reset input
+			currentInput = InputMode.Menu;
+			Input.ResetInputAxes();
+
+			// Unhide cursor
+			desiredCursorVisibility = true;
+			desiredCursorMode = CursorLockMode.None;
+		}
+	}
+
+	void BackMenu () {
+		if (debugInfo) {
+			Debug.Log("Going back to " + currNode.Prev.Name, gameObject);
+		}
+		ShowMenu(currNode.Prev);
+	}
+
 	void SelectUp (int index) {
 		int newLine = (index < 0) ? 0 : index;
 		do {
@@ -240,7 +291,7 @@ public class MenuControl : MonoBehaviour {
 		// Pause first
 		// TODO: change button "Back" to send back command (once linked list in place)
 		if (Input.GetButtonDown("Back")) {
-			return new MenuCommand(MenuCommandType.ExitMenu, "");
+			return new MenuCommand(MenuCommandType.NodeBack, "");
 		}
 		// Mouse button second
 		else if (Input.GetMouseButtonDown(0)) {
@@ -248,8 +299,8 @@ public class MenuControl : MonoBehaviour {
 		}
 		// Triggers/spacebar/return third
 		else if ((Input.GetButtonDown("BombButton")) 
-			|| ((bombTrigVal > 0.05f) || (bombTrigVal < -0.05f))
-			|| Input.GetKeyDown(KeyCode.Return)) {
+			|| (Input.GetButtonDown("Select"))
+			|| ((bombTrigVal > 0.05f) || (bombTrigVal < -0.05f))) {
 			// Just run selected
 			return new MenuCommand(MenuCommandType.RunCmdLine, "");
 		}
@@ -292,12 +343,16 @@ public class MenuControl : MonoBehaviour {
 		}
 		// Awful big-ass switch ahoy!
 		// (Sorry)
+		// ((Enums are meant for big-ass switches, IMNSHO))
 		switch (cmd.cmdType) {
 			case MenuCommandType.QuitApp:
 				Application.Quit();
 				break;
 			case MenuCommandType.ExitMenu:
 				HideMenu();
+				break;
+			case MenuCommandType.NodeBack:
+				BackMenu();
 				break;
 			case MenuCommandType.NodeGoto:
 				ShowMenu(cmd.cmdTarget);
@@ -335,8 +390,6 @@ public class MenuControl : MonoBehaviour {
 			case MenuCommandType.RunCmdRight:
 				ExecuteCommand(menuLines[selectedLine].CommandRight());
 				break;
-			// TODO: actually implement NodeBack...
-			case MenuCommandType.NodeBack:
 			case MenuCommandType.None:
 			default:
 				break;
@@ -370,45 +423,32 @@ public class MenuControl : MonoBehaviour {
 		titleMesh.text = titleText;
 	}
 
-	public void ShowMenu (string node) {
-		// Exit menu if node is empty string
-		if (node == "") {
-			HideMenu();
+	public void ShowMenu (string nodeName) {
+		// Creates a new nodepath...
+		MenuNodePath newNode = new MenuNodePath(currNode, nodeName, 0);
+		if (debugInfo) {
+			Debug.Log("New path node, target: " + newNode.Name 
+				+ ", previous: " + newNode.Prev.Name, gameObject);
 		}
-		// Otherwise, get and parse node
-		else if (nodes.ContainsKey(node)) {
-			LoadNode(node);
-
-			// Show ourselves
-			gameObject.layer = showLayer;
-			// Show title
-			titleMesh.gameObject.layer = showLayer;
-			// Show lines
-			foreach (MenuLine line in menuLines) {
-				line.SetLayer(showLayer);
-			}
-			// Select first line
-			SelectLine(0);
-
-			// Grab and reset input
-			currentInput = InputMode.Menu;
-			Input.ResetInputAxes();
-
-			// Unhide cursor
-			desiredCursorVisibility = true;
-			desiredCursorMode = CursorLockMode.None;
-		}
+		// and tries to go there
+		ShowMenu(newNode);
 	}
 
 	public void HideMenu () {
+		// Set current node to None (all the way back)
+		currNode = MenuNodePath.None;
+
 		// Deselect current line
 		DeselectLine(selectedLine);
+
 		// Hide lines
 		foreach (MenuLine line in menuLines) {
 			line.SetLayer(hideLayer);
 		}
+
 		// Hide title
 		titleMesh.gameObject.layer = hideLayer;
+
 		// Hide ourselves
 		gameObject.layer = hideLayer;
 
@@ -533,6 +573,41 @@ public class MenuNodeLine {
 public class MenuNode {
 	public string name;
 	public MenuNodeLine[] lines;
+}
+public class MenuNodePath {
+	// Pretty bare-bones linked list, with, like, hardly any methods
+	// (Don't need them at the moment)
+	private MenuNodePath prev;
+	private string name;
+	private int line;
+
+	public MenuNodePath Prev { get { return prev; } }
+	public string Name { get { return name; } }
+	public int Line { 
+		get { return line; } 
+		set {
+			if (name != "") {
+				line = value;
+			}
+		}
+	}
+
+	public MenuNodePath (MenuNodePath prev, string name, int line) {
+		this.prev = prev;
+		this.name = name;
+		this.line = line;
+	}
+
+	public MenuNodePath () : this(null, "", 0) {}
+	
+	// Trick to make it refer to itself as previous
+	private MenuNodePath MakeRecursive () {
+		this.prev = this;
+		return this;
+	} 
+
+	// Base empty node
+	public static MenuNodePath None = (new MenuNodePath()).MakeRecursive();
 }
 
 // Mostly for internal use within MenuControl, in a dict by setting name

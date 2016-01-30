@@ -109,7 +109,7 @@ public class MenuLine : MonoBehaviour {
 	}
 
 	public void DebugLineInfo () {
-		Debug.Log("Line " + lineIndex + ": type " + command.CommandLine().ToString() 
+		Debug.Log("Line " + lineIndex + ": type " + command.CommandLine().cmdType.ToString() 
 			+ ", label " + command.Label + ", target " + command.Target, gameObject);
 	}
 
@@ -131,6 +131,7 @@ public class MenuLine : MonoBehaviour {
 public enum MenuLineType {
 	Text = 0,
 	Quit,
+	Back,
 	Goto,
 	Number,
 	OnOff,		// Don't use this one yet
@@ -202,8 +203,17 @@ public class MenuLineCommand {
 		// Truncate label string if necessary
 		this.label = (lineLabel.Length > menu.LineColumns) ? lineLabel.Substring(0, menu.LineColumns) : lineLabel;
 
-		// Text and Quit can't have targets attached (well, can, but why bother?)
-		this.target = ((lineType == MenuLineType.Text) || (lineType == MenuLineType.Quit)) ? "" : lineTarget;
+		// Text, Quit, and Back can't have targets attached (well, can, but why bother?)
+		switch (lineType) {
+			case MenuLineType.Text:
+			case MenuLineType.Quit:
+			case MenuLineType.Back:
+				this.target = "";
+				break;
+			default:
+				this.target = lineTarget;
+				break;
+		}
 
 		// Number and sequence get special end caps
 		switch (lineType) {
@@ -227,6 +237,11 @@ public class MenuLineCommand {
 				break;
 			case MenuLineType.Quit:
 				this.cmdLine = MenuCommandType.QuitApp;
+				this.cmdLeft = MenuCommandType.None;
+				this.cmdRight = MenuCommandType.None;
+				break;
+			case MenuLineType.Back:
+				this.cmdLine = MenuCommandType.NodeBack;
 				this.cmdLeft = MenuCommandType.None;
 				this.cmdRight = MenuCommandType.None;
 				break;
