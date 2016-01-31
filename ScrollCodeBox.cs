@@ -20,7 +20,7 @@ public class ScrollCodeBox : MonoBehaviour {
 	private Scorer scorer;
 
 	// Textbox sizes
-	private int cols = 28;	// Not including newline
+	private int cols = 24;	// Not including newline
 	private int rowlen;		// Including newline
 	private int rows = 32;
 
