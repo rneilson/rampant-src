@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Text;
 using System;
 
-// TODO: increase columns to 25 (or more?)
 // TODO: change source from array to iterator over string
 // TODO: only advance line on newline in source
 // TODO: add source queue
@@ -21,24 +20,23 @@ public class ScrollCodeBox : MonoBehaviour {
 	private Scorer scorer;
 
 	// Textbox sizes
-	private int cols = 24;	// Not including newline
+	private int cols = 28;	// Not including newline
 	private int rowlen;		// Including newline
 	private int rows = 32;
 
 	// Cursor state
-	// Public for debug
-	public int cursorPos = 0;		// Current pos in display line
-	public int currentLine = 0;		// Current line since start -- for loop sync
-	public int displayLine = 0;		// Current line in display page
-	public int sourcePos = 0;		// Current pos in source lines -- for lines > rowlen
-	public int sourceLine = 0;		// Current line in source array
+	private int cursorPos = 0;		// Current pos in display line
+	private int currentLine = 0;		// Current line since start -- for loop sync
+	private int displayLine = 0;		// Current line in display page
+	private int sourcePos = 0;		// Current pos in source lines -- for lines > rowlen
+	private int sourceLine = 0;		// Current line in source array
 
 	// String data
 	private StringBuilder lineBuffer;
-	public string initialText;		// Public for debug
-	public string[] availableChars;	// Public for debug
-	public string[] displayLines;	// Lines for display
-	public string[] sourceLines;	// Lines from source text
+	private string initialText;		// Public for debug
+	private string[] availableChars;	// Public for debug
+	private string[] displayLines;	// Lines for display
+	private string[] sourceLines;	// Lines from source text
 	private StringInfo sourceStr;
 	private string newlineChar = "\n";
 	//private char paddingChar = ' ';
