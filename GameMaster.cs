@@ -33,6 +33,7 @@ public static class GameSettings {
 		AddSetting(new MouseSpeedSetting("FireCursor"));
 		AddSetting(new FullscreenSetting());
 		AddSetting(new VsyncSetting());
+		AddSetting(new AntialiasSetting());
 	}
 
 	// Publically-accessible functions
@@ -263,5 +264,64 @@ public class FullscreenSetting : MenuSetting {
 	public override void Lower () {
 		currentSetting = false;
 		Screen.fullScreen = currentSetting;
+	}
+}
+
+public class AntialiasSetting : MenuSetting {
+	// AA can be 0, 2, 4, or 8
+
+	public AntialiasSetting () {}
+
+	public override string Name {
+		get { return "Antialiasing"; }
+	}
+
+	public override string Value {
+		get {
+			if (QualitySettings.antiAliasing == 0) {
+				return "No AA";
+			}
+			else {
+				return QualitySettings.antiAliasing.ToString() + "x AA";
+			}
+		}
+	}
+
+	public override void Toggle () {
+		Higher();
+	}
+
+	public override void Higher () {
+		switch (QualitySettings.antiAliasing) {
+			case 0:
+				QualitySettings.antiAliasing = 2;
+				break;
+			case 2:
+				QualitySettings.antiAliasing = 4;
+				break;
+			case 4:
+				QualitySettings.antiAliasing = 8;
+				break;
+			case 8:
+				QualitySettings.antiAliasing = 0;
+				break;
+		}
+	}
+
+	public override void Lower () {
+		switch (QualitySettings.antiAliasing) {
+			case 0:
+				QualitySettings.antiAliasing = 8;
+				break;
+			case 2:
+				QualitySettings.antiAliasing = 0;
+				break;
+			case 4:
+				QualitySettings.antiAliasing = 2;
+				break;
+			case 8:
+				QualitySettings.antiAliasing = 4;
+				break;
+		}
 	}
 }
