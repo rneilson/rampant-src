@@ -88,6 +88,13 @@ public class EnemyPhase : MonoBehaviour {
 		}
 	}
 
+	public void ResetPhase (Scorer newScorer) {
+		if (scorer == null) {
+			scorer = newScorer;
+		}
+		ResetPhase();
+	}
+
 	// Start phase back up (testing)
 	public void StartPhase () {
 		phaseActive = true;

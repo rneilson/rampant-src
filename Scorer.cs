@@ -224,9 +224,15 @@ public class Scorer : MonoBehaviour {
 			PauseGame();
 		}
 
-		// Check if menu's exited
-		if ((isPaused) && (menu.CurrentInput == InputMode.Game)) {
-			UnPauseGame();
+		// Check if menu's exited or game's restarted
+		if (isPaused) {
+			if (menu.CurrentInput == InputMode.Game) {
+				UnPauseGame();
+			}
+			else if ((!isStarted) && (GameSettings.Restarted)) {
+				// This is on its own line in case there's anything else that needs doing
+				UnPauseGame();
+			}
 		}
 
 		/*
@@ -405,7 +411,7 @@ public class Scorer : MonoBehaviour {
 		killsUntilPowerup = biggerGunAt;
 
 		// Reset current enemy phase and level
-		currentPhase.GetComponent<EnemyPhase>().ResetPhase();
+		currentPhase.GetComponent<EnemyPhase>().ResetPhase(this);
 		level = checkpoint;
 		scoreLevel.text = "Wave: " + level.ToString();
 

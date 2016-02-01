@@ -16,6 +16,7 @@ public class GameMaster : MonoBehaviour {
 public static class GameSettings {
 	private static Dictionary<string, MenuSetting> settings;
 	private static string filename = Application.persistentDataPath + "/settings.cfg";
+	private static bool restarted;
 
 	static GameSettings () {
 		settings = new Dictionary<string, MenuSetting>();
@@ -47,6 +48,8 @@ public static class GameSettings {
 
 	// Publically-accessible functions
 
+	public static bool Restarted { get { return restarted; } }
+
 	public static void Quit () {
 		SaveSettings();
 		Application.Quit();
@@ -59,6 +62,8 @@ public static class GameSettings {
 		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 		// Unpause, because now-dead scorer paused
 		Time.timeScale = 1;
+		// Set restarted flag
+		restarted = true;
 	}
 
 	public static void LoadSettings () {
