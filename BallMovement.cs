@@ -16,6 +16,7 @@ public class BallMovement : MonoBehaviour {
 	public GameObject muzzleFlash;
 	public float muzzleDuration;
 	public GameObject deathThroes;
+	public GameObject deathFade;
 	public GameObject powerUp;
 	public GameObject powerUpBoom;
 	public GameObject bombMinusTwo;
@@ -168,6 +169,7 @@ public class BallMovement : MonoBehaviour {
 	void BlowUp () {
 		scorer.SendMessage("PlayerDied");
 		Destroy(Instantiate(deathThroes, transform.position, Quaternion.Euler(-90, 0, 0)), 1f);
+		Destroy(Instantiate(deathFade, transform.position, Quaternion.Euler(0, 0, 0)), 1f);
 		Destroy(gameObject);
 	}
 	
