@@ -14,20 +14,21 @@ public class GameMaster : MonoBehaviour {
 
 public static class GameSettings {
 	private static Dictionary<string, MenuSetting> settings;
+	private static string filename = Application.persistentDataPath + "/settings.cfg";
 
 	static GameSettings () {
 		settings = new Dictionary<string, MenuSetting>();
 		Initialize();
 	}
 
-	private static void AddSetting (MenuSetting setting) {
+	static void AddSetting (MenuSetting setting) {
 		if (!settings.ContainsKey(setting.Name)) {
 			settings.Add(setting.Name, setting);
 		}
 	}
 
 	// Safe to call multiple times
-	private static void Initialize () {
+	static void Initialize () {
 		// Setup settings dict
 		AddSetting(new VolumeSetting());
 		AddSetting(new MouseSpeedSetting("FireCursor"));
@@ -37,10 +38,49 @@ public static class GameSettings {
 		AddSetting(new AntialiasSetting());
 	}
 
+	static void LoadSetting (string name, string val) {
+		if (HasSetting(name)) {
+			settings[name].Load(val);
+		}
+	}
+
 	// Publically-accessible functions
 
+	public static void Quit () {
+		SaveSettings();
+		Application.Quit();
+	}
+
 	public static void LoadSettings () {
-		// Will load storable settings from file at some point
+		// Load non-persistent settings from file
+		// Debug.Log("Configuration save file: " + filename);
+		string jsonString;
+
+		// Guard against Unity editor and yet-unwritten cfg file
+		if (!Application.isEditor) {
+			if (System.IO.File.Exists(filename)) {
+				using (System.IO.StreamReader file = new System.IO.StreamReader(filename)) {
+					// Read file
+					jsonString = file.ReadToEnd();
+					// Parse file into SavedSettings
+					SavedSettings saved = SavedSettings.LoadFromJson(jsonString);
+					// Load applicable settings
+					foreach (SavedSettingValue setting in saved.savedSettings) {
+						LoadSetting(setting.name, setting.val);
+					}
+				}
+			}
+		}
+	}
+
+	public static void SaveSettings () {
+		// Will save non-persistent settings to file at some point
+		string jsonString = SavedSettings.SaveToJson(new SavedSettings(settings));
+
+		// Guard against Unity editor and yet-unwritten cfg file
+		if (!Application.isEditor) {
+			System.IO.File.WriteAllText(filename, jsonString);
+		}
 	}
 
 	public static bool HasSetting (string settingName) {
@@ -75,6 +115,51 @@ public static class GameSettings {
 	}
 }
 
+// For saving/loading settings from file
+[System.Serializable]
+public class SavedSettingValue {
+	public string name;
+	public string val;
+
+	public SavedSettingValue (string name, string val) {
+		this.name = name;
+		this.val = val;
+	}
+}
+
+[System.Serializable]
+public class SavedSettings {
+	public SavedSettingValue[] savedSettings;
+
+	public SavedSettings () {
+		savedSettings = new SavedSettingValue[0];
+	}
+
+	public SavedSettings (Dictionary<string, MenuSetting> settingDict) {
+		// Fresh list
+		var settingList = new List<SavedSettingValue>();
+		// Check each setting for persistence -- if not, add to saved list
+		foreach (MenuSetting setting in settingDict.Values) {
+			if (!setting.Persistent) {
+				settingList.Add(new SavedSettingValue(setting.Name, setting.Save()));
+			}
+		}
+		// Save list as array, so Unity can serialize it
+		// (This would be easier with a proper JSON library)
+		// ((But that would mean pulling in a whole JSON library))
+		savedSettings = settingList.ToArray();
+	}
+
+	public static SavedSettings LoadFromJson (string settingString) {
+		return JsonUtility.FromJson<SavedSettings>(settingString);
+	}
+
+	public static string SaveToJson (SavedSettings settingsToStringify) {
+		return JsonUtility.ToJson(settingsToStringify, true);
+	}
+
+}
+
 // Mostly for internal use within MenuControl, in a dict by setting name
 public abstract class MenuSetting {
 	public MenuSetting () {}
@@ -90,6 +175,8 @@ public abstract class MenuSetting {
 	public abstract void Toggle ();
 	public abstract void Higher ();
 	public abstract void Lower ();
+	public abstract void Load (string settingValue);
+	public virtual string Save () { return Value; }
 }
 
 public class VolumeSetting : MenuSetting {
@@ -147,6 +234,14 @@ public class VolumeSetting : MenuSetting {
 		AudioListener.volume = ((float) vol) / 100.0f;
 	}
 
+	public override void Load (string settingValue) {
+		AudioListener.volume = System.Single.Parse(settingValue);
+	}
+
+	public override string Save () {
+		return AudioListener.volume.ToString("F2");
+	}
+
 }
 
 public class MouseSpeedSetting : MenuSetting {
@@ -197,6 +292,14 @@ public class MouseSpeedSetting : MenuSetting {
 		cursor.MouseSpeed = speed;
 	}
 
+	public override void Load (string settingValue) {
+		cursor.MouseSpeed = System.Single.Parse(settingValue);
+	}
+
+	public override string Save () {
+		return cursor.MouseSpeed.ToString("F2");
+	}
+
 }
 
 // TODO: resolution class
@@ -238,6 +341,16 @@ public class VsyncSetting : MenuSetting {
 	public override void Lower () {
 		QualitySettings.vSyncCount = 0;
 	}
+
+	public override void Load (string settingValue) {
+		if (settingValue == "On") {
+			QualitySettings.vSyncCount = 1;
+		}
+		else if (settingValue == "Off") {
+			QualitySettings.vSyncCount = 0;
+		}
+	}
+
 }
 
 public class FullscreenSetting : MenuSetting {
@@ -279,6 +392,9 @@ public class FullscreenSetting : MenuSetting {
 		currentSetting = false;
 		Screen.fullScreen = currentSetting;
 	}
+
+	public override void Load (string settingValue) {}
+
 }
 
 public class AntialiasSetting : MenuSetting {
@@ -341,6 +457,14 @@ public class AntialiasSetting : MenuSetting {
 				break;
 		}
 	}
+
+	public override void Load (string settingValue) {
+		QualitySettings.antiAliasing = System.Int32.Parse(settingValue);
+	}
+
+	public override string Save () {
+		return QualitySettings.antiAliasing.ToString();
+	}
 }
 
 public class ResolutionSetting : MenuSetting {
@@ -400,5 +524,8 @@ public class ResolutionSetting : MenuSetting {
 		// Set res to new index
 		Screen.SetResolution(currentWidth, currentHeight, Screen.fullScreen);
 	}
+
+	public override void Load (string settingValue) {}
+
 }
 

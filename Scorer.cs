@@ -202,6 +202,11 @@ public class Scorer : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		// Check for quit first
+		if ((Input.GetKeyDown(KeyCode.Q)) 
+			&& ((Input.GetKey(KeyCode.LeftControl)) || (Input.GetKey(KeyCode.RightControl)) ) ) {
+			GameSettings.Quit();
+		}
 		
 		// if (Input.GetKeyDown(KeyCode.Escape)) {
 		//if ((Input.GetButtonDown("Pause")) || (Input.GetKeyDown(KeyCode.Escape))) {
@@ -246,11 +251,7 @@ public class Scorer : MonoBehaviour {
 				NewPlayer();
 			}
 		}
-		else {
-			if ((Input.GetKeyDown(KeyCode.Q)) 
-				&& ((Input.GetKey(KeyCode.LeftControl)) || (Input.GetKey(KeyCode.RightControl)) ) )
-				Application.Quit();
-		}
+
 	}
 	
 	public void AddKill () {

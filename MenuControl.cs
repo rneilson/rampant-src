@@ -370,7 +370,7 @@ public class MenuControl : MonoBehaviour {
 		// ((Enums are meant for big-ass switches, IMNSHO))
 		switch (cmd.cmdType) {
 			case MenuCommandType.QuitApp:
-				Application.Quit();
+				GameSettings.Quit();
 				break;
 			case MenuCommandType.ExitMenu:
 				HideMenu();
