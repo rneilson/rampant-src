@@ -110,9 +110,11 @@ public class MenuControl : MonoBehaviour {
 			menuLines[i].Deselect();
 		}
 
+		/*
 		// Setup settings dict
 		settings["Volume"] = new VolumeSetting("Volume");
 		settings["MouseSpeed"] = new MouseSpeedSetting("MouseSpeed", "FireCursor");
+		*/
 
 		// TODO: parse root menu
 		foreach (MenuNode node in menuNodes) {
@@ -380,22 +382,16 @@ public class MenuControl : MonoBehaviour {
 				ShowMenu(cmd.cmdTarget);
 				break;
 			case MenuCommandType.SettingToggle:
-				if (settings.ContainsKey(cmd.cmdTarget)) {
-					settings[cmd.cmdTarget].Toggle();
-					menuLines[selectedLine].UpdateText();
-				}
+				GameSettings.ToggleSetting(cmd.cmdTarget);
+				menuLines[selectedLine].UpdateText();
 				break;
 			case MenuCommandType.SettingHigher:
-				if (settings.ContainsKey(cmd.cmdTarget)) {
-					settings[cmd.cmdTarget].Higher();
-					menuLines[selectedLine].UpdateText();
-				}
+				GameSettings.RaiseSetting(cmd.cmdTarget);
+				menuLines[selectedLine].UpdateText();
 				break;
 			case MenuCommandType.SettingLower:
-				if (settings.ContainsKey(cmd.cmdTarget)) {
-					settings[cmd.cmdTarget].Lower();
-					menuLines[selectedLine].UpdateText();
-				}
+				GameSettings.LowerSetting(cmd.cmdTarget);
+				menuLines[selectedLine].UpdateText();
 				break;
 			case MenuCommandType.SelectUp:
 				SelectUp(selectedLine);
@@ -491,8 +487,8 @@ public class MenuControl : MonoBehaviour {
 	}
 
 	public string GetSetting (string settingName) {
-		return settings[settingName].Value;
-	} 
+		return GameSettings.GetSetting(settingName);
+	}
 
 }
 
