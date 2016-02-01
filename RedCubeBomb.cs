@@ -85,10 +85,10 @@ public class RedCubeBomb : MonoBehaviour {
 	
 	void BlowUp () {
 		if (dying == DeathType.Loudly) {
-			Destroy(Instantiate(burster, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
+			Destroy(Instantiate(burster, transform.position, Quaternion.Euler(-90, 0, 0)), 0.5f);
 		}
 		else {
-			Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
+			Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(-90, 0, 0)), 0.5f);
 		}
 		// Drop da bomb
 		if (armed) {
