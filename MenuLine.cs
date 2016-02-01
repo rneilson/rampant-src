@@ -133,7 +133,8 @@ public enum MenuLineType {
 	Quit,
 	Back,
 	Goto,
-	Setting
+	Setting,
+	Restart
 }
 
 // This is for setting up a line with the appropriate config
@@ -203,6 +204,7 @@ public class MenuLineCommand {
 		switch (lineType) {
 			case MenuLineType.Text:
 			case MenuLineType.Quit:
+			case MenuLineType.Restart:
 			case MenuLineType.Back:
 				this.target = "";
 				break;
@@ -232,6 +234,11 @@ public class MenuLineCommand {
 				break;
 			case MenuLineType.Quit:
 				this.cmdLine = MenuCommandType.QuitApp;
+				this.cmdLeft = MenuCommandType.None;
+				this.cmdRight = MenuCommandType.None;
+				break;
+			case MenuLineType.Restart:
+				this.cmdLine = MenuCommandType.Restart;
 				this.cmdLeft = MenuCommandType.None;
 				this.cmdRight = MenuCommandType.None;
 				break;

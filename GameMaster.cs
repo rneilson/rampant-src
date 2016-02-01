@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -49,6 +50,15 @@ public static class GameSettings {
 	public static void Quit () {
 		SaveSettings();
 		Application.Quit();
+	}
+
+	public static void Restart () {
+		// Save, because mouse speed (and soon kills/waves) will need to be reloaded
+		SaveSettings();
+		// Reload scene from beginning
+		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+		// Unpause, because now-dead scorer paused
+		Time.timeScale = 1;
 	}
 
 	public static void LoadSettings () {

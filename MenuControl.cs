@@ -372,6 +372,9 @@ public class MenuControl : MonoBehaviour {
 			case MenuCommandType.QuitApp:
 				GameSettings.Quit();
 				break;
+			case MenuCommandType.Restart:
+				GameSettings.Restart();
+				break;
 			case MenuCommandType.ExitMenu:
 				HideMenu();
 				break;
@@ -568,6 +571,7 @@ public class InputAxisTracker {
 public enum MenuCommandType : byte {
 	None = 0,
 	QuitApp,
+	Restart,
 	ExitMenu,
 	NodeGoto,
 	NodeBack,
