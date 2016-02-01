@@ -16,15 +16,19 @@ public static class GameSettings {
 		settings = new Dictionary<string, MenuSetting>();
 	}
 
+	private static void AddSetting (MenuSetting setting) {
+		if (!settings.ContainsKey(setting.Name)) {
+			settings.Add(setting.Name, setting);
+		}
+	}
+
 	// Safe to call multiple times
 	public static void Initialize () {
 		// Setup settings dict
-		if (!settings.ContainsKey("Volume")) {
-			settings.Add("Volume", new VolumeSetting("Volume"));
-		}
-		if (!settings.ContainsKey("MouseSpeed")) {
-			settings.Add("MouseSpeed", new MouseSpeedSetting("MouseSpeed", "FireCursor"));
-		}
+		AddSetting(new VolumeSetting());
+		AddSetting(new MouseSpeedSetting("FireCursor"));
+		AddSetting(new FullscreenSetting());
+		AddSetting(new VsyncSetting());
 	}
 
 	public static bool HasSetting (string settingName) {
@@ -61,29 +65,18 @@ public static class GameSettings {
 
 // Mostly for internal use within MenuControl, in a dict by setting name
 public abstract class MenuSetting {
-	protected string name;
+	public MenuSetting () {}
 
-	public MenuSetting (string name) {
-		this.name = name;
-	}
+	// Each setting has its own name
+	// Slightly circuitous way of making each a singleton
+	public abstract string Name { get; }
 
-	public string Name {
-		get { return name; }
-	}
 	// TODO: allow set?
 	public abstract string Value { get; }
 
 	public abstract void Toggle ();
 	public abstract void Higher ();
 	public abstract void Lower ();
-}
-
-public class EmptySetting : MenuSetting {
-	public EmptySetting () : base("") {}
-	public override string Value { get { return ""; } }
-	public override void Toggle () {}
-	public override void Higher () {}
-	public override void Lower () {}
 }
 
 public class VolumeSetting : MenuSetting {
@@ -93,8 +86,12 @@ public class VolumeSetting : MenuSetting {
 	// Don't need anything extra
 	// Technically this only controls overall game volume
 	// Might need a wrapper class or something for different GameObject volumes
-	public VolumeSetting (string name) : base (name) {
+	public VolumeSetting () {
 		this.savedVolume = AudioListener.volume;
+	}
+
+	public override string Name {
+		get { return "Volume"; }
 	}
 
 	// Returns volume in percent
@@ -143,8 +140,12 @@ public class MouseSpeedSetting : MenuSetting {
 	// Don't need anything extra
 	// Technically this only controls overall game volume
 	// Might need a wrapper class or something for different GameObject volumes
-	public MouseSpeedSetting (string name, string cursorName) : base (name) {
+	public MouseSpeedSetting (string cursorName) {
 		cursor = GameObject.Find(cursorName).GetComponent<CursorMovement>();
+	}
+
+	public override string Name {
+		get { return "MouseSpeed"; }
 	}
 
 	// Returns volume in percent
@@ -180,3 +181,71 @@ public class MouseSpeedSetting : MenuSetting {
 }
 
 // TODO: resolution class
+public class VsyncSetting : MenuSetting {
+
+	public VsyncSetting () {}
+
+	public override string Name {
+		get { return "Vsync"; }
+	}
+
+	public override string Value {
+		get {
+			if (QualitySettings.vSyncCount > 0) {
+				return "On";
+			}
+			else {
+				return "Off";
+			}
+		}
+	}
+
+	public override void Toggle () {
+		if (QualitySettings.vSyncCount > 0) {
+			QualitySettings.vSyncCount = 0;
+		}
+		else {
+			QualitySettings.vSyncCount = 1;
+		}
+	}
+
+	public override void Higher () {
+		QualitySettings.vSyncCount = 1;
+	}
+
+	public override void Lower () {
+		QualitySettings.vSyncCount = 0;
+	}
+}
+
+public class FullscreenSetting : MenuSetting {
+
+	public FullscreenSetting () {}
+
+	public override string Name {
+		get { return "Fullscreen"; }
+	}
+
+	public override string Value {
+		get {
+			if (Screen.fullScreen) {
+				return "On";
+			}
+			else {
+				return "Off";
+			}
+		}
+	}
+
+	public override void Toggle () {
+		Screen.fullScreen = !Screen.fullScreen;
+	}
+
+	public override void Higher () {
+		Screen.fullScreen = true;
+	}
+
+	public override void Lower () {
+		Screen.fullScreen = false;
+	}
+}

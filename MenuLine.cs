@@ -133,9 +133,7 @@ public enum MenuLineType {
 	Quit,
 	Back,
 	Goto,
-	Number,
-	OnOff,		// Don't use this one yet
-	Sequence	// Don't use this one yet
+	Setting
 }
 
 // This is for setting up a line with the appropriate config
@@ -190,9 +188,7 @@ public class MenuLineCommand {
 
 		// Certain types are updatedatable settings, others aren't
 		switch (lineType) {
-			case MenuLineType.Number:
-			case MenuLineType.OnOff:
-			case MenuLineType.Sequence:
+			case MenuLineType.Setting:
 				this.updateable = true;
 				break;
 			default:
@@ -215,10 +211,9 @@ public class MenuLineCommand {
 				break;
 		}
 
-		// Number and sequence get special end caps
+		// Settings get special end caps
 		switch (lineType) {
-			case MenuLineType.Number:
-			case MenuLineType.Sequence:
+			case MenuLineType.Setting:
 				this.capLeft = "<< ";
 				this.capRight = " >>";
 				break;
@@ -250,7 +245,7 @@ public class MenuLineCommand {
 				this.cmdLeft = MenuCommandType.None;
 				this.cmdRight = MenuCommandType.None;
 				break;
-			case MenuLineType.Number:
+			case MenuLineType.Setting:
 				this.cmdLine = MenuCommandType.SettingToggle;
 				this.cmdLeft = MenuCommandType.SettingLower;
 				this.cmdRight = MenuCommandType.SettingHigher;
