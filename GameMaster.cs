@@ -5,7 +5,10 @@ using System.Collections.Generic;
 public class GameMaster : MonoBehaviour {
 	// All this does at the moment is initialize the GameSettings (static) class
 	void Awake () {
-		GameSettings.Initialize();
+		// Load settings
+		GameSettings.LoadSettings();
+		// Enable camera depth texture
+		GameObject.Find("Camera").GetComponent<Camera>().depthTextureMode = DepthTextureMode.Depth;
 	}
 }
 
@@ -14,6 +17,7 @@ public static class GameSettings {
 
 	static GameSettings () {
 		settings = new Dictionary<string, MenuSetting>();
+		Initialize();
 	}
 
 	private static void AddSetting (MenuSetting setting) {
@@ -23,12 +27,18 @@ public static class GameSettings {
 	}
 
 	// Safe to call multiple times
-	public static void Initialize () {
+	private static void Initialize () {
 		// Setup settings dict
 		AddSetting(new VolumeSetting());
 		AddSetting(new MouseSpeedSetting("FireCursor"));
 		AddSetting(new FullscreenSetting());
 		AddSetting(new VsyncSetting());
+	}
+
+	// Publically-accessible functions
+
+	public static void LoadSettings () {
+		// Will load storable settings from file at some point
 	}
 
 	public static bool HasSetting (string settingName) {
