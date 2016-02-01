@@ -31,6 +31,7 @@ public static class GameSettings {
 		// Setup settings dict
 		AddSetting(new VolumeSetting());
 		AddSetting(new MouseSpeedSetting("FireCursor"));
+		AddSetting(new ResolutionSetting());
 		AddSetting(new FullscreenSetting());
 		AddSetting(new VsyncSetting());
 		AddSetting(new AntialiasSetting());
@@ -81,6 +82,7 @@ public abstract class MenuSetting {
 	// Each setting has its own name
 	// Slightly circuitous way of making each a singleton
 	public abstract string Name { get; }
+	public abstract bool Persistent { get; }
 
 	// TODO: allow set?
 	public abstract string Value { get; }
@@ -103,6 +105,9 @@ public class VolumeSetting : MenuSetting {
 
 	public override string Name {
 		get { return "Volume"; }
+	}
+	public override bool Persistent {
+		get { return false; }
 	}
 
 	// Returns volume in percent
@@ -158,6 +163,9 @@ public class MouseSpeedSetting : MenuSetting {
 	public override string Name {
 		get { return "MouseSpeed"; }
 	}
+	public override bool Persistent {
+		get { return false; }
+	}
 
 	// Returns volume in percent
 	public override string Value {
@@ -199,6 +207,9 @@ public class VsyncSetting : MenuSetting {
 	public override string Name {
 		get { return "Vsync"; }
 	}
+	public override bool Persistent {
+		get { return false; }
+	}
 
 	public override string Value {
 		get {
@@ -239,6 +250,9 @@ public class FullscreenSetting : MenuSetting {
 	public override string Name {
 		get { return "Fullscreen"; }
 	}
+	public override bool Persistent {
+		get { return true; }
+	}
 
 	public override string Value {
 		get {
@@ -274,6 +288,9 @@ public class AntialiasSetting : MenuSetting {
 
 	public override string Name {
 		get { return "Antialiasing"; }
+	}
+	public override bool Persistent {
+		get { return false; }
 	}
 
 	public override string Value {
@@ -325,3 +342,63 @@ public class AntialiasSetting : MenuSetting {
 		}
 	}
 }
+
+public class ResolutionSetting : MenuSetting {
+	private int currentSetting;
+	private int currentWidth;
+	private int currentHeight;
+
+	public ResolutionSetting () {
+		// Unity doesn't give us anything to link current res to the list of supported res
+		// So we find it ourselves
+		currentWidth = Screen.width;
+		currentHeight = Screen.height;
+		int i = 0;
+		while ((Screen.resolutions[i].width != currentWidth) 
+			&& (Screen.resolutions[i].height != currentHeight)) {
+			i++;
+			// Fail safely, if inaccurately
+			if (i >= Screen.resolutions.Length) {
+				i = 0;
+				break;
+			}
+		}
+		currentSetting = i;
+	}
+
+	public override string Name {
+		get { return "Resolution"; }
+	}
+	public override bool Persistent {
+		get { return true; }
+	}
+
+	public override string Value {
+		get {
+			return currentWidth.ToString() + "x" + currentHeight.ToString();
+		}
+	}
+
+	public override void Toggle () {
+		Higher();
+	}
+
+	public override void Higher () {
+		// Advance index and loop if req'd
+		if (++currentSetting >= Screen.resolutions.Length) { currentSetting = 0; }
+		currentWidth = Screen.resolutions[currentSetting].width;
+		currentHeight = Screen.resolutions[currentSetting].height;
+		// Set res to new index
+		Screen.SetResolution(currentWidth, currentHeight, Screen.fullScreen);
+	}
+
+	public override void Lower () {
+		// Retreat index and loop if req'd
+		if (--currentSetting < 0) { currentSetting = Screen.resolutions.Length - 1; }
+		currentWidth = Screen.resolutions[currentSetting].width;
+		currentHeight = Screen.resolutions[currentSetting].height;
+		// Set res to new index
+		Screen.SetResolution(currentWidth, currentHeight, Screen.fullScreen);
+	}
+}
+
