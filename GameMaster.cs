@@ -219,8 +219,11 @@ public class VsyncSetting : MenuSetting {
 }
 
 public class FullscreenSetting : MenuSetting {
+	private bool currentSetting;
 
-	public FullscreenSetting () {}
+	public FullscreenSetting () {
+		currentSetting = Screen.fullScreen;
+	}
 
 	public override string Name {
 		get { return "Fullscreen"; }
@@ -228,7 +231,7 @@ public class FullscreenSetting : MenuSetting {
 
 	public override string Value {
 		get {
-			if (Screen.fullScreen) {
+			if (currentSetting) {
 				return "On";
 			}
 			else {
@@ -238,14 +241,17 @@ public class FullscreenSetting : MenuSetting {
 	}
 
 	public override void Toggle () {
-		Screen.fullScreen = !Screen.fullScreen;
+		currentSetting = !currentSetting;
+		Screen.fullScreen = currentSetting;
 	}
 
 	public override void Higher () {
-		Screen.fullScreen = true;
+		currentSetting = true;
+		Screen.fullScreen = currentSetting;
 	}
 
 	public override void Lower () {
-		Screen.fullScreen = false;
+		currentSetting = false;
+		Screen.fullScreen = currentSetting;
 	}
 }
