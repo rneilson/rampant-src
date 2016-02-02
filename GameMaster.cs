@@ -15,7 +15,7 @@ public class GameMaster : MonoBehaviour {
 
 public static class GameSettings {
 	private static Dictionary<string, MenuSetting> settings;
-	private static string filename = Application.persistentDataPath + "/settings.cfg";
+	private static string settingsFilename = Application.persistentDataPath + "/settings.cfg";
 	private static bool restarted;
 
 	static GameSettings () {
@@ -73,14 +73,14 @@ public static class GameSettings {
 
 		// Guard against Unity editor and yet-unwritten cfg file
 		if (!Application.isEditor) {
-			if (System.IO.File.Exists(filename)) {
-				using (System.IO.StreamReader file = new System.IO.StreamReader(filename)) {
+			if (System.IO.File.Exists(settingsFilename)) {
+				using (System.IO.StreamReader file = new System.IO.StreamReader(settingsFilename)) {
 					// Read file
 					jsonString = file.ReadToEnd();
-					// Parse file into SavedSettings
-					SavedSettings saved = SavedSettings.LoadFromJson(jsonString);
+					// Parse file into SavedValueSet
+					SavedValueSet saved = SavedValueSet.LoadFromJson(jsonString);
 					// Load applicable settings
-					foreach (SavedSettingValue setting in saved.savedSettings) {
+					foreach (SavedValue setting in saved.savedValues) {
 						LoadSetting(setting.name, setting.val);
 					}
 				}
@@ -90,11 +90,11 @@ public static class GameSettings {
 
 	public static void SaveSettings () {
 		// Will save non-persistent settings to file at some point
-		string jsonString = SavedSettings.SaveToJson(new SavedSettings(settings));
+		string jsonString = SavedValueSet.SaveToJson(new SavedValueSet(settings));
 
 		// Guard against Unity editor and yet-unwritten cfg file
 		if (!Application.isEditor) {
-			System.IO.File.WriteAllText(filename, jsonString);
+			System.IO.File.WriteAllText(settingsFilename, jsonString);
 		}
 	}
 
@@ -132,44 +132,44 @@ public static class GameSettings {
 
 // For saving/loading settings from file
 [System.Serializable]
-public class SavedSettingValue {
+public class SavedValue {
 	public string name;
 	public string val;
 
-	public SavedSettingValue (string name, string val) {
+	public SavedValue (string name, string val) {
 		this.name = name;
 		this.val = val;
 	}
 }
 
 [System.Serializable]
-public class SavedSettings {
-	public SavedSettingValue[] savedSettings;
+public class SavedValueSet {
+	public SavedValue[] savedValues;
 
-	public SavedSettings () {
-		savedSettings = new SavedSettingValue[0];
+	public SavedValueSet () {
+		savedValues = new SavedValue[0];
 	}
 
-	public SavedSettings (Dictionary<string, MenuSetting> settingDict) {
+	public SavedValueSet (Dictionary<string, MenuSetting> settingDict) {
 		// Fresh list
-		var settingList = new List<SavedSettingValue>();
+		var settingList = new List<SavedValue>();
 		// Check each setting for persistence -- if not, add to saved list
 		foreach (MenuSetting setting in settingDict.Values) {
 			if (!setting.Persistent) {
-				settingList.Add(new SavedSettingValue(setting.Name, setting.Save()));
+				settingList.Add(new SavedValue(setting.Name, setting.Save()));
 			}
 		}
 		// Save list as array, so Unity can serialize it
 		// (This would be easier with a proper JSON library)
 		// ((But that would mean pulling in a whole JSON library))
-		savedSettings = settingList.ToArray();
+		savedValues = settingList.ToArray();
 	}
 
-	public static SavedSettings LoadFromJson (string settingString) {
-		return JsonUtility.FromJson<SavedSettings>(settingString);
+	public static SavedValueSet LoadFromJson (string settingString) {
+		return JsonUtility.FromJson<SavedValueSet>(settingString);
 	}
 
-	public static string SaveToJson (SavedSettings settingsToStringify) {
+	public static string SaveToJson (SavedValueSet settingsToStringify) {
 		return JsonUtility.ToJson(settingsToStringify, true);
 	}
 
