@@ -78,8 +78,16 @@ public static class GameSettings {
 				}
 				break;
 			case "Scores":
-				// TODO: actually parse scores by mode
-				foreach (string modeString in saved.Values) {}
+				// Scores group, parse scores by mode
+				foreach (string modeString in saved.Values) {
+					// Parse as base, just to get name
+					SavedValueBase baseVal = SavedValueBase.LoadFromJson(modeString);
+					// Only proceed if we have this mode on file
+					if (modeIndicies.ContainsKey(baseVal.Name)) {
+						// Find mode index, get mode, and pass saved string for further parsing
+						modeList[modeIndicies[baseVal.Name]].LoadScores(modeString);
+					}
+				}
 				break;
 		}
 	}
@@ -143,14 +151,14 @@ public static class GameSettings {
 			masterList.Add(SavedValueSet.SaveToJson(new SavedValueSet("Settings", settingList)));
 
 			// Save nonzero scores for each game mode
-			// TODO: iterate over modes
-
+			foreach (GameMode mode in modeList) {
+				scoreList.Add(mode.SaveScores());
+			}
 			// Add scores to master list
 			masterList.Add(SavedValueSet.SaveToJson(new SavedValueSet("Scores", scoreList)));
 
 			// Stringify master list
 			string jsonString = SavedValueSet.SaveToJson(new SavedValueSet("Master", masterList));
-
 			// Write to file (will create/overwrite)
 			System.IO.File.WriteAllText(settingsFilename, jsonString);
 		}
@@ -218,7 +226,7 @@ public class SavedValueBase {
 	}
 
 	public static string SaveToJson (SavedValueBase toStringify) {
-		return JsonUtility.ToJson(toStringify, true);
+		return JsonUtility.ToJson(toStringify);
 	}
 }
 
@@ -239,7 +247,7 @@ public class SavedValue : SavedValueBase {
 	}
 
 	public static string SaveToJson (SavedValue toStringify) {
-		return JsonUtility.ToJson(toStringify, true);
+		return JsonUtility.ToJson(toStringify);
 	}
 }
 
@@ -269,7 +277,7 @@ public class SavedValueSet : SavedValueBase {
 	}
 
 	public static string SaveToJson (SavedValueSet toStringify) {
-		return JsonUtility.ToJson(toStringify, true);
+		return JsonUtility.ToJson(toStringify);
 	}
 
 }
@@ -659,7 +667,12 @@ public class GameMode {
 	public GameMode (GameModeSpec spec) {
 		this.name = spec.Name;
 		this.phases = new List<GameObject>(spec.Phases);
-		this.terminal = spec.TerminalPhase;
+		if ((spec.TerminalPhase >= 0) && (spec.TerminalPhase < spec.Phases.Length)) {
+			this.terminal = spec.TerminalPhase;
+		}
+		else {
+			this.terminal = spec.Phases.Length - 1;
+		}
 		this.scores = new Dictionary<string, int>();
 	}
 
@@ -695,19 +708,19 @@ public class GameMode {
 	}
 
 	// Basically to load from a deserialized StoredValue
-	public void LoadScore (string scoreName, string scoreVal) {
+	internal void LoadScore (string scoreName, string scoreVal) {
 		// Keeping it simple for now
 		HighScore(scoreName, System.Int32.Parse(scoreVal));
 	}
 
 	// And from a still-serialized StoredValue
-	public void LoadScore (string score) {
+	internal void LoadScore (string score) {
 		SavedValue saved = SavedValue.LoadFromJson(score);
 		LoadScore(saved.Name, saved.Value);
 	}
 
 	// Takes a string (of a whole serialized StoredValue) and does the deserialization itself
-	public void LoadScores (string scoresAsString) {
+	internal void LoadScores (string scoresAsString) {
 		// First deserialize
 		SavedValueSet saved = SavedValueSet.LoadFromJson(scoresAsString);
 		// Check if this is really ours (just in case)
@@ -721,7 +734,7 @@ public class GameMode {
 
 	// Could return a SavedValueSet, but that's just pushing the temp instance upward
 	// Serializes itself, instead of delegating (unlike the loading process)
-	public string SaveScores () {
+	internal string SaveScores () {
 		// Pull a fresh list off the pile
 		List<SavedValue> values = new List<SavedValue>();
 		// Add (only) our stored scores as SavedValue instances

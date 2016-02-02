@@ -33,7 +33,7 @@ public class MenuControl : MonoBehaviour {
 	private MenuNodePath currNode = MenuNodePath.None;
 
 	// Settings
-	private Dictionary<string, MenuSetting> settings = new Dictionary<string, MenuSetting>();
+	//private Dictionary<string, MenuSetting> settings = new Dictionary<string, MenuSetting>();
 
 	// Cursor state
 	private CursorLockMode desiredCursorMode;
@@ -370,9 +370,11 @@ public class MenuControl : MonoBehaviour {
 		// ((Enums are meant for big-ass switches, IMNSHO))
 		switch (cmd.cmdType) {
 			case MenuCommandType.QuitApp:
+				scorer.SaveScores();
 				GameSettings.Quit();
 				break;
 			case MenuCommandType.Restart:
+				scorer.SaveScores();
 				GameSettings.Restart();
 				break;
 			case MenuCommandType.ExitMenu:

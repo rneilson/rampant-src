@@ -55,8 +55,6 @@ public class Scorer : MonoBehaviour {
 	public float respawnSoundVol = 0.5f;
 
 	// Enemy phases (ie difficulty stuff)
-	public GameObject[] enemyPhases;
-	public int terminalPhase;
 	private GameObject currentPhase;
 	private GameObject prevPhase;
 	private int phaseIndex;
@@ -146,11 +144,21 @@ public class Scorer : MonoBehaviour {
 		menu = GameObject.Find("Menu").GetComponent<MenuControl>();
 		kills = 0;
 		level = 0;
-		maxKills = 0;
 		totalDeaths = 0;
 		respawn = true;
 		respawnCountdown = 0.0f;
 		myAudioSource = GetComponent<AudioSource>();
+
+		// Mode debug
+		if (globalDebug) {
+			Debug.Log("Loading mode: " + GameSettings.CurrentMode.Name, gameObject);
+		}
+
+		// Get high scores from current mode
+		maxKills = GameSettings.CurrentMode.GetScore("Kills");
+		scoreHigh.text = "Best: " + maxKills.ToString();
+		maxLevel = GameSettings.CurrentMode.GetScore("Waves");
+		scoreDeaths.text = "Best: " + maxLevel.ToString();
 
 		// Start paused
 		/*
@@ -162,13 +170,7 @@ public class Scorer : MonoBehaviour {
 		// Start first enemy phase
 		phaseIndex = 0;
 		phaseShift = -1;
-		currentPhase = Instantiate(enemyPhases[phaseIndex]);
-
-		// Sanity check on terminal phase setting
-		// Defaults to last phase in array
-		if (terminalPhase >= enemyPhases.Length) {
-			terminalPhase = enemyPhases.Length - 1;
-		}
+		currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex));
 
 		menu.SetTitle(gameTitle);
 
@@ -192,6 +194,7 @@ public class Scorer : MonoBehaviour {
 		// Check for quit first
 		if ((Input.GetKeyDown(KeyCode.Q)) 
 			&& ((Input.GetKey(KeyCode.LeftControl)) || (Input.GetKey(KeyCode.RightControl)) ) ) {
+			SaveScores();
 			GameSettings.Quit();
 		}
 		
@@ -252,14 +255,6 @@ public class Scorer : MonoBehaviour {
 			kills++;
 			scoreKills.text = "Kills: " + kills.ToString();
 
-			/* Decided not to do this every kill, only on death
-			// Update high score
-			if (kills > maxKills) {
-				maxKills = kills;
-				scoreHigh.text = "Best: " + maxKills.ToString();
-			}
-			*/
-
 			// Check for weapon upgrade, or bomb, or bomb-minus warning
 			if (!playerControl.HasBomb) {
 				killsUntilPowerup--;
@@ -302,7 +297,7 @@ public class Scorer : MonoBehaviour {
 	}
 
 	public void StartNewPhase (Color pulseColor) {
-		if ((phaseShift != phaseIndex) || (phaseShift == terminalPhase)) {
+		if ((phaseShift != phaseIndex) || (phaseShift == GameSettings.CurrentMode.Terminal)) {
 			phaseShift = phaseIndex;
 			// Shift if we're shifting
 			ShiftGrid(phaseShift);
@@ -324,12 +319,12 @@ public class Scorer : MonoBehaviour {
 
 		// Advance index, and go to terminal phase if all phases complete
 		phaseIndex++;
-		if (phaseIndex >= enemyPhases.Length) {
-			phaseIndex = terminalPhase;
+		if (phaseIndex >= GameSettings.CurrentMode.PhaseCount) {
+			phaseIndex = GameSettings.CurrentMode.Terminal;
 		}
 
 		// Instantiate new phase, and let chips fall
-		currentPhase = Instantiate(enemyPhases[phaseIndex]);
+		currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex));
 	}
 	
 	void PlayerDied () {
@@ -337,12 +332,16 @@ public class Scorer : MonoBehaviour {
 		if (kills > maxKills) {
 			maxKills = kills;
 			scoreHigh.text = "Best: " + maxKills.ToString();
+			// Update mode's high score
+			GameSettings.CurrentMode.HighScore("Kills", maxKills);
 		}
 
 		// Update high wave
 		if (level > maxLevel) {
 			maxLevel = level;
 			scoreDeaths.text = "Best: " + maxLevel.ToString();
+			// Update mode's high score
+			GameSettings.CurrentMode.HighScore("Waves", maxLevel);
 		}
 
 		// Set respawn, update counts, etc		
@@ -496,6 +495,16 @@ public class Scorer : MonoBehaviour {
 	IEnumerator PlayDelayedClip (AudioClip toPlay, float delay, float volume) {
 		yield return new WaitForSeconds(delay);
 		myAudioSource.PlayOneShot(toPlay, volume);
+	}
+
+	public void SaveScores () {
+		// For saving high scores (when player isn't dead yet) before quitting
+		if (kills > maxKills) {
+			GameSettings.CurrentMode.HighScore("Kills", kills);
+		}
+		if (level > maxLevel) {
+			GameSettings.CurrentMode.HighScore("Waves", level);
+		}
 	}
 }
 
