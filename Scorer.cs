@@ -2,14 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 
-// TODO: change quit key to Esc
-// TODO: peel off pause menu into its own class (classes?)
 // TODO: corrupt title text
-// TODO: make one of the scrollboxes a log (?)
-// TODO: add PID kill message to log on each kill
-// TODO: add something fun-sounding to log when bombing
-// TODO: add kernel oops message to log on death
-// TODO: add restart message on respawn
+// TODO [NOPE]: make one of the scrollboxes a log (?)
+// TODO [NOPE]: add PID kill message to log on each kill
+// TODO [NOPE]: add something fun-sounding to log when bombing
+// TODO [NOPE]: add kernel oops message to log on death
+// TODO [NOPE]: add restart message on respawn
 public class Scorer : MonoBehaviour {
 	
 	// Game state
@@ -22,9 +20,6 @@ public class Scorer : MonoBehaviour {
 	// Title/menu stuff
 	private MenuControl menu;
 	private string gameTitle = "_rampant";
-	private string instructionsForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nQuit: Q";
-	private string instructionsNoForceBomb = "Move: left stick/WASD keys\nShoot: right stick/arrow keys\nMouse shoot: left mouse button\nPause: start button/tab\nBomb: space/right mouse button\nBomb: left/right trigger\nQuit: Q";
-	private string instructions;
 
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
@@ -175,14 +170,6 @@ public class Scorer : MonoBehaviour {
 			terminalPhase = enemyPhases.Length - 1;
 		}
 
-		// Check which instructions to make visible
-		if (forceBombUse) {
-			instructions = instructionsForceBomb;
-		}
-		else {
-			instructions = instructionsNoForceBomb;
-		}
-		
 		menu.SetTitle(gameTitle);
 
 		// Get ground control

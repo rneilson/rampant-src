@@ -4,8 +4,17 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class GameMaster : MonoBehaviour {
+	// Modes
+	public GameModeSpec[] modes;
+
 	// All this does at the moment is initialize the GameSettings (static) class
 	void Awake () {
+		// Watch for empty mode list
+		if (modes.Length == 0) {
+			Debug.LogError("No modes specified!", gameObject);
+		}
+		// Load modes
+		GameSettings.LoadModes(modes);
 		// Load settings
 		GameSettings.LoadSettings();
 		// Enable camera depth texture
@@ -15,6 +24,9 @@ public class GameMaster : MonoBehaviour {
 
 public static class GameSettings {
 	private static Dictionary<string, MenuSetting> settings;
+	private static List<GameMode> modeList;
+	private static Dictionary<string, int> modeIndicies;
+	private static int currentMode;
 	private static string settingsFilename = Application.persistentDataPath + "/settings.cfg";
 	private static bool restarted;
 
@@ -46,9 +58,38 @@ public static class GameSettings {
 		}
 	}
 
+	static void ParseAndLoad (string toLoad) {
+		// Parse string -- should be able to assume SavedValueSet here for now
+		SavedValueSet saved = SavedValueSet.LoadFromJson(toLoad);
+
+		// Switch based on name string
+		switch (saved.Name) {
+			case "Master":
+				// Main group, parse each entry
+				foreach (string masterString in saved.Values) {
+					ParseAndLoad(masterString);
+				}
+				break;
+			case "Settings":
+				// Settings group, parse and load each in turn
+				foreach (string settingString in saved.Values) {
+					SavedValue setting = SavedValue.LoadFromJson(settingString);
+					LoadSetting(setting.Name, setting.Value);
+				}
+				break;
+			case "Scores":
+				// TODO: actually parse scores by mode
+				foreach (string modeString in saved.Values) {}
+				break;
+		}
+	}
+
 	// Publically-accessible functions
 
 	public static bool Restarted { get { return restarted; } }
+	public static GameMode CurrentMode {
+		get { return modeList[currentMode]; }
+	}
 
 	public static void Quit () {
 		SaveSettings();
@@ -69,31 +110,48 @@ public static class GameSettings {
 	public static void LoadSettings () {
 		// Load non-persistent settings from file
 		// Debug.Log("Configuration save file: " + filename);
-		string jsonString;
 
 		// Guard against Unity editor and yet-unwritten cfg file
 		if (!Application.isEditor) {
 			if (System.IO.File.Exists(settingsFilename)) {
 				using (System.IO.StreamReader file = new System.IO.StreamReader(settingsFilename)) {
 					// Read file
-					jsonString = file.ReadToEnd();
-					// Parse file into SavedValueSet
-					SavedValueSet saved = SavedValueSet.LoadFromJson(jsonString);
-					// Load applicable settings
-					foreach (SavedValue setting in saved.savedValues) {
-						LoadSetting(setting.name, setting.val);
-					}
+					string jsonString = file.ReadToEnd();
+					// Delegate parsing to ParseAndLoad (recursively)
+					ParseAndLoad(jsonString);
 				}
 			}
 		}
 	}
 
 	public static void SaveSettings () {
-		// Will save non-persistent settings to file at some point
-		string jsonString = SavedValueSet.SaveToJson(new SavedValueSet(settings));
-
-		// Guard against Unity editor and yet-unwritten cfg file
+		// Guard against Unity editor
 		if (!Application.isEditor) {
+			// Fresh lists
+			var masterList = new List<string>();
+			var settingList = new List<SavedValue>();	// TODO: change to list of strings
+			var scoreList = new List<string>();
+
+			// Check each setting for persistence -- if not, add to saved list
+			foreach (MenuSetting setting in settings.Values) {
+				if (!setting.Persistent) {
+					// TODO: Should have settings stringify themselves, but that's for later
+					settingList.Add(new SavedValue(setting.Name, setting.Save()));
+				}
+			}
+			// Add settings to master list
+			masterList.Add(SavedValueSet.SaveToJson(new SavedValueSet("Settings", settingList)));
+
+			// Save nonzero scores for each game mode
+			// TODO: iterate over modes
+
+			// Add scores to master list
+			masterList.Add(SavedValueSet.SaveToJson(new SavedValueSet("Scores", scoreList)));
+
+			// Stringify master list
+			string jsonString = SavedValueSet.SaveToJson(new SavedValueSet("Master", masterList));
+
+			// Write to file (will create/overwrite)
 			System.IO.File.WriteAllText(settingsFilename, jsonString);
 		}
 	}
@@ -128,49 +186,90 @@ public static class GameSettings {
 			settings[settingName].Lower();
 		}
 	}
+
+	public static void LoadModes (GameModeSpec[] newModes) {
+		// Start fresh
+		modeList = new List<GameMode>();
+		modeIndicies = new Dictionary<string, int>();
+		
+		// Iterate over modes and add in order
+		for (int index = 0; index < newModes.Length; index++) {
+			GameMode newMode = new GameMode(newModes[index]);
+			modeList.Add(newMode);
+			modeIndicies[newMode.Name] = index;
+		}
+
+		// Set current mode to first in array as default
+		currentMode = 0;
+	}
 }
 
 // For saving/loading settings from file
 [System.Serializable]
-public class SavedValue {
-	public string name;
-	public string val;
+public class SavedValueBase {
+	public string Name;
 
-	public SavedValue (string name, string val) {
-		this.name = name;
-		this.val = val;
+	public SavedValueBase (string name) {
+		this.Name = name;
+	}
+
+	public static SavedValueBase LoadFromJson (string toLoad) {
+		return JsonUtility.FromJson<SavedValueBase>(toLoad);
+	}
+
+	public static string SaveToJson (SavedValueBase toStringify) {
+		return JsonUtility.ToJson(toStringify, true);
 	}
 }
 
 [System.Serializable]
-public class SavedValueSet {
-	public SavedValue[] savedValues;
+public class SavedValue : SavedValueBase {
+	public string Value;
 
-	public SavedValueSet () {
-		savedValues = new SavedValue[0];
+	public SavedValue (string name) : base (name) {
+		this.Value = "";
 	}
 
-	public SavedValueSet (Dictionary<string, MenuSetting> settingDict) {
-		// Fresh list
-		var settingList = new List<SavedValue>();
-		// Check each setting for persistence -- if not, add to saved list
-		foreach (MenuSetting setting in settingDict.Values) {
-			if (!setting.Persistent) {
-				settingList.Add(new SavedValue(setting.Name, setting.Save()));
-			}
+	public SavedValue (string name, string val) : base (name) {
+		this.Value = val;
+	}
+
+	new public static SavedValue LoadFromJson (string toLoad) {
+		return JsonUtility.FromJson<SavedValue>(toLoad);
+	}
+
+	public static string SaveToJson (SavedValue toStringify) {
+		return JsonUtility.ToJson(toStringify, true);
+	}
+}
+
+[System.Serializable]
+public class SavedValueSet : SavedValueBase {
+	public string[] Values;
+
+	public SavedValueSet (string name) : base (name) {
+		this.Values = new string[0];
+	}
+
+	public SavedValueSet (string name, List<string> listToSave) : base(name) {
+		// Already strings, so save list as array
+		this.Values = listToSave.ToArray();
+	}
+
+	public SavedValueSet (string name, List<SavedValue> listToSave) : base(name) {
+		this.Values = new string[listToSave.Count];
+		// Stringify each item in list and add to array
+		for (int i = 0; i < listToSave.Count; i++) {
+			this.Values[i] = SavedValue.SaveToJson(listToSave[i]);
 		}
-		// Save list as array, so Unity can serialize it
-		// (This would be easier with a proper JSON library)
-		// ((But that would mean pulling in a whole JSON library))
-		savedValues = settingList.ToArray();
 	}
 
-	public static SavedValueSet LoadFromJson (string settingString) {
-		return JsonUtility.FromJson<SavedValueSet>(settingString);
+	new public static SavedValueSet LoadFromJson (string toLoad) {
+		return JsonUtility.FromJson<SavedValueSet>(toLoad);
 	}
 
-	public static string SaveToJson (SavedValueSet settingsToStringify) {
-		return JsonUtility.ToJson(settingsToStringify, true);
+	public static string SaveToJson (SavedValueSet toStringify) {
+		return JsonUtility.ToJson(toStringify, true);
 	}
 
 }
@@ -544,3 +643,95 @@ public class ResolutionSetting : MenuSetting {
 
 }
 
+[System.Serializable]
+public class GameModeSpec {
+	public string Name;
+	public GameObject[] Phases;
+	public int TerminalPhase;
+}
+
+public class GameMode {
+	private string name;
+	private List<GameObject> phases;
+	private int terminal;
+	private Dictionary<string, int> scores;
+
+	public GameMode (GameModeSpec spec) {
+		this.name = spec.Name;
+		this.phases = new List<GameObject>(spec.Phases);
+		this.terminal = spec.TerminalPhase;
+		this.scores = new Dictionary<string, int>();
+	}
+
+	public string Name { get { return name; } }
+	public int PhaseCount { get { return phases.Count; } }
+	public int Terminal { get { return terminal; } }
+
+	public GameObject GetPhase (int index) {
+		if ((index >= 0) && (index < phases.Count)) {
+			return phases[index];
+		}
+		else {
+			return null;
+		}
+	}
+
+	public int GetScore (string scoreName) {
+		if (scores.ContainsKey(scoreName)) {
+			return scores[scoreName];
+		}
+		else {
+			return 0;
+		}
+	}
+
+	public void HighScore (string scoreName, int scoreVal) {
+		// Only update if new score actually higher
+		// Will only end up creating score entry if above 0
+		if (scoreVal > GetScore(scoreName)) {
+			// Ensures new high scores will be created if not already present
+			scores[scoreName] = scoreVal;
+		}
+	}
+
+	// Basically to load from a deserialized StoredValue
+	public void LoadScore (string scoreName, string scoreVal) {
+		// Keeping it simple for now
+		HighScore(scoreName, System.Int32.Parse(scoreVal));
+	}
+
+	// And from a still-serialized StoredValue
+	public void LoadScore (string score) {
+		SavedValue saved = SavedValue.LoadFromJson(score);
+		LoadScore(saved.Name, saved.Value);
+	}
+
+	// Takes a string (of a whole serialized StoredValue) and does the deserialization itself
+	public void LoadScores (string scoresAsString) {
+		// First deserialize
+		SavedValueSet saved = SavedValueSet.LoadFromJson(scoresAsString);
+		// Check if this is really ours (just in case)
+		if (saved.Name == this.name) {
+			// Pass each stringified value to LoadScore for deserialization
+			foreach (string savedVal in saved.Values) {
+				LoadScore(savedVal);
+			}
+		}
+	}
+
+	// Could return a SavedValueSet, but that's just pushing the temp instance upward
+	// Serializes itself, instead of delegating (unlike the loading process)
+	public string SaveScores () {
+		// Pull a fresh list off the pile
+		List<SavedValue> values = new List<SavedValue>();
+		// Add (only) our stored scores as SavedValue instances
+		foreach (string scoreName in scores.Keys) {
+			values.Add(new SavedValue(scoreName, scores[scoreName].ToString()));
+		}
+		// Turn into a SavedValueSet
+		SavedValueSet saved = new SavedValueSet(name, values);
+		// Now stringify the whole thing
+		return SavedValueSet.SaveToJson(saved);
+	}
+
+}
