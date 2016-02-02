@@ -162,7 +162,7 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 		// Turn down volume if dying quietly
 		if (dying == DeathType.Quietly) {
-			daBomb.GetComponent<AudioSource>().volume *= 0.2f;
+			daBomb.GetComponent<AudioSource>().volume *= 0.25f;
 		}
 		// Mute if dying silently
 		if (dying == DeathType.Silently) {
@@ -220,7 +220,7 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 		
 		// Kill things in inner radius
-		things = Physics.OverlapSphere(bombPos, bombKillRadius, killmask);
+		things = Physics.OverlapSphere(pos, bombKillRadius, killmask);
 		if (things.Length > 0) {
 			for (int i=0; i<things.Length; i++) {
 				things[i].SendMessage("Die", false);
@@ -231,7 +231,7 @@ public class RedCubeBomb : MonoBehaviour {
 		if (dying == DeathType.Loudly) {
 			pushmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Player"));
 			// Push things in outer radius
-			things = Physics.OverlapSphere(bombPos, bombPushRadius, pushmask);
+			things = Physics.OverlapSphere(pos, bombPushRadius, pushmask);
 			for (int i=0; i<things.Length; i++) {
 				things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 			}
