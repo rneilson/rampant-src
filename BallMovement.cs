@@ -168,8 +168,15 @@ public class BallMovement : MonoBehaviour {
 	
 	void BlowUp () {
 		scorer.SendMessage("PlayerDied");
-		Destroy(Instantiate(deathThroes, transform.position, Quaternion.Euler(-90, 0, 0)), 1f);
+		// Create death explosion of glittering particles
+		GameObject death = Instantiate(deathThroes, transform.position, Quaternion.Euler(-90, 0, 0)) as GameObject;
+		// Give it our current velocity so the particles can inherit it
+		death.GetComponent<Rigidbody>().velocity = myRigidbody.velocity;
+		// And now, in a pique of poetry, destroy death
+		Destroy(death, 1f);
+		// Give us our fading ghost
 		Destroy(Instantiate(deathFade, transform.position, Quaternion.Euler(0, 0, 0)), 1f);
+		// Oh yeah, now destory ourselves
 		Destroy(gameObject);
 	}
 	
