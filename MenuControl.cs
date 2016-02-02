@@ -504,7 +504,7 @@ public enum InputMode : byte {
 // For checking an axis while timescale = 0
 public class InputAxisTracker {
 	private const float resetTime = 0.35f;
-	private const float threshold = 0.05f;
+	private const float threshold = 0.1f;
 	private static float deltaTime;
 	private float resetCountdown = 0.0f;
 	private bool wasCaptured = false;
