@@ -202,6 +202,7 @@ public class EnemySpawner : MonoBehaviour {
 		// Each wavespec gets a loop
 		foreach (WaveSpec wave in waveList) {
 			// Find current list length, and how many to add of this enemy type
+			int startLen = spawnPoints.Count;	// Mostly for debug
 			int endLen = wave.Advance() + spawnPoints.Count;
 
 			// Only do anything more if we're adding something at this point
@@ -232,6 +233,13 @@ public class EnemySpawner : MonoBehaviour {
 					else {
 						// If no candidate found, remove sample from list (leave in spawnlist though)
 						samplePoints.RemoveAt(i);
+					}
+				}
+
+				if (debugInfo) {
+					if (spawnPoints.Count < endLen) {
+						Debug.Log("Couldn't find room, should be " + (endLen - startLen).ToString() 
+							+ ", was " + (spawnPoints.Count - startLen).ToString(), gameObject);
 					}
 				}
 				
@@ -403,7 +411,7 @@ public class WaveSpec {
 
 	public void ResetCount () {
 		roundSizeCurrent = roundSizeStart;
-		waveCounter = 0;
+		waveCounter = -1;	// Will advance before spawning
 	}
 
 	// Increase/decrease size/num/both/neither
