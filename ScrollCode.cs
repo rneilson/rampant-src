@@ -31,12 +31,13 @@ public class ScrollCode : MonoBehaviour {
 
 	// Text things
 	private string initialText = 
-@"------------------------
-        _rampant        
-------------------------
+@"
+-------------------------
+        _rampant         
+-------------------------
 
-       _a_game_by
-    _raymond_neilson";
+       _a_game_by        
+    _raymond_neilson     ";
     private string[] initialLines;
     public TextAsset sourceText;
     public TextAsset sourceOffsets;
