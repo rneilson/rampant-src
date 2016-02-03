@@ -20,9 +20,9 @@ public class ScrollCodeBox : MonoBehaviour {
 	private Scorer scorer;
 
 	// Textbox sizes
-	private int cols = 24;	// Not including newline
+	public int cols = 25;	// Not including newline
+	public int rows = 32;
 	private int rowlen;		// Including newline
-	private int rows = 32;
 
 	// Cursor state
 	private int cursorPos = 0;		// Current pos in display line
