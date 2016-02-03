@@ -134,6 +134,9 @@ public class Scorer : MonoBehaviour {
 			return menu.CurrentInput;
 		}
 	}
+	public Vector3 SpawnPosition {
+		get { return spawnPos; }
+	}
 
 	// Use this for initialization
 	void Start () {
