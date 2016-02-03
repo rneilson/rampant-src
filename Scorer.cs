@@ -137,6 +137,9 @@ public class Scorer : MonoBehaviour {
 	public Vector3 SpawnPosition {
 		get { return spawnPos; }
 	}
+	public float SpawnHeight {
+		get { return spawnPos.y; }
+	}
 
 	// Use this for initialization
 	void Start () {

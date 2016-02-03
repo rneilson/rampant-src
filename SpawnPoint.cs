@@ -14,7 +14,7 @@ public class SpawnPoint : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		spawnTime = Time.fixedTime + preTime;
+		//spawnTime = Time.fixedTime + preTime;
 		spawned = false;
 	}
 	
@@ -40,11 +40,15 @@ public class SpawnPoint : MonoBehaviour {
 		}
 	}
 
-	void SetPhaseIndex (int phase) {
+	public void SetPhaseIndex (int phase) {
 		phaseIndex = phase;
 	}
 	
-	void FindControl (GameObject control) {
+	public void FindControl (GameObject control) {
 		scorer = control.GetComponent<Scorer>();
+	}
+
+	public void SetDelay (float delay) {
+		spawnTime = Time.fixedTime + preTime + delay;
 	}
 }
