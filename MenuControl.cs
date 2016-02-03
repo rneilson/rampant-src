@@ -116,7 +116,7 @@ public class MenuControl : MonoBehaviour {
 		settings["MouseSpeed"] = new MouseSpeedSetting("MouseSpeed", "FireCursor");
 		*/
 
-		// TODO: parse root menu
+		// Parse menu node list
 		foreach (MenuNode node in menuNodes) {
 			nodes[node.name] = node;
 		}
@@ -157,16 +157,21 @@ public class MenuControl : MonoBehaviour {
 			Debug.Log("Loading node: " + node.name, gameObject);
 		}
 
+		int lineIndex = 0;
+		int sourceIndex = 0;
+
 		// Make the first line a back cmd
 		string backName;
+
 		// Check if there's a previous node
 		if ((currNode.Prev == null) || (currNode.Prev.Name == "")) {
 			// Check if game's started
 			if (scorer.IsStarted) {
 				backName = "Resume";
 			}
+			// Otherwise, don't even show this line
 			else {
-				backName = "Start";
+				backName = "";
 			}
 		}
 		// Otherwise, use the generic "back"
@@ -175,32 +180,36 @@ public class MenuControl : MonoBehaviour {
 		else {
 			backName = "Back";
 		}
-		menuLines[0].ConfigureLine(MenuLineType.Back, backName, "");
-		if (debugInfo) {
-			menuLines[0].DebugLineInfo();
+
+		if (backName != "") {
+			menuLines[0].ConfigureLine(MenuLineType.Back, backName, "");
+			if (debugInfo) {
+				menuLines[0].DebugLineInfo();
+			}
+			lineIndex++;
 		}
 
 		// Configure listed lines
-		// TODO: don't skip first line
-		int i = 0;
-		while ((i < node.lines.Length) && (i < menuLines.Length - 1)) {
-			MenuNodeLine line = node.lines[i];
-			menuLines[i+1].ConfigureLine(line.lineType, line.label, line.target);
+		while ((sourceIndex < node.lines.Length) && (lineIndex < menuLines.Length - 1)) {
+			MenuNodeLine line = node.lines[sourceIndex];
+			menuLines[lineIndex].ConfigureLine(line.lineType, line.label, line.target);
 
 			if (debugInfo) {
-				menuLines[i+1].DebugLineInfo();
+				menuLines[lineIndex].DebugLineInfo();
 			}
 
-			i++;
+			lineIndex++;
+			sourceIndex++;
 		}
 		// Configure remaining lines as blank
-		while (++i < menuLines.Length) {
-			menuLines[i].ConfigureLine(MenuLineType.Text, "", "");
+		while (lineIndex < menuLines.Length) {
+			menuLines[lineIndex].ConfigureLine(MenuLineType.Text, "", "");
 
 			if (debugInfo) {
-				menuLines[i].DebugLineInfo();
+				menuLines[lineIndex].DebugLineInfo();
 			}
 
+			lineIndex++;
 		}
 	}
 
