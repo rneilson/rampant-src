@@ -39,10 +39,10 @@ public class Scorer : MonoBehaviour {
 	public float respawnTime;
 	public float playerBreakDelay = 1.0f;
 	public float playerBreakRadius = 1.0f;
+	public float maxDisplacement = 4.75f;
 	private bool respawn;
 	private float respawnCountdown;
 	private bool playerBreak = false;		// Should rename at some point
-	private float maxDisplacement = 4.75f;
 	private Vector3 spawnPos = new Vector3 (0f, 1f, 0f);
 	private Vector3 bombPos = new Vector3 (0f, 0.6f, 0f);
 
