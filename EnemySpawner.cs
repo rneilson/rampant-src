@@ -20,7 +20,7 @@ public class EnemySpawner : MonoBehaviour {
 	public bool debugInfo = false;
 	
 	private Scorer scorer;
-	private RedCubeGroundControl control;
+	//private RedCubeGroundControl control;
 	private float countdown;
 	private bool counting;
 	private int roundCounter;
@@ -91,7 +91,7 @@ public class EnemySpawner : MonoBehaviour {
 
 	public void FindControl (GameObject controller) {
 		scorer = controller.GetComponent<Scorer>();
-		control = controller.GetComponent<RedCubeGroundControl>();
+		//control = controller.GetComponent<RedCubeGroundControl>();
 	}
 
 	// Reset to initial state
