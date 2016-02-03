@@ -7,6 +7,7 @@ public class BallMovement : MonoBehaviour {
 	public float movementScale;
 	public float dragNoInput;
 	public float dragInput;
+	private Vector3 prevVel;
 
 	public AudioClip bulletSound;
 	public AudioSource[] audioArray;
@@ -108,6 +109,9 @@ public class BallMovement : MonoBehaviour {
 	
 	//Put everything in FixedUpdate
 	void FixedUpdate () {
+		// Update previous velocity
+		prevVel = myRigidbody.velocity;
+
 		// Only move/shoot if input directed to game
 		if (scorer.InputTarget == InputMode.Game) {
 			// Get movement
@@ -171,7 +175,8 @@ public class BallMovement : MonoBehaviour {
 		// Create death explosion of glittering particles
 		GameObject death = Instantiate(deathThroes, transform.position, Quaternion.Euler(-90, 0, 0)) as GameObject;
 		// Give it our current velocity so the particles can inherit it
-		death.GetComponent<Rigidbody>().velocity = myRigidbody.velocity;
+		Rigidbody deathRB = death.GetComponent<Rigidbody>();
+		deathRB.velocity = prevVel;
 		// And now, in a pique of poetry, destroy death
 		Destroy(death, 1f);
 		// Give us our fading ghost
