@@ -29,8 +29,7 @@ public class MaterialPulse : MonoBehaviour {
 
 	private const float halfPi = Mathf.PI / 2.0f;
 
-	// Use this for initialization
-	void Start () {
+	void Awake () {
 		// Sanity checks
 		if (emissionFraction < 0.0f) {
 			emissionFraction = 0.0f;
@@ -57,7 +56,10 @@ public class MaterialPulse : MonoBehaviour {
 
 		// Initialize to stopped
 		currentState = PulseState.Stopped;
-		
+	}
+
+	// Use this for initialization
+	void Start () {
 		// Start only if autostarting
 		if (autoStart) {
 			StartPulse();

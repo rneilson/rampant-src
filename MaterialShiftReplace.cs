@@ -23,8 +23,7 @@ public class MaterialShiftReplace : MonoBehaviour {
 	private Color emissionMid = Color.black;
 	private Color emissionTarget;
 
-	// Use this for initialization
-	void Start () {
+	void Awake () {
 		// Get material object from renderer
 		rendControl = GetComponent<Renderer>();
 		// Enable emissions, just in case
@@ -35,7 +34,10 @@ public class MaterialShiftReplace : MonoBehaviour {
 		if (materialTargetList.Length <= 0) {
 			Debug.LogError("No materials in shift array!", gameObject);
 		}
+	}
 
+	// Use this for initialization
+	void Start () {
 		// Set as active
 		isActive = true;
 	}

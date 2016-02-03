@@ -43,8 +43,8 @@ public class ScrollCode : MonoBehaviour {
     private string[] sourceLines;
     private int[] sourceLineNums;
 
-	// Use this for initialization
-	void Start () {
+	// Using Awake() for initialization instead
+	void Awake () {
 		// Sanity checks
 		blendFraction = (blendFraction > 1.0f) ? 1.0f : blendFraction;
 
@@ -88,14 +88,16 @@ public class ScrollCode : MonoBehaviour {
 			}
 		}
 
+		// Load sourcecode text asset
+		//sourceText = Resources.Load("sourcecode") as TextAsset;
+
 		// Start boxes scrolling with intro text
 		boxLeft.StartScrolling(initialLines, false, 0);
 		boxRight.StartScrolling(initialLines, false, 0);
-
-		// Load sourcecode text asset
-		//sourceText = Resources.Load("sourcecode") as TextAsset;
 	}
 	
+	void Start () {}
+
 	// Update is called once per frame
 	void Update () {
 		if (colorPulsing) {

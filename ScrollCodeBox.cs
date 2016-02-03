@@ -53,17 +53,17 @@ public class ScrollCodeBox : MonoBehaviour {
 		get { return initialText; }
 	}
 
-	// Use this for initialization
-	void Start () {
-		// Stupid compiler won't let me put these in initialization...
-		rowlen = cols + 1;
-		int boxChars = rows * rowlen;
-		lineBuffer = new StringBuilder(rowlen);
-
+	// Component setup ASAP
+	void Awake () {
 		// Grab components, obvs
 		display = GetComponent<TextMesh>();
 		timer = GetComponent<PulseControl>();
 		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
+
+		// Stupid compiler won't let me put these in initialization...
+		rowlen = cols + 1;
+		int boxChars = rows * rowlen;
+		lineBuffer = new StringBuilder(rowlen);
 
 		// Debug screen pos/size
 		if (debugInfo) {
@@ -111,6 +111,9 @@ public class ScrollCodeBox : MonoBehaviour {
 		}
 		LoadNextSourceString();
 	}
+
+	// Use this for initialization
+	void Start () {}
 	
 	// Update is called once per frame
 	void Update () {
@@ -149,20 +152,24 @@ public class ScrollCodeBox : MonoBehaviour {
 
 			// If the line is too short, do a forced rollever on the timer and recalc pos/line
 			if (newPos > GetSourceLength()) {
+				/*
 				if (debugInfo) {
 					Debug.Log("Line too short, newPos: " + newPos.ToString() 
 						+ ", newLine: " + newLine.ToString() 
 						+ ", source length: " + GetSourceLength().ToString(), gameObject);
 				}
+				*/
 				timer.StopPulse();
 				timer.ForceRollover();
 				newPos = (timer.Phase > 0.0f) ? Mathf.FloorToInt(timer.Phase * (float) rowlen) : 0;
 				newLine = timer.Loops;
+				/*
 				if (debugInfo) {
 					Debug.Log("After restart, newPos: " + newPos.ToString() 
 						+ ", newLine: " + newLine.ToString() 
 						+ ", source length: " + GetSourceLength().ToString(), gameObject);
 				}
+				*/
 			}
 
 			// Catch up to present line

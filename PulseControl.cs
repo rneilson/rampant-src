@@ -224,8 +224,8 @@ public class PulseControl : MonoBehaviour {
 	}
 	// END SUBTLE DIFFERENCES (AGAIN, NOTE!!!)
 
-	// Use this for initialization
-	void Start () {
+	// Most setup goes here -- we might need it ASAP
+	void Awake () {
 		phase = 0.0f;
 		counter = 0.0f;
 		loops = 0;
@@ -239,7 +239,10 @@ public class PulseControl : MonoBehaviour {
 		// Initialize to stopped
 		currentState = PulseState.Stopped;
 		previousState = PulseState.Stopped;
+	}
 
+	// Use this for initialization
+	void Start () {
 		// If autostarting, this frame we'll switch from Starting to ToTarget, and only next frame have the
 		// possibility of stopping
 		if (autoStart) {

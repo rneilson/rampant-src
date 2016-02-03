@@ -23,8 +23,7 @@ public class MaterialShiftEmission : MonoBehaviour {
 	private Color colorTarget;
 	private Texture textureTarget;
 
-	// Use this for initialization
-	void Start () {
+	void Awake () {
 		// Get material object from renderer
 		rendControl = GetComponent<Renderer>();
 		// Enable emissions, just in case
@@ -41,7 +40,10 @@ public class MaterialShiftEmission : MonoBehaviour {
 		if ((colorTargetList.Length <= 0) || (textureTargetList.Length <= 0)) {
 			Debug.LogError("No targets in shift array!", gameObject);
 		}
+	}
 
+	// Use this for initialization
+	void Start () {
 		// Set as active
 		isActive = true;
 	}

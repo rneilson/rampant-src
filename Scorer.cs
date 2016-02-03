@@ -77,6 +77,7 @@ public class Scorer : MonoBehaviour {
 
 	// Global debug option
 	public bool globalDebug = false;
+	//private int framesActive = 0;
 
 	// Camera tracking
 	public bool cameraTracking = false;
@@ -163,10 +164,36 @@ public class Scorer : MonoBehaviour {
 			arenaShifters.Add(shifter);
 		}
 
+		// Autostart if game (re)started
+		if ((!isStarted) && (GameSettings.Restarted)) {
+			if (globalDebug) {
+				// Debug.Log("Game (re)started, autostarting as of frame " + framesActive.ToString(), gameObject);
+				Debug.Log("Game (re)started, autostarting", gameObject);
+			}
+			// This is on its own line in case there's anything else that needs doing
+			UnPauseGame();
+		}
+
 	}
 	
 	// Update is called once per frame
 	void Update () {
+		/*
+		if (globalDebug) {
+			framesActive++;
+		}
+		*/
+
+		// Check if menu's exited or game's restarted
+		if (isPaused) {
+			if (menu.CurrentInput == InputMode.Game) {
+				if (globalDebug) {
+					Debug.Log("Menu exited, unpausing", gameObject);
+				}
+				UnPauseGame();
+			}
+		}
+
 		// Check for quit first
 		if ((Input.GetKeyDown(KeyCode.Q)) 
 			&& ((Input.GetKey(KeyCode.LeftControl)) || (Input.GetKey(KeyCode.RightControl)) ) ) {
@@ -178,6 +205,9 @@ public class Scorer : MonoBehaviour {
 		//if ((Input.GetButtonDown("Pause")) || (Input.GetKeyDown(KeyCode.Escape))) {
 		if (Input.GetButtonDown("Pause")) {
 			if (isPaused) {
+				if (globalDebug) {
+					Debug.Log("Pause key hit, unpausing", gameObject);
+				}
 				UnPauseGame();
 			}
 			else {
@@ -188,17 +218,6 @@ public class Scorer : MonoBehaviour {
 		// If we're not in the menu, then back will pause
 		if ((menu.CurrentInput == InputMode.Game) && (Input.GetButtonDown("Back"))) {
 			PauseGame();
-		}
-
-		// Check if menu's exited or game's restarted
-		if (isPaused) {
-			if (menu.CurrentInput == InputMode.Game) {
-				UnPauseGame();
-			}
-			else if ((!isStarted) && (GameSettings.Restarted)) {
-				// This is on its own line in case there's anything else that needs doing
-				UnPauseGame();
-			}
 		}
 
 		/*
@@ -408,8 +427,8 @@ public class Scorer : MonoBehaviour {
 		
 	void UnPauseGame () {
 		isPaused = false;
+
 		if (!isStarted) {
-			isStarted = true;
 			SendStartGame();
 		}
 		Time.timeScale = 1;
@@ -489,6 +508,8 @@ public class Scorer : MonoBehaviour {
 				shifter.SendMessage("GameStarted", null, SendMessageOptions.DontRequireReceiver);
 			}
 		}
+
+		isStarted = true;
 	}
 
 	IEnumerator PlayDelayedClip (AudioClip toPlay, float delay, float volume) {

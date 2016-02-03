@@ -94,7 +94,9 @@ public static class GameSettings {
 
 	// Publically-accessible functions
 
-	public static bool Restarted { get { return restarted; } }
+	public static bool Restarted {
+		get {return restarted; }
+	}
 	public static GameMode CurrentMode {
 		get { return modeList[currentMode]; }
 	}
@@ -107,12 +109,12 @@ public static class GameSettings {
 	public static void Restart () {
 		// Save, because mouse speed (and soon kills/waves) will need to be reloaded
 		SaveSettings();
-		// Reload scene from beginning
-		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 		// Unpause, because now-dead scorer paused
 		Time.timeScale = 1;
 		// Set restarted flag
 		restarted = true;
+		// Reload scene from beginning
+		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 	}
 
 	public static void LoadSettings () {
