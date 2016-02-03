@@ -149,29 +149,6 @@ public class Scorer : MonoBehaviour {
 		respawnCountdown = 0.0f;
 		myAudioSource = GetComponent<AudioSource>();
 
-		// Mode debug
-		if (globalDebug) {
-			Debug.Log("Loading mode: " + GameSettings.CurrentMode.Name, gameObject);
-		}
-
-		// Get high scores from current mode
-		maxKills = GameSettings.CurrentMode.GetScore("Kills");
-		scoreHigh.text = "Best: " + maxKills.ToString();
-		maxLevel = GameSettings.CurrentMode.GetScore("Waves");
-		scoreDeaths.text = "Best: " + maxLevel.ToString();
-
-		// Start paused
-		/*
-		if (isPaused) {
-			Time.timeScale = 0;
-		}
-		*/
-
-		// Start first enemy phase
-		phaseIndex = 0;
-		phaseShift = -1;
-		currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex));
-
 		menu.SetTitle(gameTitle);
 
 		// Get ground control
@@ -186,7 +163,6 @@ public class Scorer : MonoBehaviour {
 			arenaShifters.Add(shifter);
 		}
 
-		// TODO: show menu root node at startup
 	}
 	
 	// Update is called once per frame
@@ -423,6 +399,9 @@ public class Scorer : MonoBehaviour {
 		isPaused = true;
 		Time.timeScale = 0;
 
+		// Reset input
+		Input.ResetInputAxes();
+
 		// Show menu
 		menu.ShowMenu(menu.RootNode);
 	}
@@ -437,6 +416,9 @@ public class Scorer : MonoBehaviour {
 
 		// Hide menu
 		menu.HideMenu();
+
+		// Reset input
+		Input.ResetInputAxes();
 	}
 
 	void ClearTargets () {
@@ -480,6 +462,23 @@ public class Scorer : MonoBehaviour {
 	}
 
 	void SendStartGame () {
+		// Mode debug
+		if (globalDebug) {
+			Debug.Log("Loading mode: " + GameSettings.CurrentMode.Name, gameObject);
+		}
+
+		// Get high scores from current mode
+		maxKills = GameSettings.CurrentMode.GetScore("Kills");
+		scoreHigh.text = "Best: " + maxKills.ToString();
+		maxLevel = GameSettings.CurrentMode.GetScore("Waves");
+		scoreDeaths.text = "Best: " + maxLevel.ToString();
+
+		// Start first enemy phase
+		phaseIndex = 0;
+		phaseShift = -1;
+		currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex));
+
+		// Inform pulsers and shifters that game has started
 		foreach (GameObject pulser in arenaPulsers) {
 			if (pulser) {
 				pulser.SendMessage("GameStarted", null, SendMessageOptions.DontRequireReceiver);

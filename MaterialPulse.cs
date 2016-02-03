@@ -291,6 +291,8 @@ public class MaterialPulse : MonoBehaviour {
 
 	// Placeholder
 	public void GameStarted () {
-
+		if (!autoStart) {
+			StartPulse();
+		}
 	}
 }

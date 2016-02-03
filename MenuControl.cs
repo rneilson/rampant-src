@@ -152,7 +152,9 @@ public class MenuControl : MonoBehaviour {
 	// Internal methods
 
 	void LoadNode (string nodeName) {
+		// Grab node name
 		MenuNode node = nodes[nodeName];
+
 		if (debugInfo) {
 			Debug.Log("Loading node: " + node.name, gameObject);
 		}

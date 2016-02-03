@@ -17,8 +17,8 @@ public class EnemyPhase : MonoBehaviour {
 
 	private bool phaseActive = true;
 
-	// Use this for initialization
-	void Start () {
+	// Initialize on Awake() instead of Start()
+	void Awake () {
 		scorer = GameObject.FindGameObjectWithTag("GameController").GetComponent<Scorer>();
 		// Find attached spawners
 		spawners = gameObject.GetComponents<EnemySpawner>();
