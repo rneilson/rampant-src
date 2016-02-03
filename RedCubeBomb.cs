@@ -12,7 +12,7 @@ public class RedCubeBomb : MonoBehaviour {
 	private const bool spin = true;
 	private Vector3 spinAxis = Vector3.right;
 	private Vector3 spinRef = Vector3.forward;
-	private float torque = 0.1f;
+	private float torque = 0.15f;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
@@ -34,7 +34,7 @@ public class RedCubeBomb : MonoBehaviour {
 	public float bombPushRadius = 2.5f;
 	public float bombTriggerRadius = 0.75f;
 	public GameObject bombEffect;
-	public bool enableBombPush = false;
+	//public bool enableBombPush = false;
 
 	static RedCubeBomb () {
 		thisType = EnemyList.AddOrGetType(thisTypeName);
@@ -69,7 +69,7 @@ public class RedCubeBomb : MonoBehaviour {
 			// Get bearing
 			bearing = target.transform.position - transform.position;
 			// Blow up if we're in range
-			if (bearing.magnitude <= bombTriggerRadius) {
+			if ((bombTriggerRadius > 0.0f) && (bearing.magnitude <= bombTriggerRadius)) {
 				Die(true);
 			}
 			// Or try to get in range
@@ -220,10 +220,12 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 		
 		// Kill things in inner radius
-		things = Physics.OverlapSphere(pos, bombKillRadius, killmask);
-		if (things.Length > 0) {
-			for (int i=0; i<things.Length; i++) {
-				things[i].SendMessage("Die", false);
+		if (bombKillRadius > 0.0f) {
+			things = Physics.OverlapSphere(pos, bombKillRadius, killmask);
+			if (things.Length > 0) {
+				for (int i=0; i<things.Length; i++) {
+					things[i].SendMessage("Die", false);
+				}
 			}
 		}
 		
