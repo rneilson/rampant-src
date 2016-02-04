@@ -251,24 +251,24 @@ public class BallMovement : MonoBehaviour {
 		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
 		GameObject powerUpEffect = Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
 		powerUpEffect.transform.parent = transform;
-		Destroy(powerUpEffect, 0.5f);
+		Destroy(powerUpEffect, 1.5f);
 	}
 	
 	public void BombMinusTwo () {
-		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
+		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 1.5f);
 		if (bombMinusTwo) {
 			GameObject powerUpEffect = Instantiate(bombMinusTwo, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
 			powerUpEffect.transform.parent = transform;
-			Destroy(powerUpEffect, 0.5f);
+			Destroy(powerUpEffect, 1.5f);
 		}
 	}
 
 	public void BombMinusOne () {
-		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 0.5f);
+		//Destroy(Instantiate(powerUp, transform.position, Quaternion.Euler(0, 0, 0)), 1.5f);
 		if (bombMinusOne) {
 			GameObject powerUpEffect = Instantiate(bombMinusOne, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
 			powerUpEffect.transform.parent = transform;
-			Destroy(powerUpEffect, 0.5f);
+			Destroy(powerUpEffect, 1.5f);
 		}
 	}
 
@@ -279,7 +279,7 @@ public class BallMovement : MonoBehaviour {
 			if (bombAcquired) {
 				GameObject powerUpEffect = Instantiate(bombAcquired, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
 				powerUpEffect.transform.parent = transform;
-				Destroy(powerUpEffect, 0.5f);
+				Destroy(powerUpEffect, 1.5f);
 			}
 
 			// Bomb-carrying effect (permanent until bomb used)
