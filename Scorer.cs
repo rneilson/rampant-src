@@ -370,17 +370,28 @@ public class Scorer : MonoBehaviour {
 
 		Collider[] enemies;
 		int mask = 1 << LayerMask.NameToLayer("Enemy");
+		Rigidbody rb;
 		
 		// Clear enemies
 		enemies = Physics.OverlapSphere(bombAt, killRadius, mask);
 		for (int i=0; i<enemies.Length; i++) {
-			enemies[i].SendMessage("Clear", false);
+			enemies[i].SendMessage("Clear", false, SendMessageOptions.DontRequireReceiver);
 		}
 		
 		// Push away remaining enemies
 		enemies = Physics.OverlapSphere(bombAt, pushRadius, mask);
 		for (int i=0; i<enemies.Length; i++) {
-			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(spawnBombForce, bombAt, 0);
+			rb = enemies[i].GetComponent<Rigidbody>();
+			if (rb) {
+				rb.AddExplosionForce(spawnBombForce, bombAt, 0);
+			}
+			else {
+				// Try parent instead
+				rb = enemies[i].transform.parent.GetComponent<Rigidbody>();
+				if (rb) {
+					rb.AddExplosionForce(spawnBombForce, bombAt, 0);
+				}
+			}
 		}
 	}
 	
