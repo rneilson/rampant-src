@@ -273,7 +273,8 @@ public class EnemySpawner : MonoBehaviour {
 
 				if (debugInfo) {
 					if (spawnPoints.Count < endLen) {
-						Debug.Log("Couldn't find room, should be " + (endLen - startLen).ToString() 
+						Debug.Log("Couldn't find room for " + wave.enemySpawn.name
+							+ ", should be " + (endLen - startLen).ToString() 
 							+ ", was " + (spawnPoints.Count - startLen).ToString(), gameObject);
 					}
 				}
