@@ -53,6 +53,7 @@ public class Scorer : MonoBehaviour {
 	public AudioClip respawnSound;
 	public float respawnSoundDelay = 0.0f;
 	public float respawnSoundVol = 0.5f;
+	public float spawnBombForce = 800f;
 
 	// Enemy phases (ie difficulty stuff)
 	private GameObject currentPhase;
@@ -379,7 +380,7 @@ public class Scorer : MonoBehaviour {
 		// Push away remaining enemies
 		enemies = Physics.OverlapSphere(bombAt, pushRadius, mask);
 		for (int i=0; i<enemies.Length; i++) {
-			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(500f, bombAt, 0);
+			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(spawnBombForce, bombAt, 0);
 		}
 	}
 	
@@ -388,7 +389,7 @@ public class Scorer : MonoBehaviour {
 		menu.HideMenu();
 		
 		// Bomb enemies near spawn point
-		SpawnBomb(spawnPos, bombPos, 2.0f, 5.0f);
+		SpawnBomb(spawnPos, bombPos, 2.5f, 5.0f);
 		
 		// Reset kills
 		kills = 0;
