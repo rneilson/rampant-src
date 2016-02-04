@@ -26,7 +26,7 @@ public class BulletCollider : MonoBehaviour {
 		} 
 				
 		if (thingHit.tag == "Enemy") {
-			thingHit.SendMessage("Die", true);
+			thingHit.SendMessage("Die", true, SendMessageOptions.DontRequireReceiver);
 		}
 		
 		Destroy(gameObject);

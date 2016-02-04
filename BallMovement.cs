@@ -40,6 +40,7 @@ public class BallMovement : MonoBehaviour {
 	//private GameObject controller;
 	private Scorer scorer;
 	//private RedCubeGroundControl groundControl;
+	private int enemyLayer;
 
 	const float fireDist = 0.10f;
 	const float fireSpeed = 5.0f;
@@ -86,6 +87,8 @@ public class BallMovement : MonoBehaviour {
 		fireCycle = 0;
 		audioCycle = 0;
 		audioCycleMax = audioArray.Length / 2;	// Should still work for Length=1, since cycle will always reset to 0
+
+		enemyLayer = LayerMask.NameToLayer("Enemy");
 	}
 	
 	// Update is called once per frame
@@ -319,7 +322,7 @@ public class BallMovement : MonoBehaviour {
 
 		// Old code
 		Collider[] enemies;
-		int mask = 1 << LayerMask.NameToLayer("Enemy");
+		int mask = 1 << enemyLayer;
 		
 		// Kill enemies in inner radius
 		enemies = Physics.OverlapSphere(bombPos, bombKillRadius, mask);
