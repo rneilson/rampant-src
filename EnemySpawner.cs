@@ -156,7 +156,7 @@ public class EnemySpawner : MonoBehaviour {
 		// Generates up to k test points (iteratively) based on samplePoint, ranging from minDist to 2*minDist
 		// Then compares test point to all points in testList for minimum distance
 		const float twoPi = Mathf.PI * 2;
-		const int k = 30;	// Max iterations
+		const int k = 40;	// Max iterations
 		Vector2 samplePos = samplePoint.pointPos;	// Seed position
 		Vector2 candidatePos;						// Candidate position
 		float sqrSafeDist = safeDist * safeDist;	// Squard minimum distance from player
