@@ -6,6 +6,8 @@ public class SpawnPoint : MonoBehaviour {
 	public GameObject enemyType;
 	public float preTime;
 	public float postTime;
+	public bool randomRotationY = true;
+	public bool randomRotationZ = true;
 	
 	private float countdown;
 	private bool started;
@@ -33,9 +35,12 @@ public class SpawnPoint : MonoBehaviour {
 				// Already did particle effect, spawn
 				if (particled) {
 					GetComponent<Collider>().enabled = false;
-					float spawnZ = Random.Range(0f, (phaseIndex * 5f));
-					float spawnY = Random.Range(0f, 360f);
-					GameObject spawn = Instantiate(enemyType, transform.position, Quaternion.Euler(spawnZ, 0, spawnY)) as GameObject;
+
+					float spawnZ = (randomRotationZ) ? Random.Range(0f, (phaseIndex * 5f)) : 0.0f;
+					float spawnY = (randomRotationY) ? Random.Range(0f, 360f) : 0.0f;
+
+					GameObject spawn = Instantiate(enemyType, 
+						transform.position, Quaternion.Euler(0.0f, spawnY, spawnZ)) as GameObject;
 					if (scorer) {
 						spawn.SendMessage("FindControl", scorer.gameObject);
 					}
