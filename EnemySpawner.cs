@@ -56,12 +56,15 @@ public class EnemySpawner : MonoBehaviour {
 		// Now reverse -- we want the furthest-spaced wave first
 		waveList.Reverse();
 
+		/*
 		if (debugInfo) {
-			Debug.Log("Wave list: ", gameObject);
+			string debugStr = "Wave list: ";
 			foreach (WaveSpec wave in waveList) {
-				Debug.Log("Type: " + wave.enemySpawn.name, wave.enemySpawn.gameObject);
+				debugStr = debugStr + wave.enemySpawn.name + " ";
 			}
+			Debug.Log(debugStr, gameObject);
 		}
+		*/
 	}
 	
 	// Update is called once per frame
@@ -148,13 +151,15 @@ public class EnemySpawner : MonoBehaviour {
 		return true;
 	}
 
-	bool TestCandidates (PointCandidate samplePoint, float minDist, List<PointCandidate> testList, out Vector2 newPos) {
+	bool TestCandidates (PointCandidate samplePoint, float minDist, float safeDist, 
+		Vector2 playerPos, List<PointCandidate> testList, out Vector2 newPos) {
 		// Generates up to k test points (iteratively) based on samplePoint, ranging from minDist to 2*minDist
 		// Then compares test point to all points in testList for minimum distance
 		const float twoPi = Mathf.PI * 2;
 		const int k = 30;	// Max iterations
 		Vector2 samplePos = samplePoint.pointPos;	// Seed position
 		Vector2 candidatePos;						// Candidate position
+		float sqrSafeDist = safeDist * safeDist;	// Squard minimum distance from player
 		Collider[] others;							// For spawn-zone clearance
 		int mask = playerMask | enemyMask | spawnMask;
 
@@ -170,15 +175,18 @@ public class EnemySpawner : MonoBehaviour {
 
 			// Check if in bounds
 			if (InBounds(candidatePos)) {
-				// Check via overlap sphere if any other enemies/players in safe radius
-				others = Physics.OverlapSphere(new Vector3(candidatePos.x, scorer.SpawnHeight, candidatePos.y), 
-					clearRadius, mask);
-				if (others.Length == 0) {
-					// Test position against list, and return results if position further than minDist
-					// away from all points in testList
-					if (TestPoint(candidatePos, minDist, testList)) {
-						newPos = candidatePos;
-						return true;
+				// Check if sufficiently far from player
+				if ((candidatePos - playerPos).sqrMagnitude >= sqrSafeDist) {
+					// Check via overlap sphere if any other enemies/players in safe radius
+					others = Physics.OverlapSphere(new Vector3(candidatePos.x, scorer.SpawnHeight, candidatePos.y), 
+						clearRadius, mask);
+					if (others.Length == 0) {
+						// Test position against list, and return results if position further than minDist
+						// away from all points in testList
+						if (TestPoint(candidatePos, minDist, testList)) {
+							newPos = candidatePos;
+							return true;
+						}
 					}
 				}
 			}
@@ -189,18 +197,45 @@ public class EnemySpawner : MonoBehaviour {
 		return false;
 	}
 
+	void GenerateSeeds (int seeds, float radius, Vector2 playerPos, List<PointCandidate> seedList) {
+		const float twoPi = Mathf.PI * 2;
+		const float maxRange = 2.0f;
+		int i = 0;
+
+		while (i < seeds) {
+			// Choose random angle and length
+			float angle = Random.Range(0.0f, 1.0f) * twoPi;
+			float range = Random.Range(1.0f, maxRange) * radius;
+			// Create offset at said random angle and supplied distance
+			Vector2 offset = new Vector2(range * Mathf.Cos(angle), range * Mathf.Sin(angle));
+			Vector2 candidatePos = playerPos + offset;
+			// Check if inbounds (we can assume the safezone radius (or more) has been passed in)
+			if (InBounds(candidatePos)) {
+				// Add point to seed list and increment count
+				seedList.Add(new PointCandidate(null, offset.magnitude, candidatePos));
+				i++;
+			}
+		}
+	}
+
 	void SpawnWave () {
+		// Number of seed points
+		const int m = 5;
+
+		// Get player position
+		Vector3 playerPos3d = (scorer.Player) ? scorer.Player.transform.position : scorer.SpawnPosition;
+		Vector2 playerPos = new Vector2(playerPos3d.x, playerPos3d.z);
+
 		// Fresh lists, one for the points to use, one for active processing
 		var spawnPoints = new List<PointCandidate>();
 
-		// Get player position, and add to list as initial sample
-		// (We'll remove it before spawning)
-		Vector3 playerPos = (scorer.Player) ? scorer.Player.transform.position : scorer.SpawnPosition;
-		PointCandidate playerPoint = new PointCandidate(null, 0.0f, playerPos.x, playerPos.z);
-		spawnPoints.Add(playerPoint);
+		// Seed with m initial points, at the first wave's minimum safe radius
+		// (Let's try right at safe radius -- may add random amount later if req'd)
+		GenerateSeeds(m, waveList[0].safeRadius, playerPos, spawnPoints);
 
 		// Each wavespec gets a loop
 		foreach (WaveSpec wave in waveList) {
+
 			// Find current list length, and how many to add of this enemy type
 			int startLen = spawnPoints.Count;	// Mostly for debug
 			int endLen = wave.Advance() + spawnPoints.Count;
@@ -208,7 +243,7 @@ public class EnemySpawner : MonoBehaviour {
 			// Only do anything more if we're adding something at this point
 			if (endLen > spawnPoints.Count) {
 				// Set minimum spacing depending on playerBreak
-				float spacing = (playerBreak) ? wave.minSpacing + scorer.PlayerBreakRadius : wave.minSpacing;
+				float safeDist = (playerBreak) ? wave.safeRadius + scorer.PlayerBreakRadius : wave.safeRadius;
 
 				// Start off the sample-point list with the current spawn points
 				var samplePoints = new List<PointCandidate>(spawnPoints);
@@ -221,11 +256,11 @@ public class EnemySpawner : MonoBehaviour {
 
 					// Use that sample to seed candidates and generate another point, if possible
 					Vector2 candidate;
-					if (TestCandidates(sample, spacing, spawnPoints, out candidate)) {
+					if (TestCandidates(sample, wave.minSpacing, safeDist, playerPos, spawnPoints, out candidate)) {
 						// If candidate found, add to spawn and sample lists
 						PointCandidate newPoint = new PointCandidate(
 							wave.enemySpawn,								// Type to spawn
-							(candidate - playerPoint.pointPos).magnitude,	// Distance from player
+							(candidate - playerPos).magnitude,	// Distance from player
 							candidate);										// Position to spawn
 						spawnPoints.Add(newPoint);
 						samplePoints.Add(newPoint);
@@ -246,25 +281,29 @@ public class EnemySpawner : MonoBehaviour {
 			}
 		}
 
-		// Remove player point
-		spawnPoints.RemoveAt(0);
+		// Remove seed points
+		spawnPoints.RemoveRange(0, m);
 
 		// Sort list by player distance
 		PointComparePlayerDist pc = new PointComparePlayerDist();
 		spawnPoints.Sort(pc);
 
+		/*
 		if (debugInfo) {
 			Debug.Log("Spawning round of: " + spawnPoints.Count.ToString(), gameObject);
 		}
+		*/
 
 		// Instantiate spawners, with increasing delays
 		for (int i = 0; i < spawnPoints.Count; i++) {
 			PointCandidate point = spawnPoints[i];
 
 			Vector3 spawnPos = new Vector3(point.pointPos.x, scorer.SpawnHeight, point.pointPos.y);
+			/*
 			if (debugInfo) {
 				Debug.Log("Spawning type " + point.enemySpawn.name + " at: " + spawnPos.ToString(), gameObject);
 			}
+			*/
 
 			GameObject obj = Instantiate(point.enemySpawn, spawnPos, Quaternion.identity) as GameObject;
 			SpawnPoint spawner = obj.GetComponent<SpawnPoint>();
@@ -272,7 +311,7 @@ public class EnemySpawner : MonoBehaviour {
 			// Housekeeping
 			spawner.SetPhaseIndex(scorer.PhaseIndex);
 			spawner.FindControl(scorer.gameObject);
-			spawner.SetDelay((float) i * timeSpacing);
+			spawner.StartCountdown((float) i * timeSpacing);
 		}
 	}
 
@@ -401,6 +440,7 @@ public class WaveSpec {
 	public AudioClip spawnSound;
 	public float soundDelay = 0.0f;
 	public float minSpacing;
+	public float safeRadius;
 	public int roundSizeStart;
 	public int roundSizeStep;
 	public WaveType[] waveCycle;
