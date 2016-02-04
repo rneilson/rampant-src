@@ -192,7 +192,7 @@ public class MenuControl : MonoBehaviour {
 		}
 
 		// Configure listed lines
-		while ((sourceIndex < node.lines.Length) && (lineIndex < menuLines.Length - 1)) {
+		while ((sourceIndex < node.lines.Length) && (lineIndex < menuLines.Length)) {
 			MenuNodeLine line = node.lines[sourceIndex];
 			menuLines[lineIndex].ConfigureLine(line.lineType, line.label, line.target);
 
