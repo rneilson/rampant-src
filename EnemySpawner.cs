@@ -306,7 +306,8 @@ public class EnemySpawner : MonoBehaviour {
 			}
 			*/
 
-			GameObject obj = Instantiate(point.enemySpawn, spawnPos, Quaternion.identity) as GameObject;
+			// All spawners set to -90 deg around X, so hemispheres will work
+			GameObject obj = Instantiate(point.enemySpawn, spawnPos, Quaternion.Euler(-90, 0, 0)) as GameObject;
 			SpawnPoint spawner = obj.GetComponent<SpawnPoint>();
 
 			// Housekeeping
