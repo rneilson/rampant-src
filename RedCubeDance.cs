@@ -269,6 +269,9 @@ public class RedCubeDance : MonoBehaviour {
 			else {
 				// Get relative velocity
 				Vector3 relativeVel = myRigidbody.GetRelativePointVelocity(tmp.transform.position - transform.position);
+				// Pick a slight offset for death force position
+				float off = 0.02f;
+				Vector3 deathPos = transform.position + new Vector3(Random.Range(-off, off), 0.0f, Random.Range(-off, off));
 
 				tmp.transform.parent = null;
 				tmp.tag = "Shrapnel";
@@ -277,7 +280,7 @@ public class RedCubeDance : MonoBehaviour {
 				// Add rigidbody and setup
 				rb = tmp.AddComponent<Rigidbody>();
 				SetupChildRigid(myRigidbody, rb, numChildren + 1, relativeVel);
-				rb.AddExplosionForce(deathForce, transform.position, 0f);
+				rb.AddExplosionForce(deathForce, deathPos, 0f);
 
 				// Change material
 				Renderer rend = tmp.GetComponent<Renderer>();
