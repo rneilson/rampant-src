@@ -19,7 +19,7 @@ public class RedCubeDance : MonoBehaviour {
 	private bool debugInfo;
 	private float avgWeight = 0.82f;
 	private float currWeight = 0.18f;
-	private bool dodgedLastFrame = false;
+	//private bool dodgedLastFrame = false;
 
 	private const bool spin = true;
 	private Vector3 spinAxis = Vector3.up;
@@ -115,9 +115,8 @@ public class RedCubeDance : MonoBehaviour {
 		currSpeed = currVel.magnitude;
 
 		// Average speed (only update if not dodging -- screws with the average)
-		if (!dodgedLastFrame) {
+		//if (!dodgedLastFrame)
 			avgSpeed = avgSpeed * avgWeight + currSpeed * currWeight;
-		}
 
 		// Spin menacingly (if spinning enabled)
 		if (spin) {
@@ -158,11 +157,11 @@ public class RedCubeDance : MonoBehaviour {
 		if (dodgeDir.magnitude < Mathf.Epsilon) {
 			// Clear to proceed on bearing
 			myRigidbody.AddForce(bearing.normalized * speed);
-			dodgedLastFrame = false;
+			//dodgedLastFrame = false;
 		}
 		else {
 			// We're dodging something
-			dodgedLastFrame = true;
+			//dodgedLastFrame = true;
 
 			// Question is how
 			if (Vector3.Dot(bearing, dodgeDir) >= 0.0f) {
@@ -200,12 +199,17 @@ public class RedCubeDance : MonoBehaviour {
 				}
 
 				// Now apply our forces
+				Vector3 heading = (bearing.normalized + dodgeDir).normalized;
+				myRigidbody.AddForce(heading * speed);
+
+				/* Old way, separate vectors
 				if (bearing.magnitude > 0.0f) {
 					myRigidbody.AddForce(bearing.normalized * speed);
 				}
 				if (dodgeDir.magnitude > 0.0f) {
 					myRigidbody.AddForce(dodgeDir * dodgeForce);
 				}
+				*/
 			}
 		}
 
