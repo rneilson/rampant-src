@@ -24,7 +24,7 @@ public class RedCubeDance : MonoBehaviour {
 	private const bool spin = true;
 	private Vector3 spinAxis = Vector3.up;
 	private Vector3 spinRef = Vector3.forward;
-	private float torque = 0.25f;
+	private float torque = 0.3f;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
