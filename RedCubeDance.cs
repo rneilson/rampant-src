@@ -11,6 +11,7 @@ public class RedCubeDance : MonoBehaviour {
 	private Vector3 closing = Vector3.zero;
 	private Vector3 prevPos = Vector3.zero;
 	private Vector3 currPos = Vector3.zero;
+	private Vector3 dodgeDir = Vector3.zero;
 	private float currSpeed = 0.0f;
 	private float avgSpeed = 0.0f;
 	private RedCubeGroundControl control;
@@ -35,6 +36,8 @@ public class RedCubeDance : MonoBehaviour {
 	// Public parameters
 	public float speed;
 	public float drag;
+	public float dodgeForce = 20f;
+	public float dodgeRadius = 1.0f;
 	public GameObject burster;
 	public GameObject bursterQuiet;
 	public GameObject deathFade;
@@ -46,6 +49,8 @@ public class RedCubeDance : MonoBehaviour {
 	// Prefab detach & delay-kill
 	//public int numChildren;
 	//public GameObject[] allChildren;
+
+	int bulletMask;
 
 	static RedCubeDance () {
 		thisType = EnemyList.AddOrGetType(thisTypeName);
@@ -80,6 +85,8 @@ public class RedCubeDance : MonoBehaviour {
 			}
 		}
 		*/
+
+		bulletMask = 1 << LayerMask.NameToLayer("Bullet");
 	}
 	
 	// Update is called once per frame
@@ -90,6 +97,7 @@ public class RedCubeDance : MonoBehaviour {
 		else if ((debugInfo) || (scorer.GlobalDebug)) {
 			Debug.DrawLine(transform.position, closing + transform.position, Color.magenta);
 			Debug.DrawLine(closing + transform.position, bearing + transform.position, Color.blue);
+			Debug.DrawLine(transform.position, transform.position + dodgeDir, Color.green);
 		}
 	}
 	
@@ -118,6 +126,14 @@ public class RedCubeDance : MonoBehaviour {
 			// Try and acquire new target
 			NewTarget(scorer.Player);
 		}
+
+		// Add dodge force
+		dodgeDir = DodgeBulletsSimple(dodgeRadius);
+		if (dodgeDir.magnitude > 1.0f) {
+			dodgeDir = dodgeDir.normalized;
+		}
+		myRigidbody.AddForce(dodgeDir * dodgeForce);
+
 	}
 	
 	void BlowUp () {
@@ -176,7 +192,7 @@ public class RedCubeDance : MonoBehaviour {
 
 			// Add rigidbody and setup
 			rb = tmp.AddComponent<Rigidbody>();
-			SetupChildRigid(myRigidbody, rb, numChildren, relativeVel);
+			SetupChildRigid(myRigidbody, rb, numChildren + 1, relativeVel);
 			rb.AddExplosionForce(deathForce, transform.position, 0f);
 
 			// Change material
@@ -263,6 +279,36 @@ public class RedCubeDance : MonoBehaviour {
 	Vector3 SpinVector (Vector3 bearingVec) {
 		Quaternion rot = Quaternion.FromToRotation(spinRef, bearingVec);
 		return rot * spinAxis;
+	}
+
+	Vector3 DodgeBulletsSimple (float scanRadius) {
+		Vector3 dodgeVec = Vector3.zero;
+		Collider[] bullets = Physics.OverlapSphere(transform.position, scanRadius, bulletMask);
+
+		// Check each bullet in radius, if any
+		for (int i = 0; i < bullets.Length; i++) {
+			// Get our position relative to the bullet
+			Vector3 bulletPos = transform.position - bullets[i].transform.position;
+			// Get bullet's velocity
+			Vector3 bulletVel = bullets[i].GetComponent<Rigidbody>().velocity;
+			// Compare our pos relative to bullet with bullet's velo -- if angle is < 90 deg,
+			// we're possibly converging, and we'll dodge
+			float dot = Vector3.Dot(bulletPos, bulletVel);
+			if (dot > 0.0f) {
+				// Get projection along bullet velo vec
+				// (Algebra scribbled on paper, sorry)
+				Vector3 proj = (dot / bulletVel.magnitude) * bulletVel.normalized;
+
+				// We want the direction perpendicular to the bullet velo
+				// So we take our projection, add it to the bullet's position, and sub from there
+				Vector3 dir = transform.position - (bullets[i].transform.position + proj);
+
+				// Now we add it to the (aggregate) dodge vector, at 1 - (distance / radius)
+				dodgeVec += (dir.normalized - (dir / scanRadius));
+			}
+		}
+
+		return dodgeVec;
 	}
 	
 }
