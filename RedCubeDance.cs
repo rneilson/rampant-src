@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class RedCubeDance : MonoBehaviour {
 	
@@ -18,11 +19,12 @@ public class RedCubeDance : MonoBehaviour {
 	private bool debugInfo;
 	private float avgWeight = 0.82f;
 	private float currWeight = 0.18f;
+	private bool dodgedLastFrame = false;
 
 	private const bool spin = true;
 	private Vector3 spinAxis = Vector3.up;
 	private Vector3 spinRef = Vector3.forward;
-	private float torque = 0.35f;
+	private float torque = 0.25f;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
@@ -38,6 +40,8 @@ public class RedCubeDance : MonoBehaviour {
 	public float drag;
 	public float dodgeForce = 20f;
 	public float dodgeRadius = 1.0f;
+	public DodgeMode dodgeMode = DodgeMode.Simple;
+	public BearingConflict bearingConflict = BearingConflict.Add;
 	public GameObject burster;
 	public GameObject bursterQuiet;
 	public GameObject deathFade;
@@ -110,29 +114,100 @@ public class RedCubeDance : MonoBehaviour {
 		Vector3 currVel = (currPos - prevPos) / deltaTime;
 		currSpeed = currVel.magnitude;
 
-		// Average speed
-		avgSpeed = avgSpeed * avgWeight + currSpeed * currWeight;
+		// Average speed (only update if not dodging -- screws with the average)
+		if (!dodgedLastFrame) {
+			avgSpeed = avgSpeed * avgWeight + currSpeed * currWeight;
+		}
+
+		// Spin menacingly (if spinning enabled)
+		if (spin) {
+			myRigidbody.AddTorque(SpinVector(bearing) * torque);
+		}
 
 		if (target) {
 			UpdateTracking();
-			//bearing = target.transform.position - transform.position;
-			myRigidbody.AddForce(bearing.normalized * speed);
-			// Spin menacingly (if spinning enabled)
-			if (spin) {
-				myRigidbody.AddTorque(SpinVector(bearing) * torque);
-			}
 		}
 		else {
+			bearing = Vector3.zero;
 			// Try and acquire new target
 			NewTarget(scorer.Player);
 		}
 
-		// Add dodge force
-		dodgeDir = DodgeBulletsSimple(dodgeRadius);
+		// Dodge bullets
+		switch (dodgeMode) {
+			case DodgeMode.Simple:
+				dodgeDir = DodgeBulletsSimple(dodgeRadius);
+				break;
+			case DodgeMode.Scaled:
+				dodgeDir = DodgeBulletsScaled(dodgeRadius);
+				break;
+			case DodgeMode.HalfScaled:
+				dodgeDir = DodgeBulletsHalfScaled(dodgeRadius);
+				break;
+			case DodgeMode.ClosestSimple:
+				dodgeDir = DodgeBulletsClosestSimple(dodgeRadius);
+				break;
+			case DodgeMode.ClosestScaled:
+				dodgeDir = DodgeBulletsClosestScaled(dodgeRadius);
+				break;
+		}
 		if (dodgeDir.magnitude > 1.0f) {
 			dodgeDir = dodgeDir.normalized;
 		}
-		myRigidbody.AddForce(dodgeDir * dodgeForce);
+
+		if (dodgeDir.magnitude < Mathf.Epsilon) {
+			// Clear to proceed on bearing
+			myRigidbody.AddForce(bearing.normalized * speed);
+			dodgedLastFrame = false;
+		}
+		else {
+			// We're dodging something
+			dodgedLastFrame = true;
+
+			// Question is how
+			if (Vector3.Dot(bearing, dodgeDir) >= 0.0f) {
+				// No conflict, do both
+				myRigidbody.AddForce(bearing.normalized * speed);
+				myRigidbody.AddForce(dodgeDir * dodgeForce);
+			}
+			else {
+				Vector3 correction;
+				// Pick a conflict resolution
+				switch (bearingConflict) {
+					case BearingConflict.Add:
+						// Forcibly (sic) do both
+						// Mostly by doing nothing to either vector
+						break;
+					case BearingConflict.OverrideBearing:
+						// Dodging more important than chasing
+						bearing = Vector3.zero;
+						break;
+					case BearingConflict.OrthoBearing:
+						// Make bearing orthogonal to dodge vector
+						// (I'd do cross products here, but I think Unity uses left-handed coordinates)
+						// ((Which suck, and I refuse on principle))
+						// (((I also don't want to muck about with doing everything backwards)))
+						// ((((So I'll do it the hard way with dot product and correction vectors))))
+						correction = dodgeDir.normalized * (Vector3.Dot(bearing, dodgeDir) / dodgeDir.magnitude);
+						bearing = (bearing + correction).normalized;
+						break;
+					case BearingConflict.OrthoDodgevec:
+						// Make dodge vector orthogonal to bearing
+						// (Same disclaimer/complaint as above)
+						correction = bearing.normalized * (Vector3.Dot(bearing, dodgeDir) / bearing.magnitude);
+						bearing = (dodgeDir + correction).normalized;
+						break;
+				}
+
+				// Now apply our forces
+				if (bearing.magnitude > 0.0f) {
+					myRigidbody.AddForce(bearing.normalized * speed);
+				}
+				if (dodgeDir.magnitude > 0.0f) {
+					myRigidbody.AddForce(dodgeDir * dodgeForce);
+				}
+			}
+		}
 
 	}
 	
@@ -172,6 +247,7 @@ public class RedCubeDance : MonoBehaviour {
 		GameObject tmp;
 		Rigidbody rb;
 		int newLayer = LayerMask.NameToLayer("Ignore Raycast");
+		int forceLayer = LayerMask.NameToLayer("Forcefield");
 		int numChildren = transform.childCount;
 
 		// Parent first
@@ -184,23 +260,33 @@ public class RedCubeDance : MonoBehaviour {
 		for (int i = numChildren - 1; i >= 0 ; i--) {
 
 			tmp = transform.GetChild(i).gameObject;
-			Vector3 relativeVel = myRigidbody.GetRelativePointVelocity(tmp.transform.position - transform.position);
 
-			tmp.transform.parent = null;
-			tmp.tag = "Shrapnel";
-			tmp.layer = newLayer;
+			// If it's the forcefield, just kill it
+			if (tmp.layer == forceLayer) {
+				tmp.transform.parent = null;
+				Destroy(tmp, 0.1f);
+			}
+			else {
+				// Get relative velocity
+				Vector3 relativeVel = myRigidbody.GetRelativePointVelocity(tmp.transform.position - transform.position);
 
-			// Add rigidbody and setup
-			rb = tmp.AddComponent<Rigidbody>();
-			SetupChildRigid(myRigidbody, rb, numChildren + 1, relativeVel);
-			rb.AddExplosionForce(deathForce, transform.position, 0f);
+				tmp.transform.parent = null;
+				tmp.tag = "Shrapnel";
+				tmp.layer = newLayer;
 
-			// Change material
-			Renderer rend = tmp.GetComponent<Renderer>();
-			rend.material = shrapnelMaterial;
+				// Add rigidbody and setup
+				rb = tmp.AddComponent<Rigidbody>();
+				SetupChildRigid(myRigidbody, rb, numChildren + 1, relativeVel);
+				rb.AddExplosionForce(deathForce, transform.position, 0f);
 
-			// "...but then again, who does?"
-			tmp.GetComponent<DelayedDeath>().DieInTime(Random.Range(0.75f, 1.25f) * shrapnelLifetime, shrapnelSparker);
+				// Change material
+				Renderer rend = tmp.GetComponent<Renderer>();
+				rend.material = shrapnelMaterial;
+
+				// "...but then again, who does?"
+				tmp.GetComponent<DelayedDeath>().DieInTime(Random.Range(0.75f, 1.25f) * shrapnelLifetime, shrapnelSparker);
+			}
+
 		}
 
 	}
@@ -303,6 +389,37 @@ public class RedCubeDance : MonoBehaviour {
 				// So we take our projection, add it to the bullet's position, and sub from there
 				Vector3 dir = transform.position - (bullets[i].transform.position + proj);
 
+				// Now we add it to the (aggregate) dodge vector
+				dodgeVec += dir.normalized;
+			}
+		}
+
+		return dodgeVec;
+	}
+	
+	// Same as simple, but scale the dodge by radius
+	Vector3 DodgeBulletsScaled (float scanRadius) {
+		Vector3 dodgeVec = Vector3.zero;
+		Collider[] bullets = Physics.OverlapSphere(transform.position, scanRadius, bulletMask);
+
+		// Check each bullet in radius, if any
+		for (int i = 0; i < bullets.Length; i++) {
+			// Get our position relative to the bullet
+			Vector3 bulletPos = transform.position - bullets[i].transform.position;
+			// Get bullet's velocity
+			Vector3 bulletVel = bullets[i].GetComponent<Rigidbody>().velocity;
+			// Compare our pos relative to bullet with bullet's velo -- if angle is < 90 deg,
+			// we're possibly converging, and we'll dodge
+			float dot = Vector3.Dot(bulletPos, bulletVel);
+			if (dot > 0.0f) {
+				// Get projection along bullet velo vec
+				// (Algebra scribbled on paper, sorry)
+				Vector3 proj = (dot / bulletVel.magnitude) * bulletVel.normalized;
+
+				// We want the direction perpendicular to the bullet velo
+				// So we take our projection, add it to the bullet's position, and sub from there
+				Vector3 dir = transform.position - (bullets[i].transform.position + proj);
+
 				// Now we add it to the (aggregate) dodge vector, at 1 - (distance / radius)
 				dodgeVec += (dir.normalized - (dir / scanRadius));
 			}
@@ -311,4 +428,171 @@ public class RedCubeDance : MonoBehaviour {
 		return dodgeVec;
 	}
 	
+	// Same as scaled, but only scale if more than half-radius
+	Vector3 DodgeBulletsHalfScaled (float scanRadius) {
+		Vector3 dodgeVec = Vector3.zero;
+		Collider[] bullets = Physics.OverlapSphere(transform.position, scanRadius, bulletMask);
+
+		// Check each bullet in radius, if any
+		for (int i = 0; i < bullets.Length; i++) {
+			// Get our position relative to the bullet
+			Vector3 bulletPos = transform.position - bullets[i].transform.position;
+			// Get bullet's velocity
+			Vector3 bulletVel = bullets[i].GetComponent<Rigidbody>().velocity;
+			// Compare our pos relative to bullet with bullet's velo -- if angle is < 90 deg,
+			// we're possibly converging, and we'll dodge
+			float dot = Vector3.Dot(bulletPos, bulletVel);
+			if (dot > 0.0f) {
+				// Get projection along bullet velo vec
+				// (Algebra scribbled on paper, sorry)
+				Vector3 proj = (dot / bulletVel.magnitude) * bulletVel.normalized;
+
+				// We want the direction perpendicular to the bullet velo
+				// So we take our projection, add it to the bullet's position, and sub from there
+				Vector3 dir = transform.position - (bullets[i].transform.position + proj);
+
+				// Now we add it to the (aggregate) dodge vector
+				if (dir.magnitude < scanRadius / 2.0f) {
+					// Full amount if closer than half radius
+					dodgeVec += dir.normalized;
+				}
+				else {
+					// Otherwise, scale the outer half
+					dodgeVec += dir.normalized * (2.0f - (2.0f * dir.magnitude / scanRadius));
+				}
+			}
+		}
+
+		return dodgeVec;
+	}
+
+	// Same as simple, but only deal with the closest
+	Vector3 DodgeBulletsClosestSimple (float scanRadius) {
+		Vector3 dodgeVec = Vector3.zero;
+		var bulletList = new List<BulletInfo>();
+		Collider[] bullets = Physics.OverlapSphere(transform.position, scanRadius, bulletMask);
+
+		// Check each bullet in radius, if any
+		for (int i = 0; i < bullets.Length; i++) {
+			// Get our position relative to the bullet
+			Vector3 bulletPos = transform.position - bullets[i].transform.position;
+			// Get bullet's velocity
+			Vector3 bulletVel = bullets[i].GetComponent<Rigidbody>().velocity;
+			// Compare our pos relative to bullet with bullet's velo -- if angle is < 90 deg,
+			// we're possibly converging, and we'll dodge
+			BulletInfo thisBullet = new BulletInfo(bulletPos, bulletVel);
+			if ((thisBullet.Dot > 0.0f) && (thisBullet.Dist > 0.0f)) {
+				bulletList.Add(thisBullet);
+			}
+		}
+
+		if (bulletList.Count > 0) {
+			// Get the closest bullet
+			var bc = new BulletDistCompare();
+			bulletList.Sort(bc);
+			BulletInfo bullet = bulletList[0];
+
+			// Get projection along bullet velo vec
+			// (Algebra scribbled on paper, sorry)
+			Vector3 proj = (bullet.Dot / bullet.Vel.magnitude) * bullet.Vel.normalized;
+
+			// We want the direction perpendicular to the bullet velo
+			// So we take our projection, add it to the bullet's position, and sub from there
+			// (Or rather, skip a step, and sub the projection from the position (which was from
+			// the bullet to us anyways))
+			Vector3 dir = bullet.Pos - proj;
+
+			// Now we have our dodge vector
+			dodgeVec = dir.normalized;
+		}
+		return dodgeVec;
+	}
+
+	// Same as scaled, but only deal with the closest
+	Vector3 DodgeBulletsClosestScaled (float scanRadius) {
+		Vector3 dodgeVec = Vector3.zero;
+		var bulletList = new List<BulletInfo>();
+		Collider[] bullets = Physics.OverlapSphere(transform.position, scanRadius, bulletMask);
+
+		// Check each bullet in radius, if any
+		for (int i = 0; i < bullets.Length; i++) {
+			// Get our position relative to the bullet
+			Vector3 bulletPos = transform.position - bullets[i].transform.position;
+			// Get bullet's velocity
+			Vector3 bulletVel = bullets[i].GetComponent<Rigidbody>().velocity;
+			// Compare our pos relative to bullet with bullet's velo -- if angle is < 90 deg,
+			// we're possibly converging, and we'll dodge
+			BulletInfo thisBullet = new BulletInfo(bulletPos, bulletVel);
+			if ((thisBullet.Dot > 0.0f) && (thisBullet.Dist > 0.0f)) {
+				bulletList.Add(thisBullet);
+			}
+		}
+
+		if (bulletList.Count > 0) {
+			// Get the closest bullet
+			var bc = new BulletDistCompare();
+			bulletList.Sort(bc);
+			BulletInfo bullet = bulletList[0];
+
+			// Get projection along bullet velo vec
+			// (Algebra scribbled on paper, sorry)
+			Vector3 proj = (bullet.Dot / bullet.Vel.magnitude) * bullet.Vel.normalized;
+
+			// We want the direction perpendicular to the bullet velo
+			// So we take our projection, add it to the bullet's position, and sub from there
+			// (Or rather, skip a step, and sub the projection from the position (which was from
+			// the bullet to us anyways))
+			Vector3 dir = bullet.Pos - proj;
+
+			// Now we set our dodge vector, at 1 - (distance / radius)
+			dodgeVec = (dir.normalized - (dir / scanRadius));
+		}
+		return dodgeVec;
+	}
+	
+
+}
+
+public enum DodgeMode : byte {
+	Simple = 0,
+	Scaled,
+	HalfScaled,
+	ClosestSimple,
+	ClosestScaled
+}
+
+public enum BearingConflict : byte {
+	Add = 0,
+	OverrideBearing,
+	OrthoBearing,
+	OrthoDodgevec
+}
+
+public struct BulletInfo {
+	public Vector3 Pos;
+	public Vector3 Vel;
+	public float Dist;
+	public float Dot;
+
+	public BulletInfo (Vector3 Pos, Vector3 Vel) {
+		this.Pos = Pos;
+		this.Vel = Vel;
+		this.Dist = Pos.magnitude;
+		this.Dot = Vector3.Dot(Pos, Vel);
+	}
+
+}
+
+public class BulletDistCompare : IComparer<BulletInfo> {
+	public int Compare (BulletInfo x, BulletInfo y) {
+		if (x.Dist > y.Dist) {
+			return 1;
+		}
+		else if (x.Dist < y.Dist) {
+			return -1;
+		}
+		else {
+			return 0;
+		}
+	}
 }
