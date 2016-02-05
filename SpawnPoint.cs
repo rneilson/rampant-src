@@ -36,7 +36,7 @@ public class SpawnPoint : MonoBehaviour {
 				if (particled) {
 					GetComponent<Collider>().enabled = false;
 
-					float spawnZ = (randomRotationZ) ? Random.Range(0f, (phaseIndex * 5f)) : 0.0f;
+					float spawnZ = (randomRotationZ) ? Random.Range(0f, 10f + (phaseIndex * 10f)) : 0.0f;
 					float spawnY = (randomRotationY) ? Random.Range(0f, 360f) : 0.0f;
 
 					GameObject spawn = Instantiate(enemyType, 
