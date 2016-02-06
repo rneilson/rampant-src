@@ -162,7 +162,7 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 		// Turn down volume if dying quietly
 		if (dying == DeathType.Quietly) {
-			daBomb.GetComponent<AudioSource>().volume *= 0.25f;
+			daBomb.GetComponent<AudioSource>().volume *= 0.15f;
 		}
 		// Mute if dying silently
 		if (dying == DeathType.Silently) {
