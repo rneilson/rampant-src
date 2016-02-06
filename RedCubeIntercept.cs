@@ -38,6 +38,9 @@ public class RedCubeIntercept : MonoBehaviour {
 	public GameObject burster;
 	public GameObject bursterQuiet;
 	public GameObject deathFade;
+	public float deathForce = 50f;
+	public float shrapnelLifetime = 0.5f;
+	public GameObject shrapnelSparker;
 
 	// Prefab detach & delay-kill
 	//public int numChildren;
@@ -150,6 +153,7 @@ public class RedCubeIntercept : MonoBehaviour {
 	void KillRelatives (float delay) {
 		// Detach from parent and/or children and destroy them after a delay
 		GameObject tmp;
+		int numChildren = transform.childCount;
 
 		// Parent first
 		if (transform.parent) {
@@ -160,10 +164,35 @@ public class RedCubeIntercept : MonoBehaviour {
 		// Next the kids, if any
 		for (int i = transform.childCount - 1; i >= 0 ; i--) {
 			tmp = transform.GetChild(i).gameObject;
+
+			// Get relative velocity
+			Vector3 relativeVel = myRigidbody.GetRelativePointVelocity(tmp.transform.position - transform.position);
+			// Pick a slight offset for death force position
+			float off = 0.02f;
+			Vector3 deathPos = transform.position + new Vector3(Random.Range(-off, off), 
+				Random.Range(-off, off), Random.Range(-off, off));
+
 			tmp.transform.parent = null;
-			Destroy(tmp, delay);
+
+			// Add rigidbody and setup
+			var rb = tmp.AddComponent<Rigidbody>();
+			SetupChildRigid(myRigidbody, rb, numChildren + 1, relativeVel);
+			rb.AddExplosionForce(deathForce, deathPos, 0f);
+
+			// Enable renderer
+			var rend = tmp.GetComponent<Renderer>();
+			rend.enabled = true;
+
+			// "...but then again, who does?"
+			tmp.GetComponent<DelayedDeath>().DieInTime(Random.Range(0.75f, 1.25f) * shrapnelLifetime, shrapnelSparker);
 		}
 
+	}
+	
+	void SetupChildRigid (Rigidbody source, Rigidbody dest, int portion, Vector3 newVelocity) {
+		dest.mass = source.mass / (float) portion;
+		dest.useGravity = false;
+		dest.velocity = newVelocity;
 	}
 	
 	void ClearTarget () {
