@@ -20,8 +20,8 @@ public class RedCubeBomb : MonoBehaviour {
 	private Rigidbody myRigidbody;
 	
 	// Type/instance management stuff
-	private const string thisTypeName = "Bomber";
-	private static EnemyType thisType;
+	public string thisTypeName = "Bomber";
+	private EnemyType thisType;
 	private EnemyInst thisInst;
 
 	// Public parameters
@@ -37,10 +37,6 @@ public class RedCubeBomb : MonoBehaviour {
 	public GameObject bombEffect;
 	//public bool enableBombPush = false;
 
-	static RedCubeBomb () {
-		thisType = EnemyList.AddOrGetType(thisTypeName);
-	}
-
 	// Use this for initialization
 	void Start () {
 		// Unity 5 API changes
@@ -54,6 +50,7 @@ public class RedCubeBomb : MonoBehaviour {
 		armed = true;
 
 		// Add to control's list
+		thisType = EnemyList.AddOrGetType(thisTypeName);
 		thisInst = new EnemyInst(thisType.typeNum, gameObject);
 		control.AddInstanceToList(thisInst);
 	}

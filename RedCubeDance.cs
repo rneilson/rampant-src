@@ -31,8 +31,8 @@ public class RedCubeDance : MonoBehaviour {
 	private Rigidbody myRigidbody;
 	
 	// Type/instance management stuff
-	private const string thisTypeName = "Dancer";
-	private static EnemyType thisType;
+	public string thisTypeName = "Dancer";
+	private EnemyType thisType;
 	private EnemyInst thisInst;
 
 	// Public parameters
@@ -56,10 +56,6 @@ public class RedCubeDance : MonoBehaviour {
 
 	int bulletMask;
 
-	static RedCubeDance () {
-		thisType = EnemyList.AddOrGetType(thisTypeName);
-	}
-
 	// Use this for initialization
 	void Start () {
 		// Unity 5 API changes
@@ -77,6 +73,7 @@ public class RedCubeDance : MonoBehaviour {
 		currPos = transform.position;
 
 		// Add to control's list
+		thisType = EnemyList.AddOrGetType(thisTypeName);
 		thisInst = new EnemyInst(thisType.typeNum, gameObject);
 		control.AddInstanceToList(thisInst);
 		/*

@@ -28,8 +28,8 @@ public class RedCubeIntercept : MonoBehaviour {
 	private Rigidbody myRigidbody;
 	
 	// Type/instance management stuff
-	private const string thisTypeName = "Interceptor";
-	private static EnemyType thisType;
+	public string thisTypeName = "Interceptor";
+	private EnemyType thisType;
 	private EnemyInst thisInst;
 
 	// Public parameters
@@ -45,10 +45,6 @@ public class RedCubeIntercept : MonoBehaviour {
 	// Prefab detach & delay-kill
 	//public int numChildren;
 	//public GameObject[] allChildren;
-
-	static RedCubeIntercept () {
-		thisType = EnemyList.AddOrGetType(thisTypeName);
-	}
 
 	// Use this for initialization
 	void Start () {
@@ -67,6 +63,7 @@ public class RedCubeIntercept : MonoBehaviour {
 		currPos = transform.position;
 
 		// Add to control's list
+		thisType = EnemyList.AddOrGetType(thisTypeName);
 		thisInst = new EnemyInst(thisType.typeNum, gameObject);
 		control.AddInstanceToList(thisInst);
 		/*
