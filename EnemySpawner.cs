@@ -229,6 +229,11 @@ public class EnemySpawner : MonoBehaviour {
 
 		// Each wavespec gets a loop
 		foreach (WaveSpec wave in waveList) {
+			int spawnSize = wave.Advance();
+			// If we're dropping wave sizes, do it
+			if (playerBreak) {
+				spawnSize = Mathf.RoundToInt(scorer.PlayerBreakFraction * (float) spawnSize);
+			}
 
 			// Find current list length, and how many to add of this enemy type
 			int startLen = spawnPoints.Count;	// Mostly for debug

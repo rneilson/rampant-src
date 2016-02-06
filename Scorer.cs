@@ -39,6 +39,7 @@ public class Scorer : MonoBehaviour {
 	public float respawnTime;
 	public float playerBreakDelay = 1.0f;
 	public float playerBreakRadius = 1.0f;
+	public float playerBreakFraction = 0.5f;
 	public float maxDisplacement = 4.75f;
 	private bool respawn;
 	private float respawnCountdown;
@@ -113,6 +114,9 @@ public class Scorer : MonoBehaviour {
 	}
 	public float PlayerBreakRadius {
 		get { return playerBreakRadius; }
+	}
+	public float PlayerBreakFraction {
+		get { return playerBreakFraction; }
 	}
 	public float MaxDisplacement {
 		get { return maxDisplacement; }
