@@ -77,12 +77,6 @@ public class EnemySpawner : MonoBehaviour {
 		// If currently counting and not waiting for respawn, do stuff
 		if ((!scorer.Respawn) && (counting)) {
 			if (countdown <= 0.0f) {
-				// Play sounds
-				foreach (WaveSpec wave in waveList) {
-					if (wave.spawnSound) {
-						StartCoroutine(PlayDelayedClip(wave.spawnSound, wave.soundDelay, 1.0f));
-					}
-				}
 				// Spawn wave(s)
 				SpawnWave();
 				// Stop counting, we're there
@@ -242,6 +236,11 @@ public class EnemySpawner : MonoBehaviour {
 
 			// Only do anything more if we're adding something at this point
 			if (endLen > spawnPoints.Count) {
+				// Play sound
+				if (wave.spawnSound) {
+					StartCoroutine(PlayDelayedClip(wave.spawnSound, wave.soundDelay, 1.0f));
+				}
+
 				// Set minimum spacing depending on playerBreak
 				float safeDist = (playerBreak) ? wave.safeRadius + scorer.PlayerBreakRadius : wave.safeRadius;
 
