@@ -187,14 +187,14 @@ public class RedCubeDance : MonoBehaviour {
 						// ((Which suck, and I refuse on principle))
 						// (((I also don't want to muck about with doing everything backwards)))
 						// ((((So I'll do it the hard way with dot product and correction vectors))))
-						correction = dodgeDir.normalized * (Vector3.Dot(bearing, dodgeDir) / dodgeDir.magnitude);
+						correction = dodgeDir.normalized * (Vector3.Dot(bearing, -dodgeDir) / dodgeDir.magnitude);
 						bearing = (bearing + correction).normalized;
 						break;
 					case BearingConflict.OrthoDodgevec:
 						// Make dodge vector orthogonal to bearing
 						// (Same disclaimer/complaint as above)
-						correction = bearing.normalized * (Vector3.Dot(bearing, dodgeDir) / bearing.magnitude);
-						bearing = (dodgeDir + correction).normalized;
+						correction = bearing.normalized * (Vector3.Dot(dodgeDir, -bearing) / bearing.magnitude);
+						dodgeDir += correction;
 						break;
 				}
 
