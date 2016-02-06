@@ -9,6 +9,7 @@ public class RedCubeBomb : MonoBehaviour {
 	private Vector3 bearing;
 	private DeathType dying = DeathType.None;
 	private bool armed;
+	private bool killPlayer = false;
 	private const bool spin = true;
 	private Vector3 spinAxis = Vector3.right;
 	private Vector3 spinRef = Vector3.forward;
@@ -70,6 +71,7 @@ public class RedCubeBomb : MonoBehaviour {
 			bearing = target.transform.position - transform.position;
 			// Blow up if we're in range
 			if ((bombTriggerRadius > 0.0f) && (bearing.magnitude <= bombTriggerRadius)) {
+				killPlayer = true;
 				Die(true);
 			}
 			// Or try to get in range
@@ -172,47 +174,10 @@ public class RedCubeBomb : MonoBehaviour {
 		// We're dropping, make sure we're now disarmed
 		armed = false;
 
-		/* Nope, not faster, not really
-		// New bomb radius code
-		float playerExtent = 0.1f;
-		float thingExtent = 0.1f;
-		float thingDist = 0.0f;
-
-		// Find list of enemies (probably faster than an OverlapSphere (or two))
-		GameObject[] things = GameObject.FindGameObjectsWithTag("Enemy");
-		// Iterate over and check distances to everyone, killing or pushing as required
-		for (int i = 0; i < things.Length; i++) {
-			thingDist = (things[i].transform.position - transform.position).magnitude;
-			if ((thingDist <= (bombKillRadius + thingExtent)) && (things[i] != gameObject)) {
-				things[i].SendMessage("Die", false, SendMessageOptions.DontRequireReceiver);
-			}
-			// Only push if dying loudly (shot or self-triggering)
-			else if ((enableBombPush) && (dying == DeathType.Loudly) && (thingDist <= (bombPushRadius + thingExtent))) {
-				Rigidbody targetRigid = things[i].GetComponent<Rigidbody>();
-				if (targetRigid) {
-					targetRigid.AddExplosionForce(bombForce, bombPos, 0f);
-				}
-			}
-		}
-		// Now check player distance and kill/push (only if loud)
-		if ((dying == DeathType.Loudly) && (target)) {
-			thingDist = (target.transform.position - transform.position).magnitude;
-			if ((thingDist <= (bombKillRadius + playerExtent))) {
-				target.SendMessage("Die", false, SendMessageOptions.DontRequireReceiver);
-			}
-			else if ((enableBombPush) && (thingDist <= (bombPushRadius + playerExtent))) {
-				Rigidbody targetRigid = target.GetComponent<Rigidbody>();
-				if (targetRigid) {
-					targetRigid.AddExplosionForce(bombForce, bombPos, 0f);
-				}
-			}
-		}
-		*/
-			
 		int killmask, pushmask;
 		Collider[] things;
-		// If we're shooting the bomber or self-triggering, can kill player
-		if (dying == DeathType.Loudly) {
+		// If we're self-triggering, can kill player
+		if (killPlayer) {
 			killmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Player"));
 		}
 		else {
