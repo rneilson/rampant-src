@@ -237,7 +237,7 @@ public class EnemySpawner : MonoBehaviour {
 
 			// Find current list length, and how many to add of this enemy type
 			int startLen = spawnPoints.Count;	// Mostly for debug
-			int endLen = wave.Advance() + spawnPoints.Count;
+			int endLen = spawnSize + spawnPoints.Count;
 
 			// Only do anything more if we're adding something at this point
 			if (endLen > spawnPoints.Count) {
