@@ -241,8 +241,8 @@ public class RedCubeDance : MonoBehaviour {
 		if (armed) {
 			// Pick a slight offset for bomb force position
 			float off = 0.02f;
-			Vector3 deathPos = transform.position + new Vector3(Random.Range(-off, off), 
-				bombHeight, Random.Range(-off, off));
+			Vector3 deathPos = new Vector3(transform.position.x + Random.Range(-off, off), 
+				bombHeight, transform.position.z + Random.Range(-off, off));
 			DropBomb(deathPos);
 		}
 
