@@ -41,6 +41,7 @@ public class RedCubeIntercept : MonoBehaviour {
 	public float shrapnelForce = 50f;
 	public float shrapnelLifetime = 0.5f;
 	public GameObject shrapnelSparker;
+	public bool scatterChildren = true;
 
 	// Bomb parameters
 	public float bombHeight = 0.51f;
@@ -180,18 +181,26 @@ public class RedCubeIntercept : MonoBehaviour {
 		for (int i = transform.childCount - 1; i >= 0 ; i--) {
 			tmp = transform.GetChild(i).gameObject;
 
-			// Get relative velocity
-			Vector3 relativeVel = myRigidbody.GetRelativePointVelocity(tmp.transform.position - transform.position);
-			// Pick a slight offset for death force position
-			float off = 0.02f;
-			Vector3 deathPos = transform.position + new Vector3(Random.Range(-off, off), -2.0f * off, Random.Range(-off, off));
 
 			tmp.transform.parent = null;
 
 			// Add rigidbody and setup
 			var rb = tmp.AddComponent<Rigidbody>();
-			SetupChildRigid(myRigidbody, rb, numChildren + 1, relativeVel);
-			rb.AddExplosionForce(shrapnelForce, deathPos, 0f);
+
+			if (scatterChildren) {
+				// Get relative velocity
+				Vector3 relativeVel = myRigidbody.GetRelativePointVelocity(tmp.transform.position - transform.position);
+				// Pick a slight offset for death force position
+				float off = 0.02f;
+				Vector3 deathPos = transform.position + new Vector3(Random.Range(-off, off), -2.0f * off, Random.Range(-off, off));
+				// Setup child rigidbody and apply scatter force
+				SetupChildRigid(myRigidbody, rb, numChildren + 1, relativeVel);
+				rb.AddExplosionForce(shrapnelForce, deathPos, 0f);
+			}
+			else {
+				// Just give the child a rigidbody and zero velocity
+				SetupChildRigid(myRigidbody, rb, numChildren + 1, Vector3.zero);
+			}
 
 			// Enable renderer
 			var rend = tmp.GetComponent<Renderer>();
