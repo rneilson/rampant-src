@@ -22,9 +22,9 @@ public class RedCubeDance : MonoBehaviour {
 	//private bool dodgedLastFrame = false;
 
 	private const bool spin = true;
-	private Vector3 spinAxis = Vector3.up;
 	private Vector3 spinRef = Vector3.forward;
-	private float torque = 0.3f;
+	public Vector3 spinAxis = Vector3.up;
+	public float torque = 0.3f;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
@@ -160,13 +160,15 @@ public class RedCubeDance : MonoBehaviour {
 			// We're dodging something
 			//dodgedLastFrame = true;
 
+			/*
 			// Question is how
 			if (Vector3.Dot(bearing, dodgeDir) >= 0.0f) {
 				// No conflict, do both
 				myRigidbody.AddForce(bearing.normalized * speed);
 				myRigidbody.AddForce(dodgeDir * dodgeForce);
 			}
-			else {
+			*/
+			//else {
 				Vector3 correction;
 				// Pick a conflict resolution
 				switch (bearingConflict) {
@@ -207,7 +209,7 @@ public class RedCubeDance : MonoBehaviour {
 					myRigidbody.AddForce(dodgeDir * dodgeForce);
 				}
 				*/
-			}
+			//}
 		}
 
 	}
@@ -285,6 +287,7 @@ public class RedCubeDance : MonoBehaviour {
 
 				// Change material
 				Renderer rend = tmp.GetComponent<Renderer>();
+				rend.enabled = true;
 				rend.material = shrapnelMaterial;
 
 				// "...but then again, who does?"
