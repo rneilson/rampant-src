@@ -40,7 +40,6 @@ public class RedCubeDance : MonoBehaviour {
 	public float drag;
 	public float dodgeForce = 20f;
 	public float dodgeRadius = 1.0f;
-	public bool separateDodgeForce = false;
 	public DodgeMode dodgeMode = DodgeMode.Simple;
 	public BearingConflict bearingConflict = BearingConflict.Add;
 	public GameObject burster;
@@ -164,25 +163,15 @@ public class RedCubeDance : MonoBehaviour {
 			// We're dodging something
 			//dodgedLastFrame = true;
 
+			/*
 			// Question is how
 			if (Vector3.Dot(bearing, dodgeDir) >= 0.0f) {
 				// No conflict, do both
-				if (separateDodgeForce) {
-					if (bearing.magnitude > Mathf.Epsilon) {
-						myRigidbody.AddForce(bearing.normalized * speed);
-					}
-					if (dodgeDir.magnitude > Mathf.Epsilon) {
-						myRigidbody.AddForce(dodgeDir * dodgeForce);
-					}
-				}
-				else {
-					// Now apply our forces
-					Vector3 heading = (bearing.normalized + dodgeDir).normalized;
-					myRigidbody.AddForce(heading * speed);
-				}
+				myRigidbody.AddForce(bearing.normalized * speed);
+				myRigidbody.AddForce(dodgeDir * dodgeForce);
 			}
-			// Vectors in conflict
-			else {
+			*/
+			//else {
 				Vector3 correction;
 				// Pick a conflict resolution
 				switch (bearingConflict) {
@@ -209,29 +198,21 @@ public class RedCubeDance : MonoBehaviour {
 						correction = bearing.normalized * (Vector3.Dot(dodgeDir, -bearing) / bearing.magnitude);
 						dodgeDir += correction;
 						break;
-					case BearingConflict.OrthoDodgevecScaled:
-						// Make dodge vector orthogonal to bearing
-						// (Same disclaimer/complaint as above)
-						correction = bearing.normalized * (Vector3.Dot(dodgeDir, -bearing) / bearing.magnitude);
-						dodgeDir = (dodgeDir + correction).normalized * dodgeDir.magnitude;
-						break;
 				}
 
 				// Now apply our forces
-				if (separateDodgeForce) {
-					if (bearing.magnitude > Mathf.Epsilon) {
-						myRigidbody.AddForce(bearing.normalized * speed);
-					}
-					if (dodgeDir.magnitude > Mathf.Epsilon) {
-						myRigidbody.AddForce(dodgeDir * dodgeForce);
-					}
+				Vector3 heading = (bearing.normalized + dodgeDir).normalized;
+				myRigidbody.AddForce(heading * speed);
+
+				/* Old way, separate vectors
+				if (bearing.magnitude > 0.0f) {
+					myRigidbody.AddForce(bearing.normalized * speed);
 				}
-				else {
-					// Now apply our forces
-					Vector3 heading = (bearing.normalized + dodgeDir).normalized;
-					myRigidbody.AddForce(heading * speed);
+				if (dodgeDir.magnitude > 0.0f) {
+					myRigidbody.AddForce(dodgeDir * dodgeForce);
 				}
-			}
+				*/
+			//}
 		}
 
 		// Spin menacingly (if spinning enabled)
@@ -655,8 +636,7 @@ public enum BearingConflict : byte {
 	Add = 0,
 	OverrideBearing,
 	OrthoBearing,
-	OrthoDodgevec,
-	OrthoDodgevecScaled
+	OrthoDodgevec
 }
 
 public struct BulletInfo {
