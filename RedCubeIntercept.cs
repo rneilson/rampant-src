@@ -314,14 +314,11 @@ public class RedCubeIntercept : MonoBehaviour {
 		// We're dropping, make sure we're now disarmed
 		armed = false;
 
-		int pushmask;
-		Collider[] things;
-		
 		// Only push things if we're dying loudly (do push player)
 		if (dying == DeathType.Loudly) {
-			pushmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Player"));
+			int pushmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Player"));
 			// Push things in outer radius
-			things = Physics.OverlapSphere(bombPos, bombPushRadius, pushmask);
+			Collider[] things = Physics.OverlapSphere(bombPos, bombPushRadius, pushmask);
 			for (int i=0; i<things.Length; i++) {
 				things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 			}

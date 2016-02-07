@@ -50,6 +50,13 @@ public class RedCubeDance : MonoBehaviour {
 	public Material shrapnelMaterial;
 	public GameObject shrapnelSparker;
 
+	// Bomb parameters
+	public float bombHeight = 0.51f;
+	public float bombForce = 50f;
+	public float bombPushRadius = 0.5f;
+	public GameObject bombEffect;
+	private bool armed;
+
 	// Prefab detach & delay-kill
 	//public int numChildren;
 	//public GameObject[] allChildren;
@@ -86,6 +93,7 @@ public class RedCubeDance : MonoBehaviour {
 			}
 		}
 		*/
+		armed = true;
 
 		bulletMask = 1 << LayerMask.NameToLayer("Bullet");
 	}
@@ -228,8 +236,19 @@ public class RedCubeDance : MonoBehaviour {
 			scorer.AddKill();
 		}
 		KillRelatives(1.0f);
+
+		// Drop da bomb
+		if (armed) {
+			// Pick a slight offset for bomb force position
+			float off = 0.02f;
+			Vector3 deathPos = transform.position + new Vector3(Random.Range(-off, off), 
+				bombHeight, Random.Range(-off, off));
+			DropBomb(deathPos);
+		}
+
 		// Remove from control's list
 		control.RemoveInstanceFromList(thisInst);
+
 		// Destroy ourselves
 		Destroy(gameObject);
 	}
@@ -274,7 +293,7 @@ public class RedCubeDance : MonoBehaviour {
 				Vector3 relativeVel = myRigidbody.GetRelativePointVelocity(tmp.transform.position - transform.position);
 				// Pick a slight offset for death force position
 				float off = 0.02f;
-				Vector3 deathPos = transform.position + new Vector3(Random.Range(-off, off), 0.0f, Random.Range(-off, off));
+				Vector3 deathPos = transform.position + new Vector3(Random.Range(-off, off), -2.0f * off, Random.Range(-off, off));
 
 				tmp.transform.parent = null;
 				tmp.tag = "Shrapnel";
@@ -372,6 +391,51 @@ public class RedCubeDance : MonoBehaviour {
 	Vector3 SpinVector (Vector3 bearingVec) {
 		Quaternion rot = Quaternion.FromToRotation(spinRef, bearingVec);
 		return rot * spinAxis;
+	}
+
+	void DropBomb (Vector3 bombPos) {
+		GameObject daBomb;
+
+		// Spawn effect
+		// At player position because it looks better
+		daBomb = Instantiate(bombEffect, transform.position, Quaternion.Euler(-90, 0, 0)) as GameObject;
+		Destroy(daBomb, 1.0f);
+
+		// Turn down flash if dying quietly
+		if (dying != DeathType.Loudly) {
+			var lp = daBomb.GetComponent<LightPulse>();
+			if (lp) {
+				lp.ChangeTargetRelative(-1.2f);
+			}
+		}
+		// Turn down volume if dying quietly
+		if (dying == DeathType.Quietly) {
+			var audio = daBomb.GetComponent<AudioSource>();
+			if (audio) {
+				audio.volume *= 0.15f;
+			}
+		}
+		// Mute if dying silently
+		if (dying == DeathType.Silently) {
+			var audio = daBomb.GetComponent<AudioSource>();
+			if (audio) {
+				audio.volume *= 0.0f;
+			}
+		}
+		
+		// We're dropping, make sure we're now disarmed
+		armed = false;
+
+		// Only push things if we're dying loudly (do push player)
+		if (dying == DeathType.Loudly) {
+			int pushmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Player"));
+			// Push things in outer radius
+			Collider[] things = Physics.OverlapSphere(bombPos, bombPushRadius, pushmask);
+			for (int i=0; i<things.Length; i++) {
+				things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
+			}
+		}
+
 	}
 
 	Vector3 DodgeBulletsSimple (float scanRadius) {
