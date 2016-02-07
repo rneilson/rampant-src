@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 public class GameMaster : MonoBehaviour {
 	// Modes
+	public string startMode;
 	public GameModeSpec[] modes;
 
 	// All this does at the moment is initialize the GameSettings (static) class
@@ -15,6 +16,7 @@ public class GameMaster : MonoBehaviour {
 		}
 		// Load modes
 		GameSettings.LoadModes(modes);
+		GameSettings.SetMode(startMode);
 		// Load settings
 		GameSettings.LoadSettings();
 		// Enable camera depth texture
@@ -211,6 +213,12 @@ public static class GameSettings {
 
 		// Set current mode to first in array as default
 		currentMode = 0;
+	}
+
+	public static void SetMode (string modeName) {
+		if (modeIndicies.ContainsKey(modeName)) {
+			currentMode = modeIndicies[modeName];
+		}
 	}
 }
 
