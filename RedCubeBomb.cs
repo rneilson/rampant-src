@@ -97,8 +97,10 @@ public class RedCubeBomb : MonoBehaviour {
 			scorer.AddKill();
 		}
 		KillRelatives(0.4f);
+
 		// Remove from control's list
 		control.RemoveInstanceFromList(thisInst);
+		
 		// Destroy ourselves
 		Destroy(gameObject);
 	}

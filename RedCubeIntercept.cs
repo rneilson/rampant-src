@@ -38,9 +38,16 @@ public class RedCubeIntercept : MonoBehaviour {
 	public GameObject burster;
 	public GameObject bursterQuiet;
 	public GameObject deathFade;
-	public float deathForce = 50f;
+	public float shrapnelForce = 50f;
 	public float shrapnelLifetime = 0.5f;
 	public GameObject shrapnelSparker;
+
+	// Bomb parameters
+	public float bombHeight = 0.51f;
+	public float bombForce = 50f;
+	public float bombPushRadius = 0.5f;
+	public GameObject bombEffect;
+	private bool armed;
 
 	// Prefab detach & delay-kill
 	//public int numChildren;
@@ -76,6 +83,7 @@ public class RedCubeIntercept : MonoBehaviour {
 			}
 		}
 		*/
+		armed = true;
 	}
 	
 	// Update is called once per frame
@@ -106,13 +114,14 @@ public class RedCubeIntercept : MonoBehaviour {
 			//bearing = target.transform.position - transform.position;
 			myRigidbody.AddForce(bearing.normalized * speed);
 			// Spin menacingly (if spinning enabled)
-			if (spin) {
-				myRigidbody.AddTorque(SpinVector(bearing) * torque);
-			}
 		}
 		else {
 			// Try and acquire new target
 			NewTarget(scorer.Player);
+		}
+
+		if (spin) {
+			myRigidbody.AddTorque(SpinVector(bearing) * torque);
 		}
 	}
 	
@@ -130,8 +139,19 @@ public class RedCubeIntercept : MonoBehaviour {
 			scorer.AddKill();
 		}
 		KillRelatives(1.0f);
+
+		// Drop da bomb
+		if (armed) {
+			// Pick a slight offset for bomb force position
+			float off = 0.02f;
+			Vector3 deathPos = transform.position + new Vector3(Random.Range(-off, off), 
+				bombHeight, Random.Range(-off, off));
+			DropBomb(deathPos);
+		}
+
 		// Remove from control's list
 		control.RemoveInstanceFromList(thisInst);
+
 		// Destroy ourselves
 		Destroy(gameObject);
 	}
@@ -166,15 +186,14 @@ public class RedCubeIntercept : MonoBehaviour {
 			Vector3 relativeVel = myRigidbody.GetRelativePointVelocity(tmp.transform.position - transform.position);
 			// Pick a slight offset for death force position
 			float off = 0.02f;
-			Vector3 deathPos = transform.position + new Vector3(Random.Range(-off, off), 
-				Random.Range(-off, off), Random.Range(-off, off));
+			Vector3 deathPos = transform.position + new Vector3(Random.Range(-off, off), -2.0f * off, Random.Range(-off, off));
 
 			tmp.transform.parent = null;
 
 			// Add rigidbody and setup
 			var rb = tmp.AddComponent<Rigidbody>();
 			SetupChildRigid(myRigidbody, rb, numChildren + 1, relativeVel);
-			rb.AddExplosionForce(deathForce, deathPos, 0f);
+			rb.AddExplosionForce(shrapnelForce, deathPos, 0f);
 
 			// Enable renderer
 			var rend = tmp.GetComponent<Renderer>();
@@ -262,4 +281,52 @@ public class RedCubeIntercept : MonoBehaviour {
 		return rot * spinAxis;
 	}
 	
+	void DropBomb (Vector3 bombPos) {
+		GameObject daBomb;
+
+		// Spawn effect
+		// At player position because it looks better
+		daBomb = Instantiate(bombEffect, transform.position, Quaternion.Euler(-90, 0, 0)) as GameObject;
+		Destroy(daBomb, 1.0f);
+
+		// Turn down flash if dying quietly
+		if (dying != DeathType.Loudly) {
+			var lp = daBomb.GetComponent<LightPulse>();
+			if (lp) {
+				lp.ChangeTargetRelative(-1.2f);
+			}
+		}
+		// Turn down volume if dying quietly
+		if (dying == DeathType.Quietly) {
+			var audio = daBomb.GetComponent<AudioSource>();
+			if (audio) {
+				audio.volume *= 0.15f;
+			}
+		}
+		// Mute if dying silently
+		if (dying == DeathType.Silently) {
+			var audio = daBomb.GetComponent<AudioSource>();
+			if (audio) {
+				audio.volume *= 0.0f;
+			}
+		}
+		
+		// We're dropping, make sure we're now disarmed
+		armed = false;
+
+		int pushmask;
+		Collider[] things;
+		
+		// Only push things if we're dying loudly (do push player)
+		if (dying == DeathType.Loudly) {
+			pushmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Player"));
+			// Push things in outer radius
+			things = Physics.OverlapSphere(bombPos, bombPushRadius, pushmask);
+			for (int i=0; i<things.Length; i++) {
+				things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
+			}
+		}
+
+	}
+
 }

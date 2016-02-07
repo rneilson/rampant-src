@@ -115,11 +115,6 @@ public class RedCubeDance : MonoBehaviour {
 		//if (!dodgedLastFrame)
 			avgSpeed = avgSpeed * avgWeight + currSpeed * currWeight;
 
-		// Spin menacingly (if spinning enabled)
-		if (spin) {
-			myRigidbody.AddTorque(SpinVector(bearing) * torque);
-		}
-
 		if (target) {
 			UpdateTracking();
 		}
@@ -210,6 +205,11 @@ public class RedCubeDance : MonoBehaviour {
 				}
 				*/
 			//}
+		}
+
+		// Spin menacingly (if spinning enabled)
+		if (spin) {
+			myRigidbody.AddTorque(SpinVector(bearing) * torque);
 		}
 
 	}
