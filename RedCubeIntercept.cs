@@ -19,9 +19,9 @@ public class RedCubeIntercept : MonoBehaviour {
 	private float currWeight = 0.18f;
 
 	private const bool spin = true;
-	private Vector3 spinAxis = Vector3.forward;
 	private Vector3 spinRef = Vector3.forward;
-	private float torque = 0.015f;
+	public Vector3 spinAxis = Vector3.forward;
+	public float torque = 0.015f;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
