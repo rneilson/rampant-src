@@ -143,9 +143,8 @@ public class RedCubeIntercept : MonoBehaviour {
 
 		// Drop da bomb
 		if (armed) {
-			// Pick a slight offset for bomb force position
-			Vector3 deathPos = new Vector3(transform.position.x, bombHeight, transform.position.z);
-			DropBomb(deathPos);
+			//Vector3 deathPos = new Vector3(transform.position.x, bombHeight, transform.position.z);
+			DropBomb(transform.position);
 		}
 
 		// Remove from control's list
@@ -288,12 +287,13 @@ public class RedCubeIntercept : MonoBehaviour {
 		return rot * spinAxis;
 	}
 	
-	void DropBomb (Vector3 bombPos) {
+	void DropBomb (Vector3 pos) {
 		GameObject daBomb;
+		Vector3 bombPos = new Vector3 (pos.x, bombHeight, pos.z);
 
 		// Spawn effect
 		// At player position because it looks better
-		daBomb = Instantiate(bombEffect, transform.position, Quaternion.Euler(-90, 0, 0)) as GameObject;
+		daBomb = Instantiate(bombEffect, pos, Quaternion.Euler(-90, 0, 0)) as GameObject;
 		Destroy(daBomb, 1.0f);
 
 		// Turn down flash if dying quietly
@@ -325,8 +325,9 @@ public class RedCubeIntercept : MonoBehaviour {
 		if (dying == DeathType.Loudly) {
 			int pushmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Player"));
 			// Push things in outer radius
-			Collider[] things = Physics.OverlapSphere(bombPos, bombPushRadius, pushmask);
+			Collider[] things = Physics.OverlapSphere(pos, bombPushRadius, pushmask);
 			for (int i=0; i<things.Length; i++) {
+
 				things[i].GetComponent<Rigidbody>().AddExplosionForce(bombForce, bombPos, 0f);
 			}
 		}
