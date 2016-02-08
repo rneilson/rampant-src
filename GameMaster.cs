@@ -2,9 +2,11 @@
 using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 public class GameMaster : MonoBehaviour {
 	// Modes
+	public bool debugGameSettings = false;
 	public string startMode;
 	public GameModeSpec[] modes;
 
@@ -14,13 +16,13 @@ public class GameMaster : MonoBehaviour {
 		if (modes.Length == 0) {
 			Debug.LogError("No modes specified!", gameObject);
 		}
+		GameSettings.DebugInfo = debugGameSettings;
 		// Load settings
 		GameSettings.LoadSettings();
 		// Enable camera depth texture
 		GameObject.Find("Camera").GetComponent<Camera>().depthTextureMode = DepthTextureMode.Depth;
 		// Load modes
 		GameSettings.LoadModes(modes);
-		GameSettings.SetMode(startMode);
 	}
 }
 
@@ -32,10 +34,17 @@ public static class GameSettings {
 	private static string settingsFilename = Application.persistentDataPath + "/settings.cfg";
 	private static bool restarted;
 	private static int numStarts = 0;
+	private static bool debugInfo;
 
 	static GameSettings () {
+		// Initialize settings
 		settings = new Dictionary<string, MenuSetting>();
 		Initialize();
+
+		// Initialize modes
+		modeList = new List<GameMode>();
+		modeIndicies = new Dictionary<string, int>();
+		currentMode = 0;
 	}
 
 	static void AddSetting (MenuSetting setting) {
@@ -105,6 +114,10 @@ public static class GameSettings {
 	}
 	public static GameMode CurrentMode {
 		get { return modeList[currentMode]; }
+	}
+	public static bool DebugInfo {
+		get { return debugInfo; }
+		set { debugInfo = value; }
 	}
 
 	public static void Quit () {
@@ -205,19 +218,17 @@ public static class GameSettings {
 	}
 
 	public static void LoadModes (GameModeSpec[] newModes) {
-		// Start fresh
-		modeList = new List<GameMode>();
-		modeIndicies = new Dictionary<string, int>();
-		
 		// Iterate over modes and add in order
 		for (int index = 0; index < newModes.Length; index++) {
-			GameMode newMode = new GameMode(newModes[index]);
-			modeList.Add(newMode);
-			modeIndicies[newMode.Name] = index;
+			if (!modeIndicies.ContainsKey(newModes[index].Name)) {
+				GameMode newMode = new GameMode(newModes[index]);
+				modeList.Add(newMode);
+				modeIndicies[newMode.Name] = modeList.Count - 1;
+				if (debugInfo) {
+					Debug.Log("Added mode: " + newMode.Name + ", index: " + modeIndicies[newMode.Name].ToString());
+				}
+			}
 		}
-
-		// Set current mode to first in array as default
-		currentMode = 0;
 	}
 
 	public static void SetMode (string modeName) {
@@ -226,12 +237,12 @@ public static class GameSettings {
 		}
 	}
 
-	public static string GetModeName (int index) {
+	public static GameMode GetMode (int index) {
 		if ((index >= 0) && (index < modeList.Count)) {
-			return modeList[index].Name;
+			return modeList[index];
 		}
 		else {
-			return "";
+			throw new ArgumentOutOfRangeException("index", "No game mode at index: " + index.ToString());
 		}
 	}
 }
@@ -347,7 +358,7 @@ public class VolumeSetting : MenuSetting {
 	public override string Value {
 		get {
 			int vol = Mathf.RoundToInt(AudioListener.volume * 100.0f);
-			return System.String.Format("{0,3}%", vol);
+			return String.Format("{0,3}%", vol);
 		}
 	}
 
@@ -381,7 +392,7 @@ public class VolumeSetting : MenuSetting {
 	}
 
 	public override void Load (string settingValue) {
-		AudioListener.volume = System.Single.Parse(settingValue);
+		AudioListener.volume = Single.Parse(settingValue);
 	}
 
 	public override string Save () {
@@ -439,7 +450,7 @@ public class MouseSpeedSetting : MenuSetting {
 	}
 
 	public override void Load (string settingValue) {
-		cursor.MouseSpeed = System.Single.Parse(settingValue);
+		cursor.MouseSpeed = Single.Parse(settingValue);
 	}
 
 	public override string Save () {
@@ -605,7 +616,7 @@ public class AntialiasSetting : MenuSetting {
 	}
 
 	public override void Load (string settingValue) {
-		QualitySettings.antiAliasing = System.Int32.Parse(settingValue);
+		QualitySettings.antiAliasing = Int32.Parse(settingValue);
 	}
 
 	public override string Save () {
@@ -675,7 +686,7 @@ public class ResolutionSetting : MenuSetting {
 
 }
 
-[System.Serializable]
+[Serializable]
 public class GameModeSpec {
 	public string Name;
 	public GameObject[] Phases;
@@ -734,7 +745,7 @@ public class GameMode {
 	// Basically to load from a deserialized StoredValue
 	internal void LoadScore (string scoreName, string scoreVal) {
 		// Keeping it simple for now
-		HighScore(scoreName, System.Int32.Parse(scoreVal));
+		HighScore(scoreName, Int32.Parse(scoreVal));
 	}
 
 	// And from a still-serialized StoredValue
