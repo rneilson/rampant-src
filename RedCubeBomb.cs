@@ -35,6 +35,8 @@ public class RedCubeBomb : MonoBehaviour {
 	public float bombPushRadius = 2.5f;
 	public float bombTriggerRadius = 0.75f;
 	public GameObject bombEffect;
+	public float shrapnelLifetime = 1.0f;
+	public GameObject shrapnelSparker;
 	//public bool enableBombPush = false;
 
 	// Use this for initialization
@@ -96,7 +98,7 @@ public class RedCubeBomb : MonoBehaviour {
 		if (dying != DeathType.Silently) {
 			scorer.AddKill();
 		}
-		KillRelatives(0.4f);
+		KillRelatives(shrapnelLifetime);
 
 		// Remove from control's list
 		control.RemoveInstanceFromList(thisInst);
@@ -130,7 +132,14 @@ public class RedCubeBomb : MonoBehaviour {
 		for (int i = transform.childCount - 1; i >= 0 ; i--) {
 			tmp = transform.GetChild(i).gameObject;
 			tmp.transform.parent = null;
-			Destroy(tmp, delay);
+			var dd = tmp.GetComponent<DelayedDeath>();
+			if (dd) {
+				// "...but then again, who does?"
+				dd.DieInTime(Random.Range(0.75f, 1.25f) * delay, shrapnelSparker);
+			}
+			else {
+				Destroy(tmp, delay);
+			}
 		}
 
 	}
@@ -163,7 +172,7 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 		// Turn down volume if dying quietly
 		if (dying == DeathType.Quietly) {
-			daBomb.GetComponent<AudioSource>().volume *= 0.15f;
+			daBomb.GetComponent<AudioSource>().volume *= 0.1f;
 		}
 		// Mute if dying silently
 		if (dying == DeathType.Silently) {

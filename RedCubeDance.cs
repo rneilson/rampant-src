@@ -326,7 +326,9 @@ public class RedCubeDance : MonoBehaviour {
 				// Change material
 				Renderer rend = tmp.GetComponent<Renderer>();
 				rend.enabled = true;
-				rend.material = shrapnelMaterial;
+				if (shrapnelMaterial) {
+					rend.material = shrapnelMaterial;
+				}
 
 				// "...but then again, who does?"
 				tmp.GetComponent<DelayedDeath>().DieInTime(Random.Range(0.75f, 1.25f) * shrapnelLifetime, shrapnelSparker);
@@ -431,7 +433,7 @@ public class RedCubeDance : MonoBehaviour {
 		if (dying == DeathType.Quietly) {
 			var audio = daBomb.GetComponent<AudioSource>();
 			if (audio) {
-				audio.volume *= 0.15f;
+				audio.volume *= 0.1f;
 			}
 		}
 		// Mute if dying silently

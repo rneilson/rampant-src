@@ -307,7 +307,7 @@ public class RedCubeIntercept : MonoBehaviour {
 		if (dying == DeathType.Quietly) {
 			var audio = daBomb.GetComponent<AudioSource>();
 			if (audio) {
-				audio.volume *= 0.15f;
+				audio.volume *= 0.1f;
 			}
 		}
 		// Mute if dying silently
