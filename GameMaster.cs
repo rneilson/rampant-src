@@ -14,13 +14,13 @@ public class GameMaster : MonoBehaviour {
 		if (modes.Length == 0) {
 			Debug.LogError("No modes specified!", gameObject);
 		}
-		// Load modes
-		GameSettings.LoadModes(modes);
-		GameSettings.SetMode(startMode);
 		// Load settings
 		GameSettings.LoadSettings();
 		// Enable camera depth texture
 		GameObject.Find("Camera").GetComponent<Camera>().depthTextureMode = DepthTextureMode.Depth;
+		// Load modes
+		GameSettings.LoadModes(modes);
+		GameSettings.SetMode(startMode);
 	}
 }
 
@@ -31,6 +31,7 @@ public static class GameSettings {
 	private static int currentMode;
 	private static string settingsFilename = Application.persistentDataPath + "/settings.cfg";
 	private static bool restarted;
+	private static int numStarts = 0;
 
 	static GameSettings () {
 		settings = new Dictionary<string, MenuSetting>();
@@ -97,7 +98,10 @@ public static class GameSettings {
 	// Publically-accessible functions
 
 	public static bool Restarted {
-		get {return restarted; }
+		get { return restarted; }
+	}
+	public static int NumStarts {
+		get { return numStarts; }
 	}
 	public static GameMode CurrentMode {
 		get { return modeList[currentMode]; }
@@ -115,6 +119,7 @@ public static class GameSettings {
 		Time.timeScale = 1;
 		// Set restarted flag
 		restarted = true;
+		numStarts++;
 		// Reload scene from beginning
 		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 	}
@@ -218,6 +223,15 @@ public static class GameSettings {
 	public static void SetMode (string modeName) {
 		if (modeIndicies.ContainsKey(modeName)) {
 			currentMode = modeIndicies[modeName];
+		}
+	}
+
+	public static string GetModeName (int index) {
+		if ((index >= 0) && (index < modeList.Count)) {
+			return modeList[index].Name;
+		}
+		else {
+			return "";
 		}
 	}
 }
