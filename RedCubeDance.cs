@@ -19,7 +19,7 @@ public class RedCubeDance : MonoBehaviour {
 	private bool debugInfo;
 	private float avgWeight = 0.82f;
 	private float currWeight = 0.18f;
-	//private bool dodgedLastFrame = false;
+	private bool dodgedLastFrame = false;
 
 	private const bool spin = true;
 	private Vector3 spinRef = Vector3.forward;
@@ -38,8 +38,10 @@ public class RedCubeDance : MonoBehaviour {
 	// Public parameters
 	public float speed;
 	public float drag;
+	public bool useGroundControl = true;
 	public float dodgeForce = 20f;
 	public float dodgeRadius = 1.0f;
+	public float innerRadius = 0.5f;
 	public bool separateDodgeForce = false;
 	public DodgeMode dodgeMode = DodgeMode.Simple;
 	public BearingConflict bearingConflict = BearingConflict.Add;
@@ -121,7 +123,7 @@ public class RedCubeDance : MonoBehaviour {
 		currSpeed = currVel.magnitude;
 
 		// Average speed (only update if not dodging -- screws with the average)
-		//if (!dodgedLastFrame)
+		if ((!separateDodgeForce) || (!dodgedLastFrame))
 			avgSpeed = avgSpeed * avgWeight + currSpeed * currWeight;
 
 		if (target) {
@@ -150,6 +152,9 @@ public class RedCubeDance : MonoBehaviour {
 			case DodgeMode.ClosestScaled:
 				dodgeDir = DodgeBulletsClosestScaled(dodgeRadius);
 				break;
+			case DodgeMode.ScaledAll:
+				dodgeDir = DodgeBulletsScaledAll(dodgeRadius);
+				break;
 		}
 		if (dodgeDir.magnitude > 1.0f) {
 			dodgeDir = dodgeDir.normalized;
@@ -158,11 +163,11 @@ public class RedCubeDance : MonoBehaviour {
 		if (dodgeDir.magnitude < Mathf.Epsilon) {
 			// Clear to proceed on bearing
 			myRigidbody.AddForce(bearing.normalized * speed);
-			//dodgedLastFrame = false;
+			dodgedLastFrame = false;
 		}
 		else {
 			// We're dodging something
-			//dodgedLastFrame = true;
+			dodgedLastFrame = true;
 
 			// Question is how
 			if (Vector3.Dot(bearing, dodgeDir) >= 0.0f) {
@@ -366,24 +371,27 @@ public class RedCubeDance : MonoBehaviour {
 
 		// Next we'll default to heading straight for the target's position
 		bearing = control.Prediction(0) - transform.position;
-		closing = Vector3.zero;
-		closingDiff = bearing.magnitude;
 
-		// Then, we evaluate all predicted target positions and pick the one that gets us closest
-		for (int i = 1; i < control.PredictionLength; i++) {
-			// Exclude positions out of bounds
-			if (InBounds(control.Prediction(i))) {
-				// Find vector to target position
-				bearingOption = control.Prediction(i) - transform.position;
-				// Find how far we'll get towards that in the given time (well, number of (fixed) frames)
-				closingOption = (bearingOption.normalized * frameSpeed * (float) i);
-				// Check the distance between them
-				diffOption = (bearingOption - closingOption).magnitude;
-				// Now compare with current closest option
-				if (diffOption < closingDiff) {
-					bearing = bearingOption;
-					closing = closingOption;
-					closingDiff = diffOption;
+		if (useGroundControl) {
+			closing = Vector3.zero;
+			closingDiff = bearing.magnitude;
+
+			// Then, we evaluate all predicted target positions and pick the one that gets us closest
+			for (int i = 1; i < control.PredictionLength; i++) {
+				// Exclude positions out of bounds
+				if (InBounds(control.Prediction(i))) {
+					// Find vector to target position
+					bearingOption = control.Prediction(i) - transform.position;
+					// Find how far we'll get towards that in the given time (well, number of (fixed) frames)
+					closingOption = (bearingOption.normalized * frameSpeed * (float) i);
+					// Check the distance between them
+					diffOption = (bearingOption - closingOption).magnitude;
+					// Now compare with current closest option
+					if (diffOption < closingDiff) {
+						bearing = bearingOption;
+						closing = closingOption;
+						closingDiff = diffOption;
+					}
 				}
 			}
 		}
@@ -470,7 +478,7 @@ public class RedCubeDance : MonoBehaviour {
 			// Compare our pos relative to bullet with bullet's velo -- if angle is < 90 deg,
 			// we're possibly converging, and we'll dodge
 			float dot = Vector3.Dot(bulletPos, bulletVel);
-			if (dot > 0.0f) {
+			if ((dot > 0.0f) || (bulletPos.magnitude <= innerRadius)) {
 				// Get projection along bullet velo vec
 				// (Algebra scribbled on paper, sorry)
 				Vector3 proj = (dot / bulletVel.magnitude) * bulletVel.normalized;
@@ -501,7 +509,7 @@ public class RedCubeDance : MonoBehaviour {
 			// Compare our pos relative to bullet with bullet's velo -- if angle is < 90 deg,
 			// we're possibly converging, and we'll dodge
 			float dot = Vector3.Dot(bulletPos, bulletVel);
-			if (dot > 0.0f) {
+			if ((dot > 0.0f) || (bulletPos.magnitude <= innerRadius)) {
 				// Get projection along bullet velo vec
 				// (Algebra scribbled on paper, sorry)
 				Vector3 proj = (dot / bulletVel.magnitude) * bulletVel.normalized;
@@ -532,7 +540,7 @@ public class RedCubeDance : MonoBehaviour {
 			// Compare our pos relative to bullet with bullet's velo -- if angle is < 90 deg,
 			// we're possibly converging, and we'll dodge
 			float dot = Vector3.Dot(bulletPos, bulletVel);
-			if (dot > 0.0f) {
+			if ((dot > 0.0f) || (bulletPos.magnitude <= innerRadius)) {
 				// Get projection along bullet velo vec
 				// (Algebra scribbled on paper, sorry)
 				Vector3 proj = (dot / bulletVel.magnitude) * bulletVel.normalized;
@@ -571,7 +579,7 @@ public class RedCubeDance : MonoBehaviour {
 			// Compare our pos relative to bullet with bullet's velo -- if angle is < 90 deg,
 			// we're possibly converging, and we'll dodge
 			BulletInfo thisBullet = new BulletInfo(bulletPos, bulletVel);
-			if ((thisBullet.Dot > 0.0f) && (thisBullet.Dist > 0.0f)) {
+			if (((thisBullet.Dot > 0.0f) || (thisBullet.Dist <= innerRadius)) && (thisBullet.Dist > 0.0f)) {
 				bulletList.Add(thisBullet);
 			}
 		}
@@ -613,7 +621,7 @@ public class RedCubeDance : MonoBehaviour {
 			// Compare our pos relative to bullet with bullet's velo -- if angle is < 90 deg,
 			// we're possibly converging, and we'll dodge
 			BulletInfo thisBullet = new BulletInfo(bulletPos, bulletVel);
-			if ((thisBullet.Dot > 0.0f) && (thisBullet.Dist > 0.0f)) {
+			if (((thisBullet.Dot > 0.0f) || (thisBullet.Dist <= innerRadius)) && (thisBullet.Dist > 0.0f)) {
 				bulletList.Add(thisBullet);
 			}
 		}
@@ -640,7 +648,34 @@ public class RedCubeDance : MonoBehaviour {
 		return dodgeVec;
 	}
 	
+	// Same as scaled, but consider all within radius
+	Vector3 DodgeBulletsScaledAll (float scanRadius) {
+		Vector3 dodgeVec = Vector3.zero;
+		Collider[] bullets = Physics.OverlapSphere(transform.position, scanRadius, bulletMask);
 
+		// Check each bullet in radius, if any
+		for (int i = 0; i < bullets.Length; i++) {
+			// Get our position relative to the bullet
+			Vector3 bulletPos = transform.position - bullets[i].transform.position;
+			// Get bullet's velocity
+			Vector3 bulletVel = bullets[i].GetComponent<Rigidbody>().velocity;
+
+			// Get projection along bullet velo vec
+			// (Algebra scribbled on paper, sorry)
+			float dot = Vector3.Dot(bulletPos, bulletVel);
+			Vector3 proj = (dot / bulletVel.magnitude) * bulletVel.normalized;
+
+			// We want the direction perpendicular to the bullet velo
+			// So we take our projection, add it to the bullet's position, and sub from there
+			Vector3 dir = transform.position - (bullets[i].transform.position + proj);
+
+			// Now we add it to the (aggregate) dodge vector, at 1 - (distance / radius)
+			dodgeVec += (dir.normalized - (dir / scanRadius));
+		}
+
+		return dodgeVec;
+	}
+	
 }
 
 public enum DodgeMode : byte {
@@ -648,7 +683,8 @@ public enum DodgeMode : byte {
 	Scaled,
 	HalfScaled,
 	ClosestSimple,
-	ClosestScaled
+	ClosestScaled,
+	ScaledAll
 }
 
 public enum BearingConflict : byte {
