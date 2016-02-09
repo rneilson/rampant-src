@@ -192,7 +192,7 @@ public class MenuControl : MonoBehaviour {
 		}
 
 		// Configure listed lines
-		while ((sourceIndex < node.lines.Length) && (lineIndex < menuLines.Length - 1)) {
+		while ((sourceIndex < node.lines.Length) && (lineIndex < menuLines.Length)) {
 			MenuNodeLine line = node.lines[sourceIndex];
 			menuLines[lineIndex].ConfigureLine(line.lineType, line.label, line.target);
 
@@ -499,6 +499,9 @@ public class MenuControl : MonoBehaviour {
 		// Release input
 		currentInput = InputMode.Game;
 		Input.ResetInputAxes();
+
+		// Tell GameSettings to resume
+		GameSettings.Resume();
 
 	}
 

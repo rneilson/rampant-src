@@ -44,13 +44,13 @@ public class RedCubeGroundControl : MonoBehaviour {
 	private float extent1d;
 	private float extent2d;
 	private float extent3d;
-	private const string interceptorName = "Interceptor";
-	private const string bomberName = "Bomber";
-	private const string seekerName = "Seeker";
-	private const float interceptorWarnRadius = 1.0f;
-	private const float bomberWarnRadius = 1.0f;
-	public bool seekersAvoidInterceptors = false;
-	public bool bombersAvoidBombers = false;
+	//private const string interceptorName = "Interceptor";
+	//private const string bomberName = "Bomber";
+	//private const string seekerName = "Seeker";
+	//private const float interceptorWarnRadius = 1.0f;
+	//private const float bomberWarnRadius = 1.0f;
+	//public bool seekersAvoidInterceptors = false;
+	//public bool bombersAvoidBombers = false;
 
 	// Enemy tracking/radius debug
 	private List<GameObject> debugTracking = new List<GameObject>();
@@ -92,12 +92,24 @@ public class RedCubeGroundControl : MonoBehaviour {
 	public float Extent3D {
 		get { return extent3d; }
 	}
+	public bool Clear {
+		get {
+			if (enemies.Count <= 0) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+	}
+	/*
 	public bool SeekersAvoidInterceptors {
 		get { return seekersAvoidInterceptors; }
 	}
 	public bool BombersAvoidBombers {
 		get { return bombersAvoidBombers; }
 	}
+	*/
 
 	// Use this for initialization
 	void Start () {
@@ -164,12 +176,14 @@ public class RedCubeGroundControl : MonoBehaviour {
 	void FixedUpdate () {
 		if (target) {
 			UpdateTracking(target.transform.position, Time.fixedDeltaTime);
+			/*
 			if (seekersAvoidInterceptors) {
 				InterceptorWarning();	
 			}
 			if (bombersAvoidBombers) {
 				BomberWarning();
 			}
+			*/
 		}
 		else {
 			// Try and acquire new target
@@ -255,6 +269,7 @@ public class RedCubeGroundControl : MonoBehaviour {
 
 	}
 
+	/*
 	void InterceptorWarning () {
 		Collider[] nearby;
 		int mask = 1 << LayerMask.NameToLayer("Enemy");
@@ -289,6 +304,7 @@ public class RedCubeGroundControl : MonoBehaviour {
 			}
 		}
 	}
+	*/
 
 	public void NewTarget (GameObject newTarget) {
 		target = newTarget;

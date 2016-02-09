@@ -15,8 +15,8 @@ public class RedCubeBehave : MonoBehaviour {
 	private Rigidbody myRigidbody;
 	
 	// Type/instance management stuff
-	private const string thisTypeName = "Seeker";
-	private static EnemyType thisType;
+	public string thisTypeName = "Seeker";
+	private EnemyType thisType;
 	private EnemyInst thisInst;
 
 	// Public parameters
@@ -27,12 +27,8 @@ public class RedCubeBehave : MonoBehaviour {
 	public GameObject deathFade;
 
 	// Interceptor avoidance
-	private bool avoidInterceptors;
-	private List<GameObject> interceptorsClose = new List<GameObject>();
-
-	static RedCubeBehave () {
-		thisType = EnemyList.AddOrGetType(thisTypeName);
-	}
+	//private bool avoidInterceptors;
+	//private List<GameObject> interceptorsClose = new List<GameObject>();
 
 	// Use this for initialization
 	void Start () {
@@ -46,9 +42,10 @@ public class RedCubeBehave : MonoBehaviour {
 		myRigidbody.drag = drag;
 
 		// Add to control's list
+		thisType = EnemyList.AddOrGetType(thisTypeName);
 		thisInst = new EnemyInst(thisType.typeNum, gameObject);
 		control.AddInstanceToList(thisInst);
-		avoidInterceptors = control.SeekersAvoidInterceptors;
+		//avoidInterceptors = control.SeekersAvoidInterceptors;
 	}
 	
 	// Update is called once per frame
@@ -113,7 +110,7 @@ public class RedCubeBehave : MonoBehaviour {
 	Vector3 FindBearing (Vector3 toTarget) {
 		// Start with a straight line to target
 		Vector3 curBearing = toTarget.normalized;
-
+		/*
 		if (avoidInterceptors) {
 			// Now move away from each interceptor in turn
 			for (int i = 0; i < interceptorsClose.Count; i++) {
@@ -124,12 +121,14 @@ public class RedCubeBehave : MonoBehaviour {
 			// Renormalize
 			return curBearing.normalized;
 		}
-		else {
+		*/
+		//else {
 			// Didn't add anything, return as-is
 			return curBearing;
-		}
+		//}
 	}
 
+	/*
 	Vector3 AvoidInterceptor (GameObject interceptor, Vector3 toTarget) {
 		// Set here as const, keep the namespace clean (it's not, but y'know)
 		const float avoidFactor = 1.0f;
@@ -151,5 +150,6 @@ public class RedCubeBehave : MonoBehaviour {
 			interceptorsClose.Add(interceptor);
 		}
 	}
+	*/
 
 }

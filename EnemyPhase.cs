@@ -3,10 +3,10 @@ using System.Collections;
 
 public class EnemyPhase : MonoBehaviour {
 
-	public string phaseName;
 	public int maxWaves; // Set to 0 if terminal/eternal/steadystate
 	public float initialDelay;
 	public float waveInterval;
+	public bool checkpoint = true;
 	public Color pulseColor = Color.red * 0.5f;
 	public bool debugInfo = false;
 
@@ -16,6 +16,8 @@ public class EnemyPhase : MonoBehaviour {
 	private Component[] spawners;
 
 	private bool phaseActive = true;
+
+	public bool Checkpoint { get { return checkpoint; } }
 
 	// Initialize on Awake() instead of Start()
 	void Awake () {
@@ -30,9 +32,6 @@ public class EnemyPhase : MonoBehaviour {
 		countdown = (scorer.PlayerBreak) ? (initialDelay + scorer.PlayerBreakDelay) : initialDelay;
 		waveNum = 0;
 
-		if (debugInfo) {
-			Debug.Log("Entering phase " + phaseName);
-		}
 	}
 	
 	// Update is called once per frame
@@ -43,9 +42,18 @@ public class EnemyPhase : MonoBehaviour {
 	//Put everything in FixedUpdate
 	void FixedUpdate () {
 		if ((!scorer.Respawn) && (phaseActive)) {
+			// Check if previous wave already clear
+			if ((scorer.WaveClear) && (countdown > scorer.WaveClearCountdown) && (scorer.Level > 0)) {
+				countdown = scorer.WaveClearCountdown;
+
+				if (debugInfo) {
+					Debug.Log("Wave " + scorer.Level.ToString() + " clear, cutting respawn to " 
+						+ countdown.ToString() + " sec", gameObject);
+				}
+			}
 			if (countdown <= 0.0f) {
-				waveNum++;
-				StartWave(waveNum);
+				StartWave(++waveNum);
+
 				if ((maxWaves > 0) && (waveNum >= maxWaves)) {
 					scorer.NextPhase();
 				}

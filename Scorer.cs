@@ -16,6 +16,7 @@ public class Scorer : MonoBehaviour {
 	private CameraMovement cameraFollower;
 	private bool isPaused = true;
 	private bool isStarted = false;
+	private bool isTerminal = false;
 
 	// Title/menu stuff
 	private MenuControl menu;
@@ -37,12 +38,14 @@ public class Scorer : MonoBehaviour {
 
 	// Respawn parameters
 	public float respawnTime;
+	public float waveClearCountdown = 0.25f;
 	public float playerBreakDelay = 1.0f;
 	public float playerBreakRadius = 1.0f;
+	public float playerBreakFraction = 0.5f;
+	public float maxDisplacement = 4.75f;
 	private bool respawn;
 	private float respawnCountdown;
 	private bool playerBreak = false;		// Should rename at some point
-	private float maxDisplacement = 4.75f;
 	private Vector3 spawnPos = new Vector3 (0f, 1f, 0f);
 	private Vector3 bombPos = new Vector3 (0f, 0.6f, 0f);
 
@@ -53,6 +56,7 @@ public class Scorer : MonoBehaviour {
 	public AudioClip respawnSound;
 	public float respawnSoundDelay = 0.0f;
 	public float respawnSoundVol = 0.5f;
+	public float spawnBombForce = 800f;
 
 	// Enemy phases (ie difficulty stuff)
 	private GameObject currentPhase;
@@ -60,6 +64,7 @@ public class Scorer : MonoBehaviour {
 	private int phaseIndex;
 	private int phaseShift;
 	private int checkpoint;
+	private int checkpointPhase;
 
 	// Powerup parameters and state tracking
 	public bool forceBombUse;
@@ -113,6 +118,9 @@ public class Scorer : MonoBehaviour {
 	public float PlayerBreakRadius {
 		get { return playerBreakRadius; }
 	}
+	public float PlayerBreakFraction {
+		get { return playerBreakFraction; }
+	}
 	public float MaxDisplacement {
 		get { return maxDisplacement; }
 	}
@@ -125,6 +133,15 @@ public class Scorer : MonoBehaviour {
 	public bool IsStarted {
 		get { return isStarted; }
 	}
+	public bool IsTerminal {
+		get { return isTerminal; }
+	}
+	public bool WaveClear {
+		get { return enemyControl.Clear; }
+	}
+	public float WaveClearCountdown {
+		get { return waveClearCountdown; }
+	}
 	public bool GlobalDebug {
 		get { return globalDebug; }
 	}
@@ -136,6 +153,9 @@ public class Scorer : MonoBehaviour {
 	}
 	public Vector3 SpawnPosition {
 		get { return spawnPos; }
+	}
+	public float SpawnHeight {
+		get { return spawnPos.y; }
 	}
 
 	// Use this for initialization
@@ -170,8 +190,12 @@ public class Scorer : MonoBehaviour {
 		// Autostart if game (re)started
 		if ((!isStarted) && (GameSettings.Restarted)) {
 			if (globalDebug) {
-				// Debug.Log("Game (re)started, autostarting as of frame " + framesActive.ToString(), gameObject);
-				Debug.Log("Game (re)started, autostarting", gameObject);
+				if (GameSettings.NumStarts <= 1) {
+					Debug.Log("Game started", gameObject);
+				}
+				else {
+					Debug.Log("Game restarted, total starts: " + GameSettings.NumStarts.ToString(), gameObject);
+				}
 			}
 			// This is on its own line in case there's anything else that needs doing
 			UnPauseGame();
@@ -308,21 +332,34 @@ public class Scorer : MonoBehaviour {
 	}
 	
 	public void NextPhase () {
+		bool justWentTerminal = false;
+
 		// Deactivate current phase and slate for destruction
 		currentPhase.GetComponent<EnemyPhase>().StopPhase();
 		prevPhase = currentPhase;
 
-		// Save current wave number as checkpoint
-		checkpoint = level;
-
 		// Advance index, and go to terminal phase if all phases complete
 		phaseIndex++;
+
 		if (phaseIndex >= GameSettings.CurrentMode.PhaseCount) {
+			// Go to terminal phase
 			phaseIndex = GameSettings.CurrentMode.Terminal;
+
+			// Set terminal if not already there
+			if (!isTerminal) {
+				justWentTerminal = true;
+				isTerminal = true;
+			}
 		}
 
 		// Instantiate new phase, and let chips fall
 		currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex));
+
+		// Save current wave number as checkpoint
+		if ((currentPhase.GetComponent<EnemyPhase>().Checkpoint) && ((!isTerminal) || (justWentTerminal))) {
+			checkpoint = level;
+			checkpointPhase = phaseIndex;
+		}
 	}
 	
 	void PlayerDied () {
@@ -366,17 +403,28 @@ public class Scorer : MonoBehaviour {
 
 		Collider[] enemies;
 		int mask = 1 << LayerMask.NameToLayer("Enemy");
+		Rigidbody rb;
 		
 		// Clear enemies
 		enemies = Physics.OverlapSphere(bombAt, killRadius, mask);
 		for (int i=0; i<enemies.Length; i++) {
-			enemies[i].SendMessage("Clear", false);
+			enemies[i].SendMessage("Clear", false, SendMessageOptions.DontRequireReceiver);
 		}
 		
 		// Push away remaining enemies
 		enemies = Physics.OverlapSphere(bombAt, pushRadius, mask);
 		for (int i=0; i<enemies.Length; i++) {
-			enemies[i].GetComponent<Rigidbody>().AddExplosionForce(500f, bombAt, 0);
+			rb = enemies[i].GetComponent<Rigidbody>();
+			if (rb) {
+				rb.AddExplosionForce(spawnBombForce, bombAt, 0);
+			}
+			else {
+				// Try parent instead
+				rb = enemies[i].transform.parent.GetComponent<Rigidbody>();
+				if (rb) {
+					rb.AddExplosionForce(spawnBombForce, bombAt, 0);
+				}
+			}
 		}
 	}
 	
@@ -385,7 +433,7 @@ public class Scorer : MonoBehaviour {
 		menu.HideMenu();
 		
 		// Bomb enemies near spawn point
-		SpawnBomb(spawnPos, bombPos, 2.0f, 5.0f);
+		SpawnBomb(spawnPos, bombPos, 2.5f, 5.0f);
 		
 		// Reset kills
 		kills = 0;
@@ -394,9 +442,25 @@ public class Scorer : MonoBehaviour {
 		// Reset powerup threshold
 		killsUntilPowerup = biggerGunAt;
 
-		// Reset current enemy phase and level
-		currentPhase.GetComponent<EnemyPhase>().ResetPhase(this);
+		// Reset enemy phase and level
 		level = checkpoint;
+		if (phaseIndex == checkpointPhase) {
+			currentPhase.GetComponent<EnemyPhase>().ResetPhase(this);
+		}
+		else {
+			// Reset phase index
+			phaseIndex = checkpointPhase;
+
+			// Set phase shift to new index too
+			phaseShift = phaseIndex;
+
+			// Deactivate current phase and slate for destruction
+			currentPhase.GetComponent<EnemyPhase>().StopPhase();
+			prevPhase = currentPhase;
+
+			// Load new phase
+			currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex));
+		}
 		scoreLevel.text = "Wave: " + level.ToString();
 
 		// Spawn player, notify camera
@@ -411,6 +475,7 @@ public class Scorer : MonoBehaviour {
 
 		// Flash grid
 		FlashGrid(currentPulseColor);
+
 		// Shift grid
 		if (totalDeaths > 0) {
 			ShiftGrid(phaseShift);
@@ -432,7 +497,7 @@ public class Scorer : MonoBehaviour {
 		isPaused = false;
 
 		if (!isStarted) {
-			SendStartGame();
+			StartGame();
 		}
 		Time.timeScale = 1;
 
@@ -483,7 +548,7 @@ public class Scorer : MonoBehaviour {
 		}
 	}
 
-	void SendStartGame () {
+	void StartGame () {
 		// Mode debug
 		if (globalDebug) {
 			Debug.Log("Loading mode: " + GameSettings.CurrentMode.Name, gameObject);
