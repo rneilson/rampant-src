@@ -31,20 +31,21 @@ public static class GameSettings {
 	private static List<GameMode> modeList;
 	private static Dictionary<string, int> modeIndicies;
 	private static int currentMode;
+	private static int selectedMode;
 	private static string settingsFilename = Application.persistentDataPath + "/settings.cfg";
 	private static bool restarted;
 	private static int numStarts = 0;
 	private static bool debugInfo;
 
 	static GameSettings () {
-		// Initialize settings
-		settings = new Dictionary<string, MenuSetting>();
-		Initialize();
-
 		// Initialize modes
 		modeList = new List<GameMode>();
 		modeIndicies = new Dictionary<string, int>();
-		currentMode = 0;
+		selectedMode = 0;
+
+		// Initialize settings
+		settings = new Dictionary<string, MenuSetting>();
+		InitializeSettings();
 	}
 
 	static void AddSetting (MenuSetting setting) {
@@ -54,8 +55,9 @@ public static class GameSettings {
 	}
 
 	// Safe to call multiple times
-	static void Initialize () {
+	static void InitializeSettings () {
 		// Setup settings dict
+		AddSetting(new GameModeSetting());
 		AddSetting(new VolumeSetting());
 		AddSetting(new MouseSpeedSetting("FireCursor"));
 		AddSetting(new ResolutionSetting());
@@ -115,6 +117,20 @@ public static class GameSettings {
 	public static GameMode CurrentMode {
 		get { return modeList[currentMode]; }
 	}
+	public static int CurrentModeIndex {
+		get { return currentMode; }
+	}
+	public static int SelectedModeIndex {
+		get { return selectedMode; }
+		set {
+			if ((value >= 0) && (value < modeList.Count)) {
+				selectedMode = value;
+			}
+		}
+	}
+	public static int ModeCount {
+		get { return modeList.Count; }
+	}
 	public static bool DebugInfo {
 		get { return debugInfo; }
 		set { debugInfo = value; }
@@ -135,6 +151,12 @@ public static class GameSettings {
 		numStarts++;
 		// Reload scene from beginning
 		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+	}
+
+	// For anything to be reset when menu exiting
+	public static void Resume () {
+		// Reset selected mode to current
+		selectedMode = currentMode;
 	}
 
 	public static void LoadSettings () {
@@ -218,8 +240,9 @@ public static class GameSettings {
 	}
 
 	public static void LoadModes (GameModeSpec[] newModes) {
-		// Iterate over modes and add in order
+		// Iterate over modes and add in order as required
 		for (int index = 0; index < newModes.Length; index++) {
+			// Only add if mode not already present
 			if (!modeIndicies.ContainsKey(newModes[index].Name)) {
 				GameMode newMode = new GameMode(newModes[index]);
 				modeList.Add(newMode);
@@ -229,11 +252,23 @@ public static class GameSettings {
 				}
 			}
 		}
+
+		// Set current mode
+		SetMode(selectedMode);
+	}
+
+	public static void SetMode (int modeIndex) {
+		if ((modeIndex >= 0) && (modeIndex < modeList.Count)) {
+			currentMode = modeIndex;
+		}
+		else {
+			throw new ArgumentOutOfRangeException("index", "No game mode at index: " + modeIndex.ToString());
+		}
 	}
 
 	public static void SetMode (string modeName) {
 		if (modeIndicies.ContainsKey(modeName)) {
-			currentMode = modeIndicies[modeName];
+			SetMode(modeIndicies[modeName]);
 		}
 	}
 
@@ -245,10 +280,11 @@ public static class GameSettings {
 			throw new ArgumentOutOfRangeException("index", "No game mode at index: " + index.ToString());
 		}
 	}
+
 }
 
 // For saving/loading settings from file
-[System.Serializable]
+[Serializable]
 public class SavedValueBase {
 	public string Name;
 
@@ -265,7 +301,7 @@ public class SavedValueBase {
 	}
 }
 
-[System.Serializable]
+[Serializable]
 public class SavedValue : SavedValueBase {
 	public string Value;
 
@@ -286,7 +322,7 @@ public class SavedValue : SavedValueBase {
 	}
 }
 
-[System.Serializable]
+[Serializable]
 public class SavedValueSet : SavedValueBase {
 	public string[] Values;
 
@@ -685,6 +721,43 @@ public class ResolutionSetting : MenuSetting {
 	public override void Load (string settingValue) {}
 
 }
+
+public class GameModeSetting : MenuSetting {
+	public GameModeSetting () {}
+
+	public override string Name { get { return "GameMode"; } }
+
+	// Technically a lie, but we don't want it to be saved
+	public override bool Persistent { get { return true; } }
+
+	public override string Value {
+		get {
+			return GameSettings.GetMode(GameSettings.SelectedModeIndex).Name;
+		}
+	}
+
+	public override void Toggle () {
+		Higher();
+	}
+	public override void Higher () {
+		int newMode = GameSettings.SelectedModeIndex + 1;
+		if (newMode >= GameSettings.ModeCount) {
+			newMode = 0;
+		}
+		GameSettings.SelectedModeIndex = newMode;
+	}
+
+	public override void Lower () {
+		int newMode = GameSettings.SelectedModeIndex - 1;
+		if (newMode < 0) {
+			newMode = GameSettings.ModeCount - 1;
+		}
+		GameSettings.SelectedModeIndex = newMode;
+	}
+
+	public override void Load (string settingValue) {}
+}
+
 
 [Serializable]
 public class GameModeSpec {
