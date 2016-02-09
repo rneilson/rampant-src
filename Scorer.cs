@@ -64,6 +64,7 @@ public class Scorer : MonoBehaviour {
 	private int phaseIndex;
 	private int phaseShift;
 	private int checkpoint;
+	private int checkpointPhase;
 
 	// Powerup parameters and state tracking
 	public bool forceBombUse;
@@ -357,6 +358,7 @@ public class Scorer : MonoBehaviour {
 		// Save current wave number as checkpoint
 		if ((currentPhase.GetComponent<EnemyPhase>().Checkpoint) && ((!isTerminal) || (justWentTerminal))) {
 			checkpoint = level;
+			checkpointPhase = phaseIndex;
 		}
 	}
 	
@@ -440,9 +442,25 @@ public class Scorer : MonoBehaviour {
 		// Reset powerup threshold
 		killsUntilPowerup = biggerGunAt;
 
-		// Reset current enemy phase and level
-		currentPhase.GetComponent<EnemyPhase>().ResetPhase(this);
+		// Reset enemy phase and level
 		level = checkpoint;
+		if (phaseIndex == checkpointPhase) {
+			currentPhase.GetComponent<EnemyPhase>().ResetPhase(this);
+		}
+		else {
+			// Reset phase index
+			phaseIndex = checkpointPhase;
+
+			// Set phase shift to new index too
+			phaseShift = phaseIndex;
+
+			// Deactivate current phase and slate for destruction
+			currentPhase.GetComponent<EnemyPhase>().StopPhase();
+			prevPhase = currentPhase;
+
+			// Load new phase
+			currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex));
+		}
 		scoreLevel.text = "Wave: " + level.ToString();
 
 		// Spawn player, notify camera
@@ -457,6 +475,7 @@ public class Scorer : MonoBehaviour {
 
 		// Flash grid
 		FlashGrid(currentPulseColor);
+
 		// Shift grid
 		if (totalDeaths > 0) {
 			ShiftGrid(phaseShift);
