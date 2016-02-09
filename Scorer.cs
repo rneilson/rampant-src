@@ -16,6 +16,7 @@ public class Scorer : MonoBehaviour {
 	private CameraMovement cameraFollower;
 	private bool isPaused = true;
 	private bool isStarted = false;
+	private bool isTerminal = false;
 
 	// Title/menu stuff
 	private MenuControl menu;
@@ -129,6 +130,9 @@ public class Scorer : MonoBehaviour {
 	}
 	public bool IsStarted {
 		get { return isStarted; }
+	}
+	public bool IsTerminal {
+		get { return isTerminal; }
 	}
 	public bool GlobalDebug {
 		get { return globalDebug; }
@@ -320,21 +324,33 @@ public class Scorer : MonoBehaviour {
 	}
 	
 	public void NextPhase () {
+		bool justWentTerminal = false;
+
 		// Deactivate current phase and slate for destruction
 		currentPhase.GetComponent<EnemyPhase>().StopPhase();
 		prevPhase = currentPhase;
 
-		// Save current wave number as checkpoint
-		checkpoint = level;
-
 		// Advance index, and go to terminal phase if all phases complete
 		phaseIndex++;
+
 		if (phaseIndex >= GameSettings.CurrentMode.PhaseCount) {
+			// Go to terminal phase
 			phaseIndex = GameSettings.CurrentMode.Terminal;
+
+			// Set terminal if not already there
+			if (!isTerminal) {
+				justWentTerminal = true;
+				isTerminal = true;
+			}
 		}
 
 		// Instantiate new phase, and let chips fall
 		currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex));
+
+		// Save current wave number as checkpoint
+		if ((currentPhase.GetComponent<EnemyPhase>().Checkpoint) && ((!isTerminal) || (justWentTerminal))) {
+			checkpoint = level;
+		}
 	}
 	
 	void PlayerDied () {
