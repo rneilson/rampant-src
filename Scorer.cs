@@ -37,6 +37,7 @@ public class Scorer : MonoBehaviour {
 	private TextMesh scoreLevel;
 
 	// Respawn parameters
+	public float startDelay = 1.0f;
 	public float respawnTime;
 	public float waveClearCountdown = 0.25f;
 	public float playerBreakDelay = 1.0f;
@@ -53,10 +54,12 @@ public class Scorer : MonoBehaviour {
 	public GameObject playerType;
 	public GameObject spawnEffect;
 	public AudioClip spawnSound;
+	public float spawnBombForce = 800f;
 	public AudioClip respawnSound;
 	public float respawnSoundDelay = 0.0f;
 	public float respawnSoundVol = 0.5f;
-	public float spawnBombForce = 800f;
+	public GameObject respawnOrb;
+	public float respawnOrbDelay = 0.25f;
 
 	// Enemy phases (ie difficulty stuff)
 	private GameObject currentPhase;
@@ -92,6 +95,9 @@ public class Scorer : MonoBehaviour {
 
 	public bool Respawn {
 		get { return respawn; }
+	}
+	public float RespawnCountdown {
+		get { return respawnCountdown; }
 	}
 	public int Level {
 		get { return level; }
@@ -170,7 +176,7 @@ public class Scorer : MonoBehaviour {
 		level = 0;
 		totalDeaths = 0;
 		respawn = true;
-		respawnCountdown = 0.0f;
+		respawnCountdown = startDelay;
 		myAudioSource = GetComponent<AudioSource>();
 
 		menu.SetTitle(gameTitle);
@@ -385,15 +391,7 @@ public class Scorer : MonoBehaviour {
 		totalDeaths++;
 		ClearTargets();
 
-		// Play respawn countdown sound
-		if (respawnSound) {
-			if (respawnSoundDelay > 0.0f) {
-				StartCoroutine(PlayDelayedClip(respawnSound, respawnSoundDelay, respawnSoundVol));
-			}
-			else {
-				myAudioSource.PlayOneShot(respawnSound, respawnSoundVol);
-			}
-		}
+		RespawnEffects();
 	}
 	
 	void SpawnBomb (Vector3 spawnAt, Vector3 bombAt, float killRadius, float pushRadius) {
@@ -527,6 +525,40 @@ public class Scorer : MonoBehaviour {
 		}
 	}
 
+	void RespawnEffects () {
+		// Play respawn countdown sound
+		if (respawnSound) {
+			if (respawnSoundDelay > 0.0f) {
+				StartCoroutine(PlayDelayedClip(respawnSound, respawnSoundDelay, respawnSoundVol));
+			}
+			else {
+				myAudioSource.PlayOneShot(respawnSound, respawnSoundVol);
+			}
+		}
+
+		// Instantiate spawn orbs
+		// (They'll take care of themselves)
+		if (respawnOrb) {
+			if (respawnOrbDelay > 0.0f) {
+				StartCoroutine(RespawnOrbsDelayed(respawnOrbDelay));
+			}
+			else {
+				RespawnOrbs();
+			}
+		}
+	}
+
+	void RespawnOrbs () {
+		// Left
+		Instantiate(respawnOrb, new Vector3(-maxDisplacement, spawnPos.y, 0f), Quaternion.Euler(-90, 0, 0));
+		// Right
+		Instantiate(respawnOrb, new Vector3(maxDisplacement, spawnPos.y, 0f), Quaternion.Euler(-90, 0, 0));
+		// Top
+		Instantiate(respawnOrb, new Vector3(0f, spawnPos.y, maxDisplacement), Quaternion.Euler(-90, 0, 0));
+		// Bottom
+		Instantiate(respawnOrb, new Vector3(0f, spawnPos.y, -maxDisplacement), Quaternion.Euler(-90, 0, 0));
+	}
+
 	public void FlashGrid (Color gridColor) {
 		// Update each flasher with new color (same times, though)
 		foreach (GameObject pulser in arenaPulsers) {
@@ -578,6 +610,10 @@ public class Scorer : MonoBehaviour {
 		}
 
 		isStarted = true;
+
+		if (respawnCountdown > 0.0f) {
+			RespawnEffects();
+		}
 	}
 
 	IEnumerator PlayDelayedClip (AudioClip toPlay, float delay, float volume) {
@@ -585,6 +621,10 @@ public class Scorer : MonoBehaviour {
 		myAudioSource.PlayOneShot(toPlay, volume);
 	}
 
+	IEnumerator RespawnOrbsDelayed (float delay) {
+		yield return new WaitForSeconds(delay);
+		RespawnOrbs();
+	}
 	public void SaveScores () {
 		// For saving high scores (when player isn't dead yet) before quitting
 		if (kills > maxKills) {
