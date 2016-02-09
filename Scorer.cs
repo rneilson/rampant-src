@@ -178,8 +178,12 @@ public class Scorer : MonoBehaviour {
 		// Autostart if game (re)started
 		if ((!isStarted) && (GameSettings.Restarted)) {
 			if (globalDebug) {
-				// Debug.Log("Game (re)started, autostarting as of frame " + framesActive.ToString(), gameObject);
-				Debug.Log("Game (re)started, autostarting", gameObject);
+				if (GameSettings.NumStarts <= 1) {
+					Debug.Log("Game started", gameObject);
+				}
+				else {
+					Debug.Log("Game restarted, total starts: " + GameSettings.NumStarts.ToString(), gameObject);
+				}
 			}
 			// This is on its own line in case there's anything else that needs doing
 			UnPauseGame();
@@ -451,7 +455,7 @@ public class Scorer : MonoBehaviour {
 		isPaused = false;
 
 		if (!isStarted) {
-			SendStartGame();
+			StartGame();
 		}
 		Time.timeScale = 1;
 
@@ -502,7 +506,7 @@ public class Scorer : MonoBehaviour {
 		}
 	}
 
-	void SendStartGame () {
+	void StartGame () {
 		// Mode debug
 		if (globalDebug) {
 			Debug.Log("Loading mode: " + GameSettings.CurrentMode.Name, gameObject);

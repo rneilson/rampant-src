@@ -500,6 +500,9 @@ public class MenuControl : MonoBehaviour {
 		currentInput = InputMode.Game;
 		Input.ResetInputAxes();
 
+		// Tell GameSettings to resume
+		GameSettings.Resume();
+
 	}
 
 	public string GetSetting (string settingName) {
