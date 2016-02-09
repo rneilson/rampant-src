@@ -30,6 +30,7 @@ public class ScrollCodeBox : MonoBehaviour {
 	private int displayLine = 0;		// Current line in display page
 	private int sourcePos = 0;		// Current pos in source lines -- for lines > rowlen
 	private int sourceLine = 0;		// Current line in source array
+	private bool stopped = false;
 
 	// String data
 	private StringBuilder lineBuffer;
@@ -39,7 +40,7 @@ public class ScrollCodeBox : MonoBehaviour {
 	private string[] sourceLines;	// Lines from source text
 	private StringInfo sourceStr;
 	private string newlineChar = "\n";
-	//private char paddingChar = ' ';
+	private string cursorBlink = " ";
 
 	// Controls
 	public bool debugInfo = false;
@@ -131,12 +132,23 @@ public class ScrollCodeBox : MonoBehaviour {
 		if (NextDisplaySegment()) {
 			display.text = String.Concat(displayLines);
 		}
+		else if ((showCursor) && (BlinkCursor())) {
+			display.text = String.Concat(displayLines);
+		}
 	}
 
 	bool NextDisplaySegment () {
 		/* I /was/ going to do this all functional-style, but there are /way/ too many moving parts */
-		int newPos = (timer.Phase > 0.0f) ? Mathf.FloorToInt(timer.Phase * (float) rowlen) : 0;
-		int newLine = timer.Loops;
+		int newPos, newLine;
+
+		if (!stopped) {
+			newPos = (timer.Phase > 0.0f) ? Mathf.FloorToInt(timer.Phase * (float) rowlen) : 0;
+			newLine = timer.Loops;
+		}
+		else {
+			newPos = cursorPos;
+			newLine = currentLine;
+		}
 
 		// Only do anything if we've advanced since last time
 		if ((newPos > cursorPos) || (newLine > currentLine)) {
@@ -300,11 +312,40 @@ public class ScrollCodeBox : MonoBehaviour {
 	}
 
 	void StopDisplay () {
-		// Stop timer cycle
-		timer.StopPulse();
-		if (debugInfo) {
-			Debug.Log("Display timer stopped, phase: " + timer.PhaseRaw.ToString() 
-				+ ", loops: " + timer.Loops.ToString(), gameObject);
+		stopped = true;
+
+		if (showCursor) {
+			// Reset timer, splitting pulse time between at/after target
+			timer.NewPulse(0f, timer.timeToTarget / 2.0f, 0f, timer.timeToTarget / 2.0f, true, true, true, PulseMode.Linear);
+		}
+		else {
+			// Stop timer cycle
+			timer.StopPulse();
+			if (debugInfo) {
+				Debug.Log("Display timer stopped, phase: " + timer.PhaseRaw.ToString() 
+					+ ", loops: " + timer.Loops.ToString(), gameObject);
+			}
+		}
+	}
+
+	bool BlinkCursor () {
+		if (timer.State != timer.LastState) {
+			// Show cursor on odd loops, blank on even ones
+			if (timer.State == PulseState.AtTarget) {
+				lineBuffer.Remove((lineBuffer.Length - cursorStr.Length), cursorStr.Length);
+				lineBuffer.Append(cursorBlink);
+			}
+			else if (timer.State == PulseState.AfterTarget) {
+				lineBuffer.Remove((lineBuffer.Length - cursorBlink.Length), cursorBlink.Length);
+				lineBuffer.Append(cursorStr);
+			}
+			// Now update display line
+			displayLines[displayLine] = lineBuffer.ToString();
+			// Yes, we need updating
+			return true;
+		}
+		else {
+			return false;
 		}
 	}
 
