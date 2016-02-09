@@ -11,9 +11,8 @@ public class RedCubeBomb : MonoBehaviour {
 	private bool armed;
 	private bool killPlayer = false;
 	private const bool spin = true;
-	private Vector3 spinAxis = Vector3.right;
 	private Vector3 spinRef = Vector3.forward;
-	private float torque = 0.15f;
+	private Vector3 spinAxis;
 
 	// Unity 5 API changes
 	//private AudioSource myAudioSource;
@@ -27,8 +26,11 @@ public class RedCubeBomb : MonoBehaviour {
 	// Public parameters
 	public float speed;
 	public float drag;
+	public float torque = 0.15f;
+	public Vector3 spinAxes = Vector3.right;
 	public GameObject burster;
 	public GameObject bursterQuiet;
+	public GameObject deathFade;
 	public float bombHeight = 0.51f;
 	public float bombForce = 300f;
 	public float bombKillRadius = 1.0f;
@@ -50,6 +52,8 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 		myRigidbody.drag = drag;
 		armed = true;
+
+		spinAxis = spinAxes.normalized;
 
 		// Add to control's list
 		thisType = EnemyList.AddOrGetType(thisTypeName);
@@ -91,14 +95,18 @@ public class RedCubeBomb : MonoBehaviour {
 		else {
 			Destroy(Instantiate(bursterQuiet, transform.position, Quaternion.Euler(-90, 0, 0)), 0.5f);
 		}
-		// Drop da bomb
-		if (armed) {
-			DropBomb(transform.position);
+		if (deathFade) {
+			Destroy(Instantiate(deathFade, transform.position, Quaternion.identity), 1.0f);
 		}
 		if (dying != DeathType.Silently) {
 			scorer.AddKill();
 		}
 		KillRelatives(shrapnelLifetime);
+
+		// Drop da bomb
+		if (armed) {
+			DropBomb(transform.position);
+		}
 
 		// Remove from control's list
 		control.RemoveInstanceFromList(thisInst);
@@ -184,16 +192,16 @@ public class RedCubeBomb : MonoBehaviour {
 
 		int killmask, pushmask;
 		Collider[] things;
-		// If we're self-triggering, can kill player
-		if (killPlayer) {
-			killmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Player"));
-		}
-		else {
-			killmask = (1 << LayerMask.NameToLayer("Enemy"));
-		}
 		
 		// Kill things in inner radius
 		if (bombKillRadius > 0.0f) {
+			// If we're self-triggering, can kill player
+			if (killPlayer) {
+				killmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Player"));
+			}
+			else {
+				killmask = (1 << LayerMask.NameToLayer("Enemy"));
+			}
 			things = Physics.OverlapSphere(pos, bombKillRadius, killmask);
 			if (things.Length > 0) {
 				for (int i=0; i<things.Length; i++) {
@@ -203,7 +211,7 @@ public class RedCubeBomb : MonoBehaviour {
 		}
 		
 		// Only push things if we're dying loudly (do push player)
-		if (dying == DeathType.Loudly) {
+		if ((dying == DeathType.Loudly) && (bombPushRadius > 0.0f)) {
 			pushmask = (1 << LayerMask.NameToLayer("Enemy")) | (1 << LayerMask.NameToLayer("Player"));
 			// Push things in outer radius
 			things = Physics.OverlapSphere(pos, bombPushRadius, pushmask);
