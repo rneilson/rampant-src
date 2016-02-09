@@ -38,6 +38,7 @@ public class Scorer : MonoBehaviour {
 
 	// Respawn parameters
 	public float respawnTime;
+	public float waveClearCountdown = 0.25f;
 	public float playerBreakDelay = 1.0f;
 	public float playerBreakRadius = 1.0f;
 	public float playerBreakFraction = 0.5f;
@@ -133,6 +134,12 @@ public class Scorer : MonoBehaviour {
 	}
 	public bool IsTerminal {
 		get { return isTerminal; }
+	}
+	public bool WaveClear {
+		get { return enemyControl.Clear; }
+	}
+	public float WaveClearCountdown {
+		get { return waveClearCountdown; }
 	}
 	public bool GlobalDebug {
 		get { return globalDebug; }

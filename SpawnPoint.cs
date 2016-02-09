@@ -15,7 +15,17 @@ public class SpawnPoint : MonoBehaviour {
 	private bool spawned;
 	private float phaseIndex;
 	private Scorer scorer;
+	private RedCubeGroundControl control;
 	private ParticleSystem particle;
+
+	// Type/instance management stuff
+	private static string thisTypeName = "Spawner";
+	private static EnemyType thisType;
+	private EnemyInst thisInst;
+
+	static SpawnPoint () {
+		thisType = EnemyList.AddOrGetType(thisTypeName);
+	}
 
 	void Awake () {
 		particle = GetComponent<ParticleSystem>();
@@ -44,10 +54,18 @@ public class SpawnPoint : MonoBehaviour {
 					if (scorer) {
 						spawn.SendMessage("FindControl", scorer.gameObject);
 					}
-					if (postTime > 0)
+					if (postTime > 0) {
+						// Remove from control's list
+						control.RemoveInstanceFromList(thisInst);
+
 						Destroy(gameObject, postTime);
-					else
+					}
+					else {
+						// Remove from control's list
+						control.RemoveInstanceFromList(thisInst);
+
 						Destroy(gameObject);
+					}
 					spawned = true;
 				}
 				// Start particle effect
@@ -68,8 +86,13 @@ public class SpawnPoint : MonoBehaviour {
 		phaseIndex = phase;
 	}
 	
-	public void FindControl (GameObject control) {
-		scorer = control.GetComponent<Scorer>();
+	public void FindControl (GameObject controller) {
+		scorer = controller.GetComponent<Scorer>();
+		control = controller.GetComponent<RedCubeGroundControl>();
+
+		// Add to control's list
+		thisInst = new EnemyInst(thisType.typeNum, gameObject);
+		control.AddInstanceToList(thisInst);
 	}
 
 	public void StartCountdown (float delay) {

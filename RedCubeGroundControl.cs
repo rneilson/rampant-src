@@ -92,6 +92,16 @@ public class RedCubeGroundControl : MonoBehaviour {
 	public float Extent3D {
 		get { return extent3d; }
 	}
+	public bool Clear {
+		get {
+			if (enemies.Count <= 0) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+	}
 	/*
 	public bool SeekersAvoidInterceptors {
 		get { return seekersAvoidInterceptors; }

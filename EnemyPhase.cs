@@ -42,9 +42,18 @@ public class EnemyPhase : MonoBehaviour {
 	//Put everything in FixedUpdate
 	void FixedUpdate () {
 		if ((!scorer.Respawn) && (phaseActive)) {
+			// Check if previous wave already clear
+			if ((scorer.WaveClear) && (countdown > scorer.WaveClearCountdown) && (scorer.Level > 0)) {
+				countdown = scorer.WaveClearCountdown;
+
+				if (debugInfo) {
+					Debug.Log("Wave " + scorer.Level.ToString() + " clear, cutting respawn to " 
+						+ countdown.ToString() + " sec", gameObject);
+				}
+			}
 			if (countdown <= 0.0f) {
-				waveNum++;
-				StartWave(waveNum);
+				StartWave(++waveNum);
+
 				if ((maxWaves > 0) && (waveNum >= maxWaves)) {
 					scorer.NextPhase();
 				}
