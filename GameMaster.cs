@@ -17,12 +17,12 @@ public class GameMaster : MonoBehaviour {
 			Debug.LogError("No modes specified!", gameObject);
 		}
 		GameSettings.DebugInfo = debugGameSettings;
+		// Load modes
+		GameSettings.LoadModes(modes);
 		// Load settings
 		GameSettings.LoadSettings();
 		// Enable camera depth texture
 		GameObject.Find("Camera").GetComponent<Camera>().depthTextureMode = DepthTextureMode.Depth;
-		// Load modes
-		GameSettings.LoadModes(modes);
 	}
 }
 
