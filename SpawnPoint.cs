@@ -4,6 +4,7 @@ using System.Collections;
 public class SpawnPoint : MonoBehaviour {
 	
 	public GameObject enemyType;
+	public AudioClip spawnSound;
 	public float preTime;
 	public float postTime;
 	public bool randomRotationY = true;
