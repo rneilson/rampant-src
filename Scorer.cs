@@ -451,6 +451,9 @@ public class Scorer : MonoBehaviour {
 
 			// Load new phase
 			currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex)).GetComponent<EnemyPhase>();
+
+			// Get new pulse color
+			currentPulseColor = currentPhase.pulseColor;
 		}
 		scoreLevel.text = "Wave: " + level.ToString();
 
