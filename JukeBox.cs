@@ -7,6 +7,7 @@ public class JukeBox : MonoBehaviour {
 	public int menuTrack = 0;
 	public int defaultTrack = 0;
 	public float maxVolume = 0.5f;
+	public bool playMenu = true;
 
 	private int currentTrack;
 	private AudioSource audioPlayer;
@@ -45,7 +46,9 @@ public class JukeBox : MonoBehaviour {
 		if (menuTrack > trackList.Length) {
 			menuTrack = 0;
 		}
-		PlayTrack(menuTrack);
+		if (playMenu) {
+			PlayTrack(menuTrack);
+		}
 		currentTrack = defaultTrack;
 	}
 	
