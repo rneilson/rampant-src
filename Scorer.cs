@@ -62,8 +62,8 @@ public class Scorer : MonoBehaviour {
 	public float respawnOrbDelay = 0.25f;
 
 	// Enemy phases (ie difficulty stuff)
-	private GameObject currentPhase;
-	private GameObject prevPhase;
+	private EnemyPhase currentPhase;
+	private EnemyPhase prevPhase;
 	private int phaseIndex;
 	private int phaseShift;
 	private int checkpoint;
@@ -319,7 +319,7 @@ public class Scorer : MonoBehaviour {
 
 		// Destroy previous phase, if present
 		if (prevPhase) {
-			Destroy(prevPhase, 0.0f);
+			Destroy(prevPhase.gameObject, 0.0f);
 		}
 
 	}
@@ -341,7 +341,7 @@ public class Scorer : MonoBehaviour {
 		bool justWentTerminal = false;
 
 		// Deactivate current phase and slate for destruction
-		currentPhase.GetComponent<EnemyPhase>().StopPhase();
+		currentPhase.StopPhase();
 		prevPhase = currentPhase;
 
 		// Advance index, and go to terminal phase if all phases complete
@@ -359,10 +359,10 @@ public class Scorer : MonoBehaviour {
 		}
 
 		// Instantiate new phase, and let chips fall
-		currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex));
+		currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex)).GetComponent<EnemyPhase>();
 
 		// Save current wave number as checkpoint
-		if ((currentPhase.GetComponent<EnemyPhase>().Checkpoint) && ((!isTerminal) || (justWentTerminal))) {
+		if ((currentPhase.Checkpoint) && ((!isTerminal) || (justWentTerminal))) {
 			checkpoint = level;
 			checkpointPhase = phaseIndex;
 		}
@@ -443,7 +443,7 @@ public class Scorer : MonoBehaviour {
 		// Reset enemy phase and level
 		level = checkpoint;
 		if (phaseIndex == checkpointPhase) {
-			currentPhase.GetComponent<EnemyPhase>().ResetPhase(this);
+			currentPhase.ResetPhase(this);
 		}
 		else {
 			// Reset phase index
@@ -453,11 +453,11 @@ public class Scorer : MonoBehaviour {
 			phaseShift = phaseIndex;
 
 			// Deactivate current phase and slate for destruction
-			currentPhase.GetComponent<EnemyPhase>().StopPhase();
+			currentPhase.StopPhase();
 			prevPhase = currentPhase;
 
 			// Load new phase
-			currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex));
+			currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex)).GetComponent<EnemyPhase>();
 		}
 		scoreLevel.text = "Wave: " + level.ToString();
 
@@ -595,7 +595,7 @@ public class Scorer : MonoBehaviour {
 		// Start first enemy phase
 		phaseIndex = 0;
 		phaseShift = -1;
-		currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex));
+		currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex)).GetComponent<EnemyPhase>();
 
 		// Inform pulsers and shifters that game has started
 		foreach (GameObject pulser in arenaPulsers) {
