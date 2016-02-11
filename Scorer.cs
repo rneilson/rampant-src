@@ -36,13 +36,18 @@ public class Scorer : MonoBehaviour {
 	private TextMesh scoreDeaths;
 	private TextMesh scoreLevel;
 
+	// Difficulty paramters (to be moved to mode spec)
+	//public float waveClearCountdown = 0.25f;
+	//public float playerBreakDelay = 1.0f;
+	//public float playerBreakRadius = 1.0f;
+	//public float playerBreakFraction = 0.5f;
+	//public int biggerGunAt;
+	//public int giveBombEvery;
+	//public float spawnBombForce = 800f;
+
 	// Respawn parameters
 	public float startDelay = 1.0f;
 	public float respawnTime;
-	public float waveClearCountdown = 0.25f;
-	public float playerBreakDelay = 1.0f;
-	public float playerBreakRadius = 1.0f;
-	public float playerBreakFraction = 0.5f;
 	public float maxDisplacement = 4.75f;
 	private bool respawn;
 	private float respawnCountdown;
@@ -54,7 +59,6 @@ public class Scorer : MonoBehaviour {
 	public GameObject playerType;
 	public GameObject spawnEffect;
 	public AudioClip spawnSound;
-	public float spawnBombForce = 800f;
 	public AudioClip respawnSound;
 	public float respawnSoundDelay = 0.0f;
 	public float respawnSoundVol = 0.5f;
@@ -70,11 +74,6 @@ public class Scorer : MonoBehaviour {
 	private int checkpointPhase;
 
 	// Powerup parameters and state tracking
-	public bool forceBombUse;
-	public int biggerGunAt;
-	public int giveBombEvery;
-	public int bombMinusOneAt;
-	public int bombMinusTwoAt;
 	private int killsUntilPowerup;
 
 	// Plane (etc) for color pulses and material shifts
@@ -119,13 +118,13 @@ public class Scorer : MonoBehaviour {
 		get { return playerBreak; }
 	}
 	public float PlayerBreakDelay {
-		get { return playerBreakDelay; }
+		get { return GameSettings.CurrentMode.Difficulty.playerBreakDelay; }
 	}
 	public float PlayerBreakRadius {
-		get { return playerBreakRadius; }
+		get { return GameSettings.CurrentMode.Difficulty.playerBreakRadius; }
 	}
 	public float PlayerBreakFraction {
-		get { return playerBreakFraction; }
+		get { return GameSettings.CurrentMode.Difficulty.playerBreakFraction; }
 	}
 	public float MaxDisplacement {
 		get { return maxDisplacement; }
@@ -146,7 +145,7 @@ public class Scorer : MonoBehaviour {
 		get { return enemyControl.Clear; }
 	}
 	public float WaveClearCountdown {
-		get { return waveClearCountdown; }
+		get { return GameSettings.CurrentMode.Difficulty.waveClearCountdown; }
 	}
 	public bool GlobalDebug {
 		get { return globalDebug; }
@@ -287,25 +286,14 @@ public class Scorer : MonoBehaviour {
 			if (!playerControl.HasBomb) {
 				killsUntilPowerup--;
 
-				if (playerControl.BiggerGun) {
-					if ((killsUntilPowerup == bombMinusTwoAt) && (forceBombUse)) {
-						playerControl.BombMinusTwo();
+				if (killsUntilPowerup == 0) {
+					if (playerControl.BiggerGun) {
+						killsUntilPowerup = GameSettings.CurrentMode.Difficulty.giveBombEvery;
+						playerControl.GiveBomb(false);
 					}
-					else if ((killsUntilPowerup == bombMinusOneAt) && (forceBombUse)) {
-						playerControl.BombMinusOne();
-					}
-					else if (killsUntilPowerup == 0) {
-						killsUntilPowerup = giveBombEvery;
-						playerControl.GiveBomb(forceBombUse);
-						if (forceBombUse) {
-							playerControl.UseBomb();
-						}
-					}
-				}
-				else {
-					if (killsUntilPowerup == 0) {
+					else {
 						playerControl.FireFaster();
-						killsUntilPowerup = giveBombEvery;
+						killsUntilPowerup = GameSettings.CurrentMode.Difficulty.giveBombEvery;
 					}
 				}
 			}
@@ -325,7 +313,7 @@ public class Scorer : MonoBehaviour {
 	}
 
 	public void StartNewPhase (Color pulseColor) {
-		if ((phaseShift != phaseIndex) || (phaseShift == GameSettings.CurrentMode.Terminal)) {
+		if ((phaseShift != phaseIndex) || ((isTerminal) && (phaseShift == GameSettings.CurrentMode.Terminal))) {
 			phaseShift = phaseIndex;
 			// Shift if we're shifting
 			ShiftGrid(phaseShift);
@@ -362,9 +350,12 @@ public class Scorer : MonoBehaviour {
 		currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex)).GetComponent<EnemyPhase>();
 
 		// Save current wave number as checkpoint
-		if ((currentPhase.Checkpoint) && ((!isTerminal) || (justWentTerminal))) {
-			checkpoint = level;
-			checkpointPhase = phaseIndex;
+		if (GameSettings.CurrentMode.Difficulty.allowCheckpoints) {
+			if (((currentPhase.Checkpoint) && (!isTerminal)) 
+				|| ((GameSettings.CurrentMode.Difficulty.terminalCheckpoint) && (justWentTerminal))) {
+				checkpoint = level;
+				checkpointPhase = phaseIndex;
+			}
 		}
 	}
 	
@@ -404,23 +395,27 @@ public class Scorer : MonoBehaviour {
 		Rigidbody rb;
 		
 		// Clear enemies
-		enemies = Physics.OverlapSphere(bombAt, killRadius, mask);
-		for (int i=0; i<enemies.Length; i++) {
-			enemies[i].SendMessage("Clear", false, SendMessageOptions.DontRequireReceiver);
+		if (killRadius > 0.0f) {
+			enemies = Physics.OverlapSphere(spawnAt, killRadius, mask);
+			for (int i=0; i<enemies.Length; i++) {
+				enemies[i].SendMessage("Clear", false, SendMessageOptions.DontRequireReceiver);
+			}
 		}
 		
 		// Push away remaining enemies
-		enemies = Physics.OverlapSphere(bombAt, pushRadius, mask);
-		for (int i=0; i<enemies.Length; i++) {
-			rb = enemies[i].GetComponent<Rigidbody>();
-			if (rb) {
-				rb.AddExplosionForce(spawnBombForce, bombAt, 0);
-			}
-			else {
-				// Try parent instead
-				rb = enemies[i].transform.parent.GetComponent<Rigidbody>();
+		if (pushRadius > 0.0f) {
+			enemies = Physics.OverlapSphere(spawnAt, pushRadius, mask);
+			for (int i=0; i<enemies.Length; i++) {
+				rb = enemies[i].GetComponent<Rigidbody>();
 				if (rb) {
-					rb.AddExplosionForce(spawnBombForce, bombAt, 0);
+					rb.AddExplosionForce(GameSettings.CurrentMode.Difficulty.spawnBombForce, bombAt, 0);
+				}
+				else {
+					// Try parent instead
+					rb = enemies[i].transform.parent.GetComponent<Rigidbody>();
+					if (rb) {
+						rb.AddExplosionForce(GameSettings.CurrentMode.Difficulty.spawnBombForce, bombAt, 0);
+					}
 				}
 			}
 		}
@@ -431,14 +426,12 @@ public class Scorer : MonoBehaviour {
 		menu.HideMenu();
 		
 		// Bomb enemies near spawn point
-		SpawnBomb(spawnPos, bombPos, 2.5f, 5.0f);
+		SpawnBomb(spawnPos, bombPos, GameSettings.CurrentMode.Difficulty.spawnKillRadius, 
+			GameSettings.CurrentMode.Difficulty.spawnPushRadius);
 		
 		// Reset kills
 		kills = 0;
 		scoreKills.text = "Kills: " + kills.ToString();
-
-		// Reset powerup threshold
-		killsUntilPowerup = biggerGunAt;
 
 		// Reset enemy phase and level
 		level = checkpoint;
@@ -468,6 +461,15 @@ public class Scorer : MonoBehaviour {
 			cameraFollower.NewPlayer(playerCurrent);
 		}
 		
+		// Reset powerup threshold
+		if (GameSettings.CurrentMode.Difficulty.biggerGunAt > 0) {
+			killsUntilPowerup = GameSettings.CurrentMode.Difficulty.biggerGunAt;
+		}
+		else {
+			playerControl.FireFaster();
+			killsUntilPowerup = GameSettings.CurrentMode.Difficulty.giveBombEvery;
+		}
+
 		// Assign new target
 		NewTargets(playerCurrent);
 

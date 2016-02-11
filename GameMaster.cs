@@ -764,6 +764,29 @@ public class GameModeSpec {
 	public string Name;
 	public GameObject[] Phases;
 	public int TerminalPhase;
+	public DifficultySpec Difficulty;
+}
+
+[Serializable]
+public class DifficultySpec {
+	// Wave modifiers
+	public float waveClearCountdown = 1.0f;
+	public float playerBreakDelay = 0.0f;
+	public float playerBreakRadius = 1.0f;
+	public float playerBreakFraction = 0.5f;
+
+	// Spawn bomb modifiers
+	public float spawnKillRadius = 2.5f;
+	public float spawnPushRadius = 5.0f;
+	public float spawnBombForce = 600f;
+
+	// Powerup modifiers
+	public int biggerGunAt = 20;
+	public int giveBombEvery = 40;
+
+	// Checkpoint modifiers
+	public bool allowCheckpoints = true;
+	public bool terminalCheckpoint = true;
 }
 
 public class GameMode {
@@ -771,6 +794,7 @@ public class GameMode {
 	private List<GameObject> phases;
 	private int terminal;
 	private Dictionary<string, int> scores;
+	private DifficultySpec difficulty;
 
 	public GameMode (GameModeSpec spec) {
 		this.name = spec.Name;
@@ -782,11 +806,13 @@ public class GameMode {
 			this.terminal = spec.Phases.Length - 1;
 		}
 		this.scores = new Dictionary<string, int>();
+		this.difficulty = spec.Difficulty;
 	}
 
 	public string Name { get { return name; } }
 	public int PhaseCount { get { return phases.Count; } }
 	public int Terminal { get { return terminal; } }
+	public DifficultySpec Difficulty { get { return difficulty; } }
 
 	public GameObject GetPhase (int index) {
 		if ((index >= 0) && (index < phases.Count)) {
