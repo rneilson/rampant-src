@@ -83,6 +83,7 @@ public static class GameSettings {
 		AddSetting(new VsyncSetting());
 		AddSetting(new AntialiasSetting());
 		AddSetting(new MusicVolumeSetting());
+		AddSetting(new MusicTrackSetting());
 	}
 
 	static void LoadSetting (string name, string val) {
@@ -465,7 +466,7 @@ public class MusicVolumeSetting : MenuSetting {
 	public MusicVolumeSetting () {
 		GameObject[] tmp = GameObject.FindGameObjectsWithTag("Musicbox");
 		if (tmp.Length > 0) {
-			musicBox = tmp[0].GetComponent<JukeBox>();
+			this.musicBox = tmp[0].GetComponent<JukeBox>();
 			this.savedVolume = GetVolume();
 		}
 	}
@@ -535,6 +536,95 @@ public class MusicVolumeSetting : MenuSetting {
 
 	public override string Save () {
 		return GetVolume().ToString("F2");
+	}
+
+}
+
+public class MusicTrackSetting : MenuSetting {
+	private JukeBox musicBox;
+
+	// Technically capable of functioning without music enabled
+	public MusicTrackSetting () {
+		GameObject[] tmp = GameObject.FindGameObjectsWithTag("Musicbox");
+		if (tmp.Length > 0) {
+			this.musicBox = tmp[0].GetComponent<JukeBox>();
+		}
+	}
+
+	int GetTrack () {
+		if (musicBox) {
+			return musicBox.CurrentTrack;
+		}
+		else {
+			return 0;
+		}
+	}
+
+	void SetTrack (int newTrack) {
+		if (musicBox) {
+			musicBox.SetTrack(newTrack);
+		}
+	}
+
+	int TrackCount () {
+		if (musicBox) {
+			return musicBox.TrackCount;
+		}
+		else {
+			return 0;
+		}
+	}
+
+	public override string Name {
+		get { return "MusicTrack"; }
+	}
+	public override bool Persistent {
+		get { return false; }
+	}
+
+	// Returns volume in percent
+	public override string Value {
+		get {
+			if (musicBox) {
+				if (musicBox.CurrentTrack > 0) {
+					return String.Format("Track {0}", musicBox.CurrentTrack);
+				}
+				else {
+					return "[None]";
+				}
+			}
+			else {
+				return "[Disabled]";
+			}
+		}
+	}
+
+	public override void Toggle () {
+		Higher();
+	}
+
+	public override void Higher () {
+		int trackNum = GetTrack();
+		if (++trackNum > TrackCount()) {
+			trackNum = 0;
+		}
+		SetTrack(trackNum);
+	}
+
+	public override void Lower () {
+		int trackNum = GetTrack();
+		if (--trackNum < 0) {
+			trackNum = TrackCount();
+		}
+		SetTrack(trackNum);
+	}
+
+	public override void Load (string settingValue) {
+		SetTrack(Int32.Parse(settingValue));
+	}
+
+	public override string Save () {
+		return GetTrack().ToString();
 	}
 
 }
