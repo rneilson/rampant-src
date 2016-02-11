@@ -242,8 +242,8 @@ public class EnemySpawner : MonoBehaviour {
 			// Only do anything more if we're adding something at this point
 			if (endLen > spawnPoints.Count) {
 				// Play sound
-				if (wave.enemySpawn.spawnSound) {
-					StartCoroutine(PlayDelayedClip(wave.enemySpawn.spawnSound, wave.soundDelay, 1.0f));
+				if (wave.spawnSound) {
+					StartCoroutine(PlayDelayedClip(wave.spawnSound, wave.soundDelay, 1.0f));
 				}
 
 				// Set minimum spacing depending on playerBreak
@@ -443,7 +443,7 @@ public class PointComparePlayerDist : IComparer<PointCandidate> {
 public class WaveSpec {
 	// Public specs
 	public GameObject enemySpawn;
-	//public AudioClip spawnSound;
+	public AudioClip spawnSound;
 	public float soundDelay = 0.0f;
 	public float minSpacing;
 	public float safeRadius;
