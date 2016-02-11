@@ -82,6 +82,7 @@ public static class GameSettings {
 		AddSetting(new FullscreenSetting());
 		AddSetting(new VsyncSetting());
 		AddSetting(new AntialiasSetting());
+		AddSetting(new MusicVolumeSetting());
 	}
 
 	static void LoadSetting (string name, string val) {
@@ -451,6 +452,89 @@ public class VolumeSetting : MenuSetting {
 
 	public override string Save () {
 		return AudioListener.volume.ToString("F2");
+	}
+
+}
+
+public class MusicVolumeSetting : MenuSetting {
+	private const int increment = 5;
+	private float savedVolume;
+	private JukeBox musicBox;
+
+	// Technically capable of functioning without music enabled
+	public MusicVolumeSetting () {
+		GameObject[] tmp = GameObject.FindGameObjectsWithTag("Musicbox");
+		if (tmp.Length > 0) {
+			musicBox = tmp[0].GetComponent<JukeBox>();
+			this.savedVolume = GetVolume();
+		}
+	}
+
+	float GetVolume () {
+		if (musicBox) {
+			return musicBox.Volume;
+		}
+		else {
+			return 0f;
+		}
+	}
+
+	void SetVolume (float newVol) {
+		if (musicBox) {
+			musicBox.Volume = newVol;
+		}
+	}
+
+	public override string Name {
+		get { return "MusicVolume"; }
+	}
+	public override bool Persistent {
+		get { return false; }
+	}
+
+	// Returns volume in percent
+	public override string Value {
+		get {
+			int vol = Mathf.RoundToInt(musicBox.Volume * 100.0f);
+			return String.Format("{0,3}%", vol);
+		}
+	}
+
+	public override void Toggle () {
+		// Mutes if volume positive, puts volume back if muted
+		if (GetVolume() == 0.0f) {
+			SetVolume(savedVolume);
+		}
+		else {
+			savedVolume = GetVolume();
+			SetVolume(0.0f);
+		}
+	}
+
+	public override void Higher () {
+		int vol = Mathf.RoundToInt(GetVolume() * 100.0f);
+		vol += increment;
+		if (vol > 100) {
+			vol = 100;
+		}
+		SetVolume(((float) vol) / 100.0f);
+	}
+
+	public override void Lower () {
+		int vol = Mathf.RoundToInt(GetVolume() * 100.0f);
+		vol -= increment;
+		if (vol < 0) {
+			vol = 0;
+		}
+		SetVolume(((float) vol) / 100.0f);
+	}
+
+	public override void Load (string settingValue) {
+		SetVolume(Single.Parse(settingValue));
+	}
+
+	public override string Save () {
+		return GetVolume().ToString("F2");
 	}
 
 }
