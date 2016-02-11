@@ -16,18 +16,6 @@ public class GameMaster : MonoBehaviour {
 
 	// All this does at the moment is initialize the GameSettings (static) class
 	void Awake () {
-		// Watch for empty mode list
-		if (modes.Length == 0) {
-			Debug.LogError("No modes specified!", gameObject);
-		}
-		GameSettings.DebugInfo = debugGameSettings;
-		// Load modes
-		GameSettings.LoadModes(modes);
-		// Load settings
-		GameSettings.LoadSettings();
-		// Enable camera depth texture
-		GameObject.Find("Camera").GetComponent<Camera>().depthTextureMode = DepthTextureMode.Depth;
-
 		// Load music and/or alarm if set
 		if (musicBox) {
 			GameObject[] tmp = GameObject.FindGameObjectsWithTag("Musicbox");
@@ -38,6 +26,21 @@ public class GameMaster : MonoBehaviour {
 		if (phaseAlarm) {
 			Instantiate(phaseAlarm, transform.position, Quaternion.identity);
 		}
+
+		// Watch for empty mode list
+		if (modes.Length == 0) {
+			Debug.LogError("No modes specified!", gameObject);
+		}
+		GameSettings.DebugInfo = debugGameSettings;
+		// Load modes
+		GameSettings.LoadModes(modes);
+
+		// Load settings
+		GameSettings.LoadSettings();
+
+		// Enable camera depth texture
+		GameObject.Find("Camera").GetComponent<Camera>().depthTextureMode = DepthTextureMode.Depth;
+
 	}
 }
 
