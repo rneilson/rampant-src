@@ -10,8 +10,23 @@ public class GameMaster : MonoBehaviour {
 	public string startMode;
 	public GameModeSpec[] modes;
 
+	// Background sounds
+	public GameObject musicBox;
+	public GameObject phaseAlarm;
+
 	// All this does at the moment is initialize the GameSettings (static) class
 	void Awake () {
+		// Load music and/or alarm if set
+		if (musicBox) {
+			GameObject[] tmp = GameObject.FindGameObjectsWithTag("Musicbox");
+			if (tmp.Length == 0) {
+				DontDestroyOnLoad(Instantiate(musicBox, transform.position, Quaternion.identity));
+			}
+		}
+		if (phaseAlarm) {
+			Instantiate(phaseAlarm, transform.position, Quaternion.identity);
+		}
+
 		// Watch for empty mode list
 		if (modes.Length == 0) {
 			Debug.LogError("No modes specified!", gameObject);
@@ -19,10 +34,13 @@ public class GameMaster : MonoBehaviour {
 		GameSettings.DebugInfo = debugGameSettings;
 		// Load modes
 		GameSettings.LoadModes(modes);
+
 		// Load settings
 		GameSettings.LoadSettings();
+
 		// Enable camera depth texture
 		GameObject.Find("Camera").GetComponent<Camera>().depthTextureMode = DepthTextureMode.Depth;
+
 	}
 }
 
@@ -64,6 +82,8 @@ public static class GameSettings {
 		AddSetting(new FullscreenSetting());
 		AddSetting(new VsyncSetting());
 		AddSetting(new AntialiasSetting());
+		AddSetting(new MusicVolumeSetting());
+		AddSetting(new MusicTrackSetting());
 	}
 
 	static void LoadSetting (string name, string val) {
@@ -433,6 +453,178 @@ public class VolumeSetting : MenuSetting {
 
 	public override string Save () {
 		return AudioListener.volume.ToString("F2");
+	}
+
+}
+
+public class MusicVolumeSetting : MenuSetting {
+	private const int increment = 5;
+	private float savedVolume;
+	private JukeBox musicBox;
+
+	// Technically capable of functioning without music enabled
+	public MusicVolumeSetting () {
+		GameObject[] tmp = GameObject.FindGameObjectsWithTag("Musicbox");
+		if (tmp.Length > 0) {
+			this.musicBox = tmp[0].GetComponent<JukeBox>();
+			this.savedVolume = GetVolume();
+		}
+	}
+
+	float GetVolume () {
+		if (musicBox) {
+			return musicBox.Volume;
+		}
+		else {
+			return 0f;
+		}
+	}
+
+	void SetVolume (float newVol) {
+		if (musicBox) {
+			musicBox.Volume = newVol;
+		}
+	}
+
+	public override string Name {
+		get { return "MusicVolume"; }
+	}
+	public override bool Persistent {
+		get { return false; }
+	}
+
+	// Returns volume in percent
+	public override string Value {
+		get {
+			int vol = Mathf.RoundToInt(musicBox.Volume * 100.0f);
+			return String.Format("{0,3}%", vol);
+		}
+	}
+
+	public override void Toggle () {
+		// Mutes if volume positive, puts volume back if muted
+		if (GetVolume() == 0.0f) {
+			SetVolume(savedVolume);
+		}
+		else {
+			savedVolume = GetVolume();
+			SetVolume(0.0f);
+		}
+	}
+
+	public override void Higher () {
+		int vol = Mathf.RoundToInt(GetVolume() * 100.0f);
+		vol += increment;
+		if (vol > 100) {
+			vol = 100;
+		}
+		SetVolume(((float) vol) / 100.0f);
+	}
+
+	public override void Lower () {
+		int vol = Mathf.RoundToInt(GetVolume() * 100.0f);
+		vol -= increment;
+		if (vol < 0) {
+			vol = 0;
+		}
+		SetVolume(((float) vol) / 100.0f);
+	}
+
+	public override void Load (string settingValue) {
+		SetVolume(Single.Parse(settingValue));
+	}
+
+	public override string Save () {
+		return GetVolume().ToString("F2");
+	}
+
+}
+
+public class MusicTrackSetting : MenuSetting {
+	private JukeBox musicBox;
+
+	// Technically capable of functioning without music enabled
+	public MusicTrackSetting () {
+		GameObject[] tmp = GameObject.FindGameObjectsWithTag("Musicbox");
+		if (tmp.Length > 0) {
+			this.musicBox = tmp[0].GetComponent<JukeBox>();
+		}
+	}
+
+	int GetTrack () {
+		if (musicBox) {
+			return musicBox.CurrentTrack;
+		}
+		else {
+			return 0;
+		}
+	}
+
+	void SetTrack (int newTrack) {
+		if (musicBox) {
+			musicBox.SetTrack(newTrack);
+		}
+	}
+
+	int TrackCount () {
+		if (musicBox) {
+			return musicBox.TrackCount;
+		}
+		else {
+			return 0;
+		}
+	}
+
+	public override string Name {
+		get { return "MusicTrack"; }
+	}
+	public override bool Persistent {
+		get { return false; }
+	}
+
+	// Returns volume in percent
+	public override string Value {
+		get {
+			if (musicBox) {
+				if (musicBox.CurrentTrack > 0) {
+					return String.Format("Track {0}", musicBox.CurrentTrack);
+				}
+				else {
+					return "[None]";
+				}
+			}
+			else {
+				return "[Disabled]";
+			}
+		}
+	}
+
+	public override void Toggle () {
+		Higher();
+	}
+
+	public override void Higher () {
+		int trackNum = GetTrack();
+		if (++trackNum > TrackCount()) {
+			trackNum = 0;
+		}
+		SetTrack(trackNum);
+	}
+
+	public override void Lower () {
+		int trackNum = GetTrack();
+		if (--trackNum < 0) {
+			trackNum = TrackCount();
+		}
+		SetTrack(trackNum);
+	}
+
+	public override void Load (string settingValue) {
+		SetTrack(Int32.Parse(settingValue));
+	}
+
+	public override string Save () {
+		return GetTrack().ToString();
 	}
 
 }

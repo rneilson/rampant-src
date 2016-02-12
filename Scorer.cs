@@ -614,6 +614,12 @@ public class Scorer : MonoBehaviour {
 			}
 		}
 
+		// Start music, if present
+		GameObject[] musicbox = GameObject.FindGameObjectsWithTag("Musicbox");
+		if (musicbox.Length > 0) {
+			musicbox[0].SendMessage("GameStarted", null, SendMessageOptions.DontRequireReceiver);
+		}
+
 		isStarted = true;
 
 		if (respawnCountdown > 0.0f) {
