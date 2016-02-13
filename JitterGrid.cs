@@ -75,20 +75,24 @@ public class JitterGrid : MonoBehaviour {
 		// Initialize lines
 		int useLayer = LayerMask.NameToLayer("TransparentFX");
 		for (int z = 0; z < pointsZ; z++) {
-			horizontalLines.Add(new VectorLine(pointsHori[z], lineMesh, lineMat, lineWidth, lineRot, useLayer, colors[0]));
+			horizontalLines.Add(new VectorLine(pointsHori[z], "Horizontal" + z.ToString(), 
+				lineMat, lineWidth, lineRot, useLayer, colors[0]));
 		}
 
 		for (int x = 0; x < pointsX; x++) {
-			verticalLines.Add(new VectorLine(pointsVert[x], lineMesh, lineMat, lineWidth, lineRot, useLayer, colors[0]));
+			verticalLines.Add(new VectorLine(pointsVert[x], "Vertical" + x.ToString(), 
+				lineMat, lineWidth, lineRot, useLayer, colors[0]));
 		}
 
 		if (debugInfo) {
 			Debug.Log("Horizontal lines: " + horizontalLines.Count.ToString(), gameObject);
 			Debug.Log("Vertical lines: " + verticalLines.Count.ToString(), gameObject);
+			Debug.Log("First mesh vertices: " + horizontalLines[0].BaseMesh.vertices.Length.ToString());
+			Debug.Log("First mesh triangles: " + horizontalLines[0].BaseMesh.triangles.Length.ToString());
+			Debug.Log("First mesh colors: " + horizontalLines[0].BaseMesh.colors32.Length.ToString());
 		}
 
 		// Set line colors
-		/*
 		if (debugInfo) {
 			// Advance line color with each segment
 			for (int z = 0; z < pointsZ; z++) {
@@ -104,18 +108,19 @@ public class JitterGrid : MonoBehaviour {
 				}
 			}
 		}
-		*/
 	}
 
 	void Start () {}
 	
 	void Update () {
+		/*
 		foreach (VectorLine line in horizontalLines) {
 			line.Draw3D();
 		}
 		foreach (VectorLine line in verticalLines) {
 			line.Draw3D();
 		}
+		*/
 	}
 
 	/*
@@ -204,22 +209,105 @@ public struct VectorLineSegment {
 }
 
 public class VectorLine {
-	private List<VectorLineSegment> segments;
+	private GameObject lineObj;
 	private Mesh baseMesh;
-	private Quaternion baseRot;
-	private float baseWidth;
 	private Material drawMat;
 	private int drawLayer;
+	private int segmentCount;
 
-	public VectorLine (List<Vector3> points, Mesh mesh, Material mat, float width, Vector3 rot, int layer, Color color) {
-		this.baseMesh = mesh;
+	public Mesh BaseMesh {
+		get { return baseMesh; }
+	}
+
+	public VectorLine (List<Vector3> points, string name, Material mat, float width, Vector3 rot, int layer, Color color) {
+
+		//this.baseWidth = width;
 		this.drawMat = mat;
-		this.baseWidth = width;
-		this.baseRot = Quaternion.Euler(rot);
 		this.drawLayer = layer;
-		this.segments = new List<VectorLineSegment>(points.Count);
+		this.segmentCount = points.Count - 1;
+
+		// Temp things
+		Quaternion baseRot = Quaternion.Euler(rot);
+		Color32 newColor = (Color32) color;
+
+		// Create mesh
+		this.baseMesh = new Mesh();
+		var newVertices = new List<Vector3>(segmentCount * 4);
+		var newUV = new List<Vector2>(segmentCount * 4);
+		var newTriangles = new List<int>(segmentCount * 6);
 
 		// Add segments
+		for (int i = 0; i < segmentCount; i++) {
+			// For later, with triangles
+			int baseIndex = newVertices.Count;
+
+			// Get segment vector
+			Vector3 segPos = points[i+1] - points[i];
+
+			// Create transformation matrix
+			Matrix4x4 segMat = Matrix4x4.TRS(points[i] + (segPos / 2.0f), 
+				Quaternion.FromToRotation(Vector3.right, segPos) * baseRot,	
+				new Vector3(segPos.magnitude, width, 1.0f));
+
+			// Add vertices
+			// Simple quad:
+			// 1-3
+			// |\|
+			// 0-2
+			newVertices.Add(segMat.MultiplyPoint3x4(new Vector3(-0.5f, -0.5f, 0f)));
+			newVertices.Add(segMat.MultiplyPoint3x4(new Vector3(-0.5f, 0.5f, 0f)));
+			newVertices.Add(segMat.MultiplyPoint3x4(new Vector3(0.5f, -0.5f, 0f)));
+			newVertices.Add(segMat.MultiplyPoint3x4(new Vector3(0.5f, 0.5f, 0f)));
+
+			// Set UVs
+			newUV.Add(new Vector2(0f, 0f));
+			newUV.Add(new Vector2(0f, 1f));
+			newUV.Add(new Vector2(1f, 0f));
+			newUV.Add(new Vector2(1f, 1f));
+
+			// Set triangles
+			newTriangles.Add(baseIndex + 0);
+			newTriangles.Add(baseIndex + 1);
+			newTriangles.Add(baseIndex + 2);
+			newTriangles.Add(baseIndex + 3);
+			newTriangles.Add(baseIndex + 2);
+			newTriangles.Add(baseIndex + 1);
+		}
+
+		// Assign stuff
+		this.baseMesh.vertices = newVertices.ToArray();
+		this.baseMesh.uv = newUV.ToArray();
+		this.baseMesh.triangles = newTriangles.ToArray();
+
+		// Let the engine do the normals
+		this.baseMesh.RecalculateNormals();
+
+		// Set colors (all to default)
+		var newColors = new Color32[segmentCount * 4];
+		for (int j = 0; j < newColors.Length; j++) {
+			newColors[j] = newColor;
+		}
+		this.baseMesh.colors32 = newColors;
+
+		// Name it
+		this.baseMesh.name = name;
+
+		// Create gameobject
+		lineObj = new GameObject(name);
+		lineObj.layer = drawLayer;
+
+		// Add mesh filter
+		var lineMesh = lineObj.AddComponent<MeshFilter>();
+		lineMesh.mesh = baseMesh;
+
+		// Add mesh renderer
+		var lineRend = lineObj.AddComponent<MeshRenderer>();
+		lineRend.enabled = true;
+		lineRend.material = drawMat;
+		lineRend.receiveShadows = false;
+		lineRend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+		/* Old code
 		for (int i = 0; i < points.Count - 1; i++) {
 			Vector3 segPos = points[i+1] - points[i];
 			segments.Add(new VectorLineSegment(
@@ -229,31 +317,69 @@ public class VectorLine {
 				new Vector3(segPos.magnitude, baseWidth, 1.0f), 		// Scale based on width (Y) and distance between points (X)
 				(Color32) color));
 		}
+		*/
+	}
+
+	void SetStartColor (Color32 color, int index) {
+		int indexBase = index * 4;
+		Color32[] newColors = baseMesh.colors32;
+
+		newColors[indexBase] = color;
+		newColors[indexBase + 1] = color;
+
+		baseMesh.colors32 = newColors;
+	}
+
+	void SetEndColor (Color32 color, int index) {
+		int indexBase = index * 4;
+		Color32[] newColors = baseMesh.colors32;
+
+		newColors[indexBase - 1] = color;
+		newColors[indexBase - 2] = color;
+
+		baseMesh.colors32 = newColors;
 	}
 
 	public void SetColor (Color color) {
 		Color32 newColor = (Color32) color;
+		Color32[] newColors = new Color32[baseMesh.vertices.Length];
+
+		for (int i = 0; i < newColors.Length; i++) {
+			newColors[i] = newColor;
+		}
+
+		baseMesh.colors32 = newColors;
+
+		/*
 		foreach (VectorLineSegment segment in segments) {
 			segment.SetStartColor(newColor);
 			segment.SetEndColor(newColor);
 		}
+		*/
 	}
 
+	// This is indexed by points (just to clarify)
 	public void SetColor (Color color, int index) {
-		// This assigns to segments, but is indexed by points (just to clarify)
-		if ((index >= 0) && (index < segments.Count)) {
-			// Set start color for any but last point in line
-			segments[index].SetStartColor((Color32) color);
+		Color32 newColor = (Color32) color;
+		Color32[] newColors = baseMesh.colors32;
+		int indexBase = index * 4;
+
+		// Set start color for any but last point in line
+		if ((index >= 0) && (index < segmentCount)) {
+			newColors[indexBase] = newColor;
+			newColors[indexBase + 1] = newColor;
 		}
-		if ((index > 0) && (index <= segments.Count)) {
-			// Set end color for previous segment, if any
-			segments[index - 1].SetEndColor((Color32) color);
+
+		// Set end color for previous segment, if any
+		if ((index > 0) && (index <= segmentCount)) {
+			newColors[indexBase - 1] = newColor;
+			newColors[indexBase - 2] = newColor;
 		}
+
+		baseMesh.colors32 = newColors;
 	}
 
 	public void Draw3D () {
-		foreach (VectorLineSegment segment in segments) {
-			Graphics.DrawMesh(segment.mesh, Matrix4x4.identity, drawMat, drawLayer, null, 0, null, false, false);
-		}
+		Graphics.DrawMesh(baseMesh, Matrix4x4.identity, drawMat, drawLayer, null, 0, null, false, false);
 	}
 }
