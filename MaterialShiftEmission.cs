@@ -7,6 +7,7 @@ public class MaterialShiftEmission : MonoBehaviour {
 
 	// Material list and parameters
 	public Color[] colorTargetList;
+	public Color[] colorTerminalList;
 	public Texture[] textureTargetList;
 	public float timeFade = 0.5f;
 	public bool debugInfo = false;
@@ -15,7 +16,9 @@ public class MaterialShiftEmission : MonoBehaviour {
 	private PulseControl timer;
 	private PulseState direction;
 	private bool isActive;
+	private bool isTerminal;
 
+	private int colorIndex;
 	private int emissionIdColor;
 	private int emissionIdTexture;
 	private Color colorBase;
@@ -88,7 +91,15 @@ public class MaterialShiftEmission : MonoBehaviour {
 			}
 
 			// Update target emission color and texture
-			colorTarget = colorTargetList[shiftIndex];
+			if (isTerminal) {
+				if (++colorIndex >= colorTerminalList.Length) {
+					colorIndex = 0;
+				}
+				colorTarget = colorTerminalList[colorIndex];
+			}
+			else {
+				colorTarget = colorTargetList[shiftIndex];
+			}
 			textureTarget = textureTargetList[shiftIndex];
 
 			// Set base color to current
@@ -117,8 +128,15 @@ public class MaterialShiftEmission : MonoBehaviour {
 	}
 
 	// Placeholder
-	public void GameStarted () {
+	public void GameStarted () {}
 
+	void GoTerminal () {
+		isTerminal = true;
+		colorIndex = 0;
+	}
+
+	void ResetTerminal () {
+		colorIndex = colorTerminalList.Length - 1;
 	}
 }
 

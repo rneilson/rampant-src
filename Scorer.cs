@@ -343,6 +343,7 @@ public class Scorer : MonoBehaviour {
 			if (!isTerminal) {
 				justWentTerminal = true;
 				isTerminal = true;
+				ShiftTerminal();
 			}
 		}
 
@@ -481,6 +482,9 @@ public class Scorer : MonoBehaviour {
 
 		// Shift grid
 		if (totalDeaths > 0) {
+			if (isTerminal) {
+				ResetTerminal();
+			}
 			ShiftGrid(phaseShift);
 		}
 	}
@@ -581,6 +585,22 @@ public class Scorer : MonoBehaviour {
 		foreach (GameObject shifter in arenaShifters) {
 			if (shifter) {
 				shifter.SendMessage("BeginShift", shiftIndex, SendMessageOptions.DontRequireReceiver);
+			}
+		}
+	}
+
+	public void ShiftTerminal () {
+		foreach (GameObject shifter in arenaShifters) {
+			if (shifter) {
+				shifter.SendMessage("GoTerminal", null, SendMessageOptions.DontRequireReceiver);
+			}
+		}
+	}
+
+	public void ResetTerminal () {
+		foreach (GameObject shifter in arenaShifters) {
+			if (shifter) {
+				shifter.SendMessage("ResetTerminal", null, SendMessageOptions.DontRequireReceiver);
 			}
 		}
 	}
