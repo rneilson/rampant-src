@@ -28,8 +28,10 @@ public class JitterGrid : MonoBehaviour {
 	private JitterPoint[,] points;
 	private List<VectorLine> horizontalLines;
 	private List<VectorLine> verticalLines;
-	// Might need this later
-	// private VectorLine vectorPoints;
+
+	// Status
+	private int raiseColorCount;
+	private const int raiseColorEvery = 50;
 
 	private const float TwoPi = Mathf.PI * 2;
 
@@ -93,6 +95,7 @@ public class JitterGrid : MonoBehaviour {
 		}
 
 		// Set line colors
+		/*
 		if (debugInfo) {
 			// Advance line color with each segment
 			for (int z = 0; z < pointsZ; z++) {
@@ -108,6 +111,7 @@ public class JitterGrid : MonoBehaviour {
 				}
 			}
 		}
+		*/
 	}
 
 	void Start () {}
@@ -123,18 +127,74 @@ public class JitterGrid : MonoBehaviour {
 		*/
 	}
 
-	/*
-	void OnDrawGizmos () {
-		if (debugInfo) {
-			foreach (VectorLine line in horizontalLines) {
-				line.Draw3D();
+	void FixedUpdate () {
+		raiseColorCount++;
+		if (raiseColorCount >= raiseColorEvery) {
+			raiseColorCount = 0;
+			RaisePointColor(Random.Range(0, pointsX), Random.Range(0, pointsZ));
+		}
+	}
+
+	bool InBounds (int x, int z) {
+		if ((x >= 0) && (x <= cellsX) && (z >= 0) && (z <= cellsZ)) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	void RaisePointColor (int x, int z) {
+		// Check bounds
+		if (InBounds(x, z)) {
+			// Raise color at point
+			int newIndex = points[x, z].colorIndex + 1;
+			if (newIndex >= colors.Length) {
+				newIndex = colors.Length - 1;
 			}
-			foreach (VectorLine line in verticalLines) {
-				line.Draw3D();
+			points[x, z].colorIndex = newIndex;
+			horizontalLines[z].SetColor(colors[newIndex], x);
+			verticalLines[x].SetColor(colors[newIndex], z);
+
+			// Check neighbors
+			// Right
+			if (x < cellsX) {
+				int testIndex = points[x+1, z].colorIndex;
+				if ((newIndex - testIndex > 1) || (testIndex - newIndex > 1)) {
+					RaisePointColor(x+1, z);
+				}
+			}
+			// Top
+			if (z < cellsZ) {
+				int testIndex = points[x, z+1].colorIndex;
+				if ((newIndex - testIndex > 1) || (testIndex - newIndex > 1)) {
+					RaisePointColor(x, z+1);
+				}
+			}
+			// Left
+			if (x > 0) {
+				int testIndex = points[x-1, z].colorIndex;
+				if ((newIndex - testIndex > 1) || (testIndex - newIndex > 1)) {
+					RaisePointColor(x-1, z);
+				}
+			}
+			// Bottom
+			if (z > 0) {
+				int testIndex = points[x, z-1].colorIndex;
+				if ((newIndex - testIndex > 1) || (testIndex - newIndex > 1)) {
+					RaisePointColor(x, z-1);
+				}
 			}
 		}
 	}
-	*/
+
+	public void RaisePointColor (float x, float z) {
+		// Convert position to grid cell
+		int cellX = Mathf.RoundToInt((x + boundX + (stepX / 2f)) / stepX);
+		int cellZ = Mathf.RoundToInt((z + boundZ + (stepZ / 2f)) / stepZ);
+		RaisePointColor(cellX, cellZ);
+	}
+
 }
 
 public struct JitterPoint {
