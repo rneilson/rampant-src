@@ -162,11 +162,11 @@ public class RedCubeGroundControl : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		// Show off our work
-		if ((debugInfo) || (scorer.GlobalDebug)) {
+		if ((debugInfo)) {
 			// Draw predicted path
 			DebugDrawPredictions();
 			// Only draw tracking lines if debugInfo set (not GlobalDebug)
-			if ((target) && (debugInfo)) {
+			if ((target)) {
 				// Draw range tracking
 				DebugDrawRanges();
 			}
