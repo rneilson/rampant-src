@@ -11,6 +11,7 @@ public class MaterialShiftEmission : MonoBehaviour {
 	public Texture[] textureTargetList;
 	public float timeFade = 0.5f;
 	public bool debugInfo = false;
+	public bool randomTerminalColor = false;
 
 	private Renderer rendControl;
 	private PulseControl timer;
@@ -92,10 +93,13 @@ public class MaterialShiftEmission : MonoBehaviour {
 
 			// Update target emission color and texture
 			if (isTerminal) {
-				if (++colorIndex >= colorTerminalList.Length) {
+				colorTarget = colorTerminalList[colorIndex];
+				if (randomTerminalColor) {
+					colorIndex = Random.Range(0, colorTerminalList.Length);
+				}
+				else if (++colorIndex >= colorTerminalList.Length) {
 					colorIndex = 0;
 				}
-				colorTarget = colorTerminalList[colorIndex];
 			}
 			else {
 				colorTarget = colorTargetList[shiftIndex];
@@ -132,11 +136,16 @@ public class MaterialShiftEmission : MonoBehaviour {
 
 	void GoTerminal () {
 		isTerminal = true;
-		colorIndex = 0;
+		if (randomTerminalColor) {
+			colorIndex = Random.Range(1, colorTerminalList.Length);
+		}
+		else {
+			colorIndex = 1;
+		}
 	}
 
 	void ResetTerminal () {
-		colorIndex = colorTerminalList.Length - 1;
+		colorIndex = 0;
 	}
 }
 
