@@ -955,7 +955,7 @@ public class GameModeSetting : MenuSetting {
 public class GameModeSpec {
 	public string Name;
 	public GameObject[] Phases;
-	public int TerminalPhase;
+	public GameObject TerminalPhase;
 	public DifficultySpec Difficulty;
 }
 
@@ -984,26 +984,21 @@ public class DifficultySpec {
 public class GameMode {
 	private string name;
 	private List<GameObject> phases;
-	private int terminal;
+	private GameObject terminal;
 	private Dictionary<string, int> scores;
 	private DifficultySpec difficulty;
 
 	public GameMode (GameModeSpec spec) {
 		this.name = spec.Name;
 		this.phases = new List<GameObject>(spec.Phases);
-		if ((spec.TerminalPhase >= 0) && (spec.TerminalPhase < spec.Phases.Length)) {
-			this.terminal = spec.TerminalPhase;
-		}
-		else {
-			this.terminal = spec.Phases.Length - 1;
-		}
+		this.terminal = spec.TerminalPhase;
 		this.scores = new Dictionary<string, int>();
 		this.difficulty = spec.Difficulty;
 	}
 
 	public string Name { get { return name; } }
 	public int PhaseCount { get { return phases.Count; } }
-	public int Terminal { get { return terminal; } }
+	public GameObject Terminal { get { return terminal; } }
 	public DifficultySpec Difficulty { get { return difficulty; } }
 
 	public GameObject GetPhase (int index) {

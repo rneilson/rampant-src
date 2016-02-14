@@ -11,15 +11,15 @@ public class MaterialShiftEmission : MonoBehaviour {
 	public Texture[] textureTargetList;
 	public float timeFade = 0.5f;
 	public bool debugInfo = false;
-	public bool randomTerminalColor = false;
+	//public bool randomTerminalColor = false;
 
 	private Renderer rendControl;
 	private PulseControl timer;
 	private PulseState direction;
 	private bool isActive;
-	private bool isTerminal;
+	//private bool isTerminal;
 
-	private int colorIndex;
+	//private int colorIndex;
 	private int emissionIdColor;
 	private int emissionIdTexture;
 	private Color colorBase;
@@ -86,11 +86,11 @@ public class MaterialShiftEmission : MonoBehaviour {
 	// Begin shift to specified index in materials array
 	public void BeginShift (int shiftIndex) {
 		if (isActive) {
+			/*
 			// Sanity check
-			if ((shiftIndex >= colorTargetList.Length) || (shiftIndex >= textureTargetList.Length)) {
+			if (shiftIndex >= textureTargetList.Length) {
 				Debug.LogError("BeginShift() called with out-of-bounds index", gameObject);
 			}
-
 			// Update target emission color and texture
 			if (isTerminal) {
 				colorTarget = colorTerminalList[colorIndex];
@@ -101,10 +101,23 @@ public class MaterialShiftEmission : MonoBehaviour {
 					colorIndex = 0;
 				}
 			}
+			*/
+
+			// Set color target (including terminal colors, if applicable)
+			if (shiftIndex >= colorTargetList.Length) {
+				colorTarget = colorTerminalList[(shiftIndex - colorTargetList.Length) % colorTerminalList.Length];
+			}
 			else {
 				colorTarget = colorTargetList[shiftIndex];
 			}
-			textureTarget = textureTargetList[shiftIndex];
+
+			// Set texture target (last texture if terminal)
+			if (shiftIndex >= textureTargetList.Length) {
+				textureTarget = textureTargetList[textureTargetList.Length - 1];
+			}
+			else {
+				textureTarget = textureTargetList[shiftIndex];
+			}
 
 			// Set base color to current
 			colorBase = rendControl.material.GetColor(emissionIdColor);
@@ -134,6 +147,7 @@ public class MaterialShiftEmission : MonoBehaviour {
 	// Placeholder
 	public void GameStarted () {}
 
+	/*
 	void GoTerminal () {
 		isTerminal = true;
 		if (randomTerminalColor) {
@@ -147,5 +161,6 @@ public class MaterialShiftEmission : MonoBehaviour {
 	void ResetTerminal () {
 		colorIndex = 0;
 	}
+	*/
 }
 

@@ -73,6 +73,11 @@ public class Scorer : MonoBehaviour {
 	private int checkpoint;
 	private int checkpointPhase;
 
+	// Terminal phase parameters
+	public Color[] terminalColors;
+	public bool randomTerminalColor = false;
+	private int terminalColorIndex;
+
 	// Powerup parameters and state tracking
 	private int killsUntilPowerup;
 
@@ -313,14 +318,21 @@ public class Scorer : MonoBehaviour {
 	}
 
 	public void StartNewPhase (Color pulseColor) {
-		if ((phaseShift != phaseIndex) || ((isTerminal) && (phaseShift == GameSettings.CurrentMode.Terminal))) {
-			phaseShift = phaseIndex;
+		if (phaseShift != phaseIndex) {
+			if (isTerminal) {
+				// Set color from terminal list
+				NextTerminalColor();
+				NewRespawnColor(TerminalColor());
+			}
+			else {
+				// Set color, just in case we die during phase transition
+				NewRespawnColor(pulseColor);
+				phaseShift = phaseIndex;
+			}
 			// Shift if we're shifting
-			ShiftGrid(phaseShift);
-			// Set color, just in case we die during phase transition
-			NewRespawnColor(pulseColor);
+			ShiftGrid(phaseShift + terminalColorIndex);
 			// Phase used to do this itself
-			FlashGrid(pulseColor);
+			FlashGrid(currentPulseColor);
 		}
 		AddLevel();
 	}
@@ -328,27 +340,31 @@ public class Scorer : MonoBehaviour {
 	public void NextPhase () {
 		bool justWentTerminal = false;
 
-		// Deactivate current phase and slate for destruction
-		currentPhase.StopPhase();
-		prevPhase = currentPhase;
-
 		// Advance index, and go to terminal phase if all phases complete
 		phaseIndex++;
 
 		if (phaseIndex >= GameSettings.CurrentMode.PhaseCount) {
 			// Go to terminal phase
-			phaseIndex = GameSettings.CurrentMode.Terminal;
+			phaseIndex = GameSettings.CurrentMode.PhaseCount;
 
 			// Set terminal if not already there
 			if (!isTerminal) {
 				justWentTerminal = true;
-				isTerminal = true;
-				ShiftTerminal();
+				GoTerminal();
 			}
 		}
 
-		// Instantiate new phase, and let chips fall
-		currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex)).GetComponent<EnemyPhase>();
+		// Deactivate current phase and slate for destruction
+		currentPhase.StopPhase();
+		prevPhase = currentPhase;
+		if (isTerminal) {
+			// Load terminal phase
+			currentPhase = Instantiate(GameSettings.CurrentMode.Terminal).GetComponent<EnemyPhase>();
+		}
+		else {
+			// Instantiate new phase, and let chips fall
+			currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex)).GetComponent<EnemyPhase>();
+		}
 
 		// Save current wave number as checkpoint
 		if (GameSettings.CurrentMode.Difficulty.allowCheckpoints) {
@@ -438,23 +454,35 @@ public class Scorer : MonoBehaviour {
 		level = checkpoint;
 		if (phaseIndex == checkpointPhase) {
 			currentPhase.ResetPhase(this);
+			if (isTerminal) {
+				ResetPulseColor();
+			}
 		}
 		else {
 			// Reset phase index
 			phaseIndex = checkpointPhase;
-
-			// Set phase shift to new index too
-			phaseShift = phaseIndex;
 
 			// Deactivate current phase and slate for destruction
 			currentPhase.StopPhase();
 			prevPhase = currentPhase;
 
 			// Load new phase
-			currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex)).GetComponent<EnemyPhase>();
+			if (phaseIndex < GameSettings.CurrentMode.PhaseCount) {
+				// Cancel terminal status, if set
+				CancelTerminal();
+				// Set phase shift to new index too
+				phaseShift = phaseIndex;
+				// Get new (old) phase
+				currentPhase = Instantiate(GameSettings.CurrentMode.GetPhase(phaseIndex)).GetComponent<EnemyPhase>();
+			}
+			else {
+				// Set phase shift to last index
+				phaseShift = GameSettings.CurrentMode.PhaseCount - 1;
+				currentPhase = Instantiate(GameSettings.CurrentMode.Terminal).GetComponent<EnemyPhase>();
+			}
 
-			// Get new pulse color
-			currentPulseColor = currentPhase.pulseColor;
+			// Reset pulse color
+			ResetPulseColor();
 		}
 		scoreLevel.text = "Wave: " + level.ToString();
 
@@ -482,10 +510,7 @@ public class Scorer : MonoBehaviour {
 
 		// Shift grid
 		if (totalDeaths > 0) {
-			if (isTerminal) {
-				ResetTerminal();
-			}
-			ShiftGrid(phaseShift);
+			ShiftGrid(phaseShift + terminalColorIndex);
 		}
 	}
 
@@ -589,18 +614,50 @@ public class Scorer : MonoBehaviour {
 		}
 	}
 
-	public void ShiftTerminal () {
-		foreach (GameObject shifter in arenaShifters) {
-			if (shifter) {
-				shifter.SendMessage("GoTerminal", null, SendMessageOptions.DontRequireReceiver);
-			}
+	void GoTerminal () {
+		isTerminal = true;
+	}
+
+	void CancelTerminal () {
+		isTerminal = false;
+	}
+
+	void ResetPulseColor () {
+		terminalColorIndex = 0;
+		if ((level > 0) || (totalDeaths > 0)) {
+			currentPulseColor = currentPhase.pulseColor;
+		}
+		else {
+			currentPulseColor = playerPulseColor;
 		}
 	}
 
-	public void ResetTerminal () {
-		foreach (GameObject shifter in arenaShifters) {
-			if (shifter) {
-				shifter.SendMessage("ResetTerminal", null, SendMessageOptions.DontRequireReceiver);
+	Color TerminalColor () {
+		// Guard against too-short color list
+		if (terminalColorIndex > terminalColors.Length) {
+			terminalColorIndex = 0;
+		}
+		// Get current color
+		if (terminalColorIndex > 0) {
+			return terminalColors[terminalColorIndex - 1];
+		}
+		else {
+			return currentPhase.pulseColor;
+		}
+	}
+
+	void NextTerminalColor () {
+		// Set next color
+		if (randomTerminalColor) {
+			int newIndex = terminalColorIndex;
+			while (newIndex == terminalColorIndex) {
+				newIndex = Random.Range(0, terminalColors.Length + 1);
+			}
+			terminalColorIndex = newIndex;
+		}
+		else {
+			if (++terminalColorIndex > terminalColors.Length) {
+				terminalColorIndex = 0;
 			}
 		}
 	}
