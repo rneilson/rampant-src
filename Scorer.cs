@@ -50,7 +50,9 @@ public class Scorer : MonoBehaviour {
 	// Respawn parameters
 	public float startDelay = 1.0f;
 	public float respawnTime;
-	public float maxDisplacement = 4.75f;
+	public float playerBoundDist = 4.75f;
+	public float maxDisplacementX = 5f;
+	public float maxDisplacementZ = 5f;
 	private bool respawn;
 	private float respawnCountdown;
 	private bool playerBreak = false;		// Should rename at some point
@@ -134,7 +136,13 @@ public class Scorer : MonoBehaviour {
 		get { return GameSettings.CurrentMode.Difficulty.playerBreakFraction; }
 	}
 	public float MaxDisplacement {
-		get { return maxDisplacement; }
+		get { return Mathf.Min(maxDisplacementX, maxDisplacementZ); }
+	}
+	public float MaxDisplacementX {
+		get { return maxDisplacementX; }
+	}
+	public float MaxDisplacementZ {
+		get { return maxDisplacementZ; }
 	}
 	public int PhaseIndex {
 		get { return phaseIndex; }
@@ -600,13 +608,13 @@ public class Scorer : MonoBehaviour {
 
 	void RespawnOrbs () {
 		// Left
-		Instantiate(respawnOrb, new Vector3(-maxDisplacement, spawnPos.y, 0f), Quaternion.Euler(-90, 0, 0));
+		Instantiate(respawnOrb, new Vector3(-playerBoundDist, spawnPos.y, 0f), Quaternion.Euler(-90, 0, 0));
 		// Right
-		Instantiate(respawnOrb, new Vector3(maxDisplacement, spawnPos.y, 0f), Quaternion.Euler(-90, 0, 0));
+		Instantiate(respawnOrb, new Vector3(playerBoundDist, spawnPos.y, 0f), Quaternion.Euler(-90, 0, 0));
 		// Top
-		Instantiate(respawnOrb, new Vector3(0f, spawnPos.y, maxDisplacement), Quaternion.Euler(-90, 0, 0));
+		Instantiate(respawnOrb, new Vector3(0f, spawnPos.y, playerBoundDist), Quaternion.Euler(-90, 0, 0));
 		// Bottom
-		Instantiate(respawnOrb, new Vector3(0f, spawnPos.y, -maxDisplacement), Quaternion.Euler(-90, 0, 0));
+		Instantiate(respawnOrb, new Vector3(0f, spawnPos.y, -playerBoundDist), Quaternion.Euler(-90, 0, 0));
 	}
 
 	public void FlashGrid (Color gridColor) {

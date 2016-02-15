@@ -18,7 +18,8 @@ public class EnemySpawner : MonoBehaviour {
 	private float countdown;
 	private bool counting;
 	private bool playerBreak;
-	private float maxDisplacement;
+	private float maxDisplacementX;
+	private float maxDisplacementZ;
 	//private int predictionFrames;
 	private int playerMask;
 	private int enemyMask;
@@ -36,7 +37,9 @@ public class EnemySpawner : MonoBehaviour {
 		}
 		
 		//mask = 1 << LayerMask.NameToLayer("Spawn");
-		maxDisplacement = scorer.MaxDisplacement;
+		//maxDisplacement = scorer.MaxDisplacement;
+		maxDisplacementX = scorer.MaxDisplacementX;
+		maxDisplacementZ = scorer.maxDisplacementZ;
 
 		// Unity 5 API changes
 		myAudioSource = scorer.GetComponent<AudioSource>();
@@ -121,10 +124,10 @@ public class EnemySpawner : MonoBehaviour {
 	}
 
 	bool InBounds (Vector2 point) {
-		if ((point.x <= maxDisplacement)
-			&& (point.x >= -maxDisplacement)
-			&& (point.y <= maxDisplacement)
-			&& (point.y >= -maxDisplacement))
+		if ((point.x <= maxDisplacementX)
+			&& (point.x >= -maxDisplacementX)
+			&& (point.y <= maxDisplacementZ)
+			&& (point.y >= -maxDisplacementZ))
 		{ return true; }
 		else { return false; }
 	}
