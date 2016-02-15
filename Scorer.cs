@@ -669,9 +669,11 @@ public class Scorer : MonoBehaviour {
 				newIndex = 1;
 			}
 		}
+		/*
 		if (globalDebug) {
 			Debug.Log("Terminal color was " + terminalColorIndex.ToString() + ", now " + newIndex.ToString(), gameObject);
 		}
+		*/
 		terminalColorIndex = newIndex;
 	}
 

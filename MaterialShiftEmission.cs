@@ -23,8 +23,9 @@ public class MaterialShiftEmission : MonoBehaviour {
 	private int emissionIdColor;
 	private int emissionIdTexture;
 	private Color colorBase;
-	private Color colorMid = Color.black;
 	private Color colorTarget;
+	private Color colorMid;
+	private Color colorMidDefault = Color.black;
 	private Texture textureTarget;
 
 	void Awake () {
@@ -103,8 +104,12 @@ public class MaterialShiftEmission : MonoBehaviour {
 			}
 			*/
 
+			// Set base color to current
+			colorBase = rendControl.material.GetColor(emissionIdColor);
+
 			// Set color target (including terminal colors, if applicable)
 			if (shiftIndex >= colorTargetList.Length) {
+				// Pick color from terminal list instead of main
 				colorTarget = colorTerminalList[(shiftIndex - colorTargetList.Length) % colorTerminalList.Length];
 			}
 			else {
@@ -113,14 +118,15 @@ public class MaterialShiftEmission : MonoBehaviour {
 
 			// Set texture target (last texture if terminal)
 			if (shiftIndex >= textureTargetList.Length) {
+				// Assume last texture
 				textureTarget = textureTargetList[textureTargetList.Length - 1];
+				// Set midpoint color instead of fading out/in
+				colorMid = Color.Lerp(colorBase, colorTarget, 0.5f);
 			}
 			else {
 				textureTarget = textureTargetList[shiftIndex];
+				colorMid = colorMidDefault;
 			}
-
-			// Set base color to current
-			colorBase = rendControl.material.GetColor(emissionIdColor);
 
 			// Set counters and go
 			direction = PulseState.ToTarget;
