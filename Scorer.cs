@@ -622,14 +622,16 @@ public class Scorer : MonoBehaviour {
 
 	void GoTerminal () {
 		isTerminal = true;
+		terminalColorIndex = 1;
 	}
 
 	void CancelTerminal () {
 		isTerminal = false;
+		terminalColorIndex = 0;
 	}
 
 	void ResetPulseColor () {
-		terminalColorIndex = 0;
+		terminalColorIndex = (isTerminal) ? 1 : 0;
 		if ((level > 0) || (totalDeaths > 0)) {
 			currentPulseColor = currentPhase.pulseColor;
 		}
@@ -641,7 +643,7 @@ public class Scorer : MonoBehaviour {
 	Color TerminalColor () {
 		// Guard against too-short color list
 		if (terminalColorIndex > terminalColors.Length) {
-			terminalColorIndex = 0;
+			terminalColorIndex = 1;
 		}
 		// Get current color
 		if (terminalColorIndex > 0) {
@@ -653,19 +655,24 @@ public class Scorer : MonoBehaviour {
 	}
 
 	void NextTerminalColor () {
+		int newIndex = terminalColorIndex;
+
 		// Set next color
 		if (randomTerminalColor) {
-			int newIndex = terminalColorIndex;
 			while (newIndex == terminalColorIndex) {
-				newIndex = Random.Range(0, terminalColors.Length + 1);
+				newIndex = Random.Range(1, terminalColors.Length + 1);
 			}
-			terminalColorIndex = newIndex;
 		}
 		else {
-			if (++terminalColorIndex > terminalColors.Length) {
-				terminalColorIndex = 0;
+			newIndex++;
+			if (newIndex > terminalColors.Length) {
+				newIndex = 1;
 			}
 		}
+		if (globalDebug) {
+			Debug.Log("Terminal color was " + terminalColorIndex.ToString() + ", now " + newIndex.ToString(), gameObject);
+		}
+		terminalColorIndex = newIndex;
 	}
 
 	void StartGame () {
