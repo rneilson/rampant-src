@@ -236,7 +236,12 @@ public class RedCubeDance : MonoBehaviour {
 
 		// Spin menacingly (if spinning enabled)
 		if (spin) {
-			myRigidbody.AddTorque(SpinVector(bearing) * torque);
+			if (target) {
+				myRigidbody.AddTorque(SpinVector(bearing) * torque);
+			}
+			else {
+				myRigidbody.AddTorque(spinAxis * torque);
+			}
 		}
 
 	}
@@ -410,8 +415,13 @@ public class RedCubeDance : MonoBehaviour {
 	}
 
 	Vector3 SpinVector (Vector3 bearingVec) {
-		Quaternion rot = Quaternion.FromToRotation(spinRef, bearingVec);
-		return rot * spinAxis;
+		if (spinAxis == Vector3.up) {
+			return spinAxis;
+		}
+		else {
+			Quaternion rot = Quaternion.FromToRotation(spinRef, bearingVec.normalized);
+			return rot * spinAxis;
+		}
 	}
 
 	void DropBomb (Vector3 pos) {
