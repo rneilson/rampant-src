@@ -203,7 +203,8 @@ public class BallMovement : MonoBehaviour {
 
 		// Muzzle flash
 		if (muzzleFlash) {
-			Destroy(Instantiate(muzzleFlash, firePos, transform.rotation), muzzleDuration);
+			Destroy(Instantiate(muzzleFlash, transform.position, 
+				Quaternion.FromToRotation(Vector3.forward, fireDir)), muzzleDuration);
 		}
 	}
 	
