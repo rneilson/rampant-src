@@ -28,9 +28,10 @@ public class BallMovement : MonoBehaviour {
 	private GameObject fireCursor;
 	private CursorMovement fireCursorControl;
 	
-	private int fireMode;
-	private int fireCycle;
+	private int fireMode = 1;
+	private int fireCycle = 0;
 	private int audioCycle;
+	private int audioCycleMin;
 	private int audioCycleMax;
 	private Vector3 firePosCurrent;
 	private Vector3 fireDirCurrent;
@@ -83,10 +84,9 @@ public class BallMovement : MonoBehaviour {
 		//groundControl = controller.GetComponent<RedCubeGroundControl>();
 
 		// Firing and audio cycle stuff
-		fireMode = 1;
-		fireCycle = 0;
-		audioCycle = 0;
-		audioCycleMax = audioArray.Length / 2;	// Should still work for Length=1, since cycle will always reset to 0
+		// Called to set everything else
+		// (fireMode may be set by scorer)
+		SetFireMode(fireMode);
 
 		enemyLayer = LayerMask.NameToLayer("Enemy");
 	}
@@ -197,8 +197,7 @@ public class BallMovement : MonoBehaviour {
 		// Play sound and advance/reset audio source counter
 		audioArray[audioCycle].PlayOneShot(bulletSound, 1.0f);
 		if (++audioCycle >= audioCycleMax) {
-			// This is to keep firemode 2 to the upper half of the array
-			audioCycle = audioArray.Length / 2;
+			audioCycle = audioCycleMin;
 		}
 
 		// Muzzle flash
@@ -243,12 +242,26 @@ public class BallMovement : MonoBehaviour {
 
 	public void FireFaster () {
 		if (fireMode < 2) {
-			fireMode++;
-			audioCycleMax = audioArray.Length;
+			SetFireMode(fireMode + 1);
 			PowerUp();
 		}
 		//else
 		//	PowerUpBoom();
+	}
+
+	public void SetFireMode (int mode) {
+		if (mode == 1) {
+			fireMode = 1;
+			audioCycleMin = 0;
+			audioCycleMax = audioArray.Length / 2;	// Should still work for Length=1, since cycle will always reset to 0
+			audioCycle = audioCycleMin;
+		}
+		else if (mode == 2) {
+			fireMode = 2;
+			audioCycleMin = audioArray.Length / 2;
+			audioCycleMax = audioArray.Length;
+			audioCycle = audioCycleMin;
+		}
 	}
 	
 	void PowerUp () {
