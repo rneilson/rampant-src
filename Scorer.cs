@@ -32,9 +32,11 @@ public class Scorer : MonoBehaviour {
 	private int maxLevel;
 	private int totalDeaths;
 	private TextMesh scoreKills;
-	private TextMesh scoreHigh;
-	private TextMesh scoreDeaths;
+	private TextMesh lastKills;
+	private TextMesh highKills;
 	private TextMesh scoreLevel;
+	private TextMesh lastLevel;
+	private TextMesh highLevel;
 
 	// Difficulty paramters (to be moved to mode spec)
 	//public float waveClearCountdown = 0.25f;
@@ -172,9 +174,11 @@ public class Scorer : MonoBehaviour {
 	void Start () {
 		cameraFollower = GameObject.Find("Camera").GetComponent<CameraMovement>();
 		scoreKills = GameObject.Find("Display-kills").GetComponent<TextMesh>();
-		scoreHigh = GameObject.Find("Display-high").GetComponent<TextMesh>();
-		scoreDeaths = GameObject.Find("Display-deaths").GetComponent<TextMesh>();
+		lastKills = GameObject.Find("Last-kills").GetComponent<TextMesh>();
+		highKills = GameObject.Find("High-kills").GetComponent<TextMesh>();
 		scoreLevel = GameObject.Find("Display-level").GetComponent<TextMesh>();
+		lastLevel = GameObject.Find("Last-level").GetComponent<TextMesh>();
+		highLevel = GameObject.Find("High-level").GetComponent<TextMesh>();
 		menu = GameObject.Find("Menu").GetComponent<MenuControl>();
 		kills = 0;
 		level = 0;
@@ -378,17 +382,19 @@ public class Scorer : MonoBehaviour {
 	
 	void PlayerDied () {
 		// Update high score
+		lastKills.text = "Last: " + kills.ToString();
 		if (kills > maxKills) {
 			maxKills = kills;
-			scoreHigh.text = "Best: " + maxKills.ToString();
+			highKills.text = "Best: " + maxKills.ToString();
 			// Update mode's high score
 			GameSettings.CurrentMode.HighScore("Kills", maxKills);
 		}
 
 		// Update high wave
+		lastLevel.text = "Last: " + level.ToString();
 		if (level > maxLevel) {
 			maxLevel = level;
-			scoreDeaths.text = "Best: " + maxLevel.ToString();
+			highLevel.text = "Best: " + maxLevel.ToString();
 			// Update mode's high score
 			GameSettings.CurrentMode.HighScore("Waves", maxLevel);
 		}
@@ -670,9 +676,9 @@ public class Scorer : MonoBehaviour {
 
 		// Get high scores from current mode
 		maxKills = GameSettings.CurrentMode.GetScore("Kills");
-		scoreHigh.text = "Best: " + maxKills.ToString();
+		highKills.text = "Best: " + maxKills.ToString();
 		maxLevel = GameSettings.CurrentMode.GetScore("Waves");
-		scoreDeaths.text = "Best: " + maxLevel.ToString();
+		highLevel.text = "Best: " + maxLevel.ToString();
 
 		// Start first enemy phase
 		phaseIndex = 0;
