@@ -37,13 +37,15 @@ public class BallMovement : MonoBehaviour {
 	private Vector3 fireDirCurrent;
 	
 	private const float piOverFour = Mathf.PI / 4;
+	private const float piOverTwo = Mathf.PI / 2;
 
 	//private GameObject controller;
 	private Scorer scorer;
 	//private RedCubeGroundControl groundControl;
 	private int enemyLayer;
 
-	const float fireDist = 0.10f;
+	const float fireDist1 = 0.04f;
+	const float fireDist2 = 0.08f;
 	const float fireSpeed = 5.0f;
 	public float bombHeight = 0.51f;
 	public float bombForce = 500f;
@@ -207,10 +209,10 @@ public class BallMovement : MonoBehaviour {
 		}
 	}
 	
-	Vector3 RotateFortyFive (Vector3 vec, float dir) {
+	Vector3 RotateFirePos (Vector3 vec, float dir) {
 		// dir 1 is counterclockwise, -1 is clockwise
-		float newx = vec.x*Mathf.Cos(piOverFour) - vec.z*Mathf.Sin(piOverFour)*dir;
-		float newz = vec.x*Mathf.Sin(piOverFour)*dir + vec.z*Mathf.Cos(piOverFour);
+		float newx = vec.x*Mathf.Cos(piOverTwo) - vec.z*Mathf.Sin(piOverTwo)*dir;
+		float newz = vec.x*Mathf.Sin(piOverTwo)*dir + vec.z*Mathf.Cos(piOverTwo);
 		return new Vector3(newx, 0, newz);
 	}
 	
@@ -218,17 +220,17 @@ public class BallMovement : MonoBehaviour {
 		// Check firemode and fire accordingly
 		if (fireMode == 1) {
 			if (fireCycle == 0) {
-				firePosCurrent = transform.position + (fireDir * fireDist);
+				firePosCurrent = transform.position + (fireDir * fireDist1);
 				FireBullet(firePosCurrent, fireDir, fireSpeed);
 			}
 		}
 		else if (fireMode == 2) {
 			if (fireCycle == 0) {
-				firePosCurrent  = transform.position + (RotateFortyFive(fireDir, 1.0f) * fireDist);
+				firePosCurrent  = transform.position + (RotateFirePos(fireDir, 1.0f) * fireDist2);
 				FireBullet(firePosCurrent, fireDir, fireSpeed);
 			}
 			else if (fireCycle == 3) {
-				firePosCurrent  = transform.position + (RotateFortyFive(fireDir, -1.0f) * fireDist);
+				firePosCurrent  = transform.position + (RotateFirePos(fireDir, -1.0f) * fireDist2);
 				FireBullet(firePosCurrent, fireDir, fireSpeed);
 			}
 		}
