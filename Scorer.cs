@@ -344,17 +344,22 @@ public class Scorer : MonoBehaviour {
 	public void NextPhase () {
 		bool justWentTerminal = false;
 
-		// Advance index, and go to terminal phase if all phases complete
+		// Advance index, and go to terminal or first phase if all phases complete
 		phaseIndex++;
 
 		if (phaseIndex >= GameSettings.CurrentMode.PhaseCount) {
-			// Go to terminal phase
-			phaseIndex = GameSettings.CurrentMode.PhaseCount;
+			if (GameSettings.CurrentMode.Terminal) {
+				// Go to terminal phase
+				phaseIndex = GameSettings.CurrentMode.PhaseCount;
 
-			// Set terminal if not already there
-			if (!isTerminal) {
-				justWentTerminal = true;
-				GoTerminal();
+				// Set terminal if not already there
+				if (!isTerminal) {
+					justWentTerminal = true;
+					GoTerminal();
+				}
+			}
+			else {
+				phaseIndex = 0;
 			}
 		}
 
