@@ -90,7 +90,7 @@ public class MenuLine : MonoBehaviour {
 				line.UpdateText(command.Label + GameSettings.GetSetting(command.Target));
 			}
 			else if (command.LineType == MenuLineType.Score) {
-				line.UpdateText(System.String.Format("{0,-9}{1,6}{2,6}", command.Target, 
+				line.UpdateText(System.String.Format("{0,-9}{1,6}{2,6}", command.Label, 
 					GameSettings.GetMode(command.Target).GetScore("Kills"),
 					GameSettings.GetMode(command.Target).GetScore("Waves")));
 			}
