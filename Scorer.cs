@@ -516,7 +516,12 @@ public class Scorer : MonoBehaviour {
 
 		// Shift grid
 		if (totalDeaths > 0) {
-			ShiftGrid(phaseShift + terminalColorIndex);
+			if (isTerminal) {
+				ShiftGrid(phaseShift);
+			}
+			else {
+				ShiftGrid(phaseShift + terminalColorIndex);
+			}
 		}
 	}
 
