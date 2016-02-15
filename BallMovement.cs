@@ -191,7 +191,7 @@ public class BallMovement : MonoBehaviour {
 	// Fire bullet
 	void FireBullet (Vector3 firePos, Vector3 fireDir, float speed) {
 		// Create and launch bullet
-		Rigidbody bulletClone = Instantiate(bullet, firePos, transform.rotation) as Rigidbody;
+		Rigidbody bulletClone = Instantiate(bullet, firePos, Quaternion.Euler(90, 0, 0)) as Rigidbody;
 		bulletClone.AddForce(fireDir * speed);
 
 		// Play sound and advance/reset audio source counter
