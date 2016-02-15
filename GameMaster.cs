@@ -301,6 +301,15 @@ public static class GameSettings {
 		}
 	}
 
+	public static GameMode GetMode (string modeName) {
+		if (modeIndicies.ContainsKey(modeName)) {
+			return modeList[modeIndicies[modeName]];
+		}
+		else {
+			throw new ArgumentOutOfRangeException("modeName", "No game mode named: " + modeName);
+		}
+	}
+
 }
 
 // For saving/loading settings from file

@@ -41,10 +41,7 @@ public class MenuLine : MonoBehaviour {
 
 		selectedStyle = menu.SelectedStyle;
 
-		// Initialize line to text-only, selectable, no command (totally breaking my own rules, but whatev)
-		// For testing...yeah...that's it...
-		command = new MenuLineCommand(true, false, line.Text, "", menu.LeftCapText, menu.RightCapText, 
-			MenuCommandType.None, MenuCommandType.None, MenuCommandType.None);
+		command = new MenuLineCommand(menu, MenuLineType.Text, line.Text, "");
 		Deselect();
 		line.UpdateText(command.Label);
 	}
@@ -89,7 +86,14 @@ public class MenuLine : MonoBehaviour {
 		// Only update if there's something which can be updated
 		// This is also to be called by MenuControl after changing a setting value
 		if (command.Updateable) {
-			line.UpdateText(command.Label + menu.GetSetting(command.Target));
+			if (command.LineType == MenuLineType.Setting) {
+				line.UpdateText(command.Label + GameSettings.GetSetting(command.Target));
+			}
+			else if (command.LineType == MenuLineType.Score) {
+				line.UpdateText(System.String.Format("{0,-9}{1,6}{2,6}", command.Target, 
+					GameSettings.GetMode(command.Target).GetScore("Kills"),
+					GameSettings.GetMode(command.Target).GetScore("Waves")));
+			}
 		}
 	}
 
@@ -134,13 +138,15 @@ public enum MenuLineType {
 	Back,
 	Goto,
 	Setting,
-	Restart
+	Restart,
+	Score
 }
 
 // This is for setting up a line with the appropriate config
 // Basically a POD class, with a Big Switch Statement Of Doom
 public class MenuLineCommand {
 
+	protected MenuLineType lineType;
 	protected bool selectable;		// Whether this line is even selectable
 	protected bool updateable;			// If true, value will be updated after cmd
 	protected string label;			// Initial label -- may be updated with value
@@ -154,6 +160,7 @@ public class MenuLineCommand {
 	// I don't think we need anything fancy in the normal constructor
 	// We'll leave checking line label/cap lengths to the static func
 	public MenuLineCommand () {
+		this.lineType = MenuLineType.Text;
 		this.selectable = false;
 		this.updateable = false;
 		this.label = "";
@@ -165,31 +172,26 @@ public class MenuLineCommand {
 		this.cmdRight = MenuCommandType.None;
 	}
 
-	public MenuLineCommand (bool selectable, bool updateable, string label, 
-		string target, string capLeft, string capRight,
-		MenuCommandType cmdLine, MenuCommandType cmdLeft, MenuCommandType cmdRight) {
-		// Pretty standard fare
-		this.selectable = selectable;
-		this.updateable = updateable;
-		this.label = label;
-		this.target = target;
-		this.capLeft = capLeft;
-		this.capRight = capRight;
-		this.cmdLine = cmdLine;
-		this.cmdLeft = cmdLeft;
-		this.cmdRight = cmdRight;
-	}
-
 	// This is to be used when MenuControl passes in line specs to MenuLine
 	// Whole lotta if and switch statements ahead!
 	public MenuLineCommand (MenuControl menu, MenuLineType lineType, string lineLabel, string lineTarget) {
+		this.lineType = lineType;
 
-		// Only text lines are non-selectable
-		this.selectable = (lineType == MenuLineType.Text) ? false : true;
+		// Text and score lines are non-selectable
+		switch (lineType) {
+			case MenuLineType.Text:
+			case MenuLineType.Score:
+				this.selectable = false;
+				break;
+			default:
+				this.selectable = true;
+				break;
+		}
 
-		// Certain types are updatedatable settings, others aren't
+		// Certain types are updatedatable text, others aren't
 		switch (lineType) {
 			case MenuLineType.Setting:
+			case MenuLineType.Score:
 				this.updateable = true;
 				break;
 			default:
@@ -227,11 +229,6 @@ public class MenuLineCommand {
 
 		// Now commands - the big one
 		switch (lineType) {
-			case MenuLineType.Text:
-				this.cmdLine = MenuCommandType.None;
-				this.cmdLeft = MenuCommandType.None;
-				this.cmdRight = MenuCommandType.None;
-				break;
 			case MenuLineType.Quit:
 				this.cmdLine = MenuCommandType.QuitApp;
 				this.cmdLeft = MenuCommandType.None;
@@ -257,6 +254,8 @@ public class MenuLineCommand {
 				this.cmdLeft = MenuCommandType.SettingLower;
 				this.cmdRight = MenuCommandType.SettingHigher;
 				break;
+			case MenuLineType.Text:
+			case MenuLineType.Score:
 			default:
 				this.cmdLine = MenuCommandType.None;
 				this.cmdLeft = MenuCommandType.None;
@@ -265,6 +264,9 @@ public class MenuLineCommand {
 		}
 	}
 
+	public MenuLineType LineType {
+		get { return lineType; }
+	}
 	public bool Selectable {
 		get { return selectable; }
 	}
