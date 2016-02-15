@@ -28,7 +28,7 @@ public class BallMovement : MonoBehaviour {
 	private GameObject fireCursor;
 	private CursorMovement fireCursorControl;
 	
-	private int fireMode;
+	private int fireMode = 1;
 	private int fireCycle;
 	private int audioCycle;
 	private int audioCycleMax;
@@ -83,7 +83,6 @@ public class BallMovement : MonoBehaviour {
 		//groundControl = controller.GetComponent<RedCubeGroundControl>();
 
 		// Firing and audio cycle stuff
-		fireMode = 1;
 		fireCycle = 0;
 		audioCycle = 0;
 		audioCycleMax = audioArray.Length / 2;	// Should still work for Length=1, since cycle will always reset to 0
