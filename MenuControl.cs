@@ -489,6 +489,9 @@ public class MenuControl : MonoBehaviour {
 			case MenuCommandType.ScreenCap:
 				StartCoroutine(ScreenCapture(true));
 				break;
+			case MenuCommandType.ResetInput:
+				GameSettings.ResetInputSettings();
+				break;
 			case MenuCommandType.None:
 			default:
 				break;
@@ -643,7 +646,7 @@ public class InputAxisTracker {
 
 	void Capture () {
 		// Get temp reading to check
-		float tempCap = Input.GetAxisRaw(axisName);
+		float tempCap = Input.GetAxis(axisName);
 		// If previously captured, test for axis return to 0 or reset time met
 		if (wasCaptured) {
 			resetCountdown -= deltaTime;
@@ -689,7 +692,8 @@ public enum MenuCommandType : byte {
 	RunCmdLine,
 	RunCmdLeft,
 	RunCmdRight,
-	ScreenCap
+	ScreenCap,
+	ResetInput
 }
 
 // To be returned from input queries
@@ -710,6 +714,7 @@ public struct MenuCommand {
 	public static MenuCommand RunCmdRight = new MenuCommand(MenuCommandType.RunCmdRight, "");
 	public static MenuCommand RunCmdLeft = new MenuCommand(MenuCommandType.RunCmdLeft, "");
 	public static MenuCommand ScreenCap = new MenuCommand(MenuCommandType.ScreenCap, "");
+	public static MenuCommand ResetInput = new MenuCommand(MenuCommandType.ResetInput, "");
 }
 
 // For menu setup

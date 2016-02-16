@@ -346,6 +346,11 @@ public static class GameSettings {
 		Application.CaptureScreenshot(filename, 2);
 	}
 
+	public static void ResetInputSettings () {
+		// Temp while I try this
+		PlayerPrefs.DeleteAll();
+	}
+
 }
 
 // For saving/loading settings from file

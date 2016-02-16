@@ -139,7 +139,8 @@ public enum MenuLineType {
 	Goto,
 	Setting,
 	Restart,
-	Score
+	Score,
+	ResetInput
 }
 
 // This is for setting up a line with the appropriate config
@@ -202,12 +203,13 @@ public class MenuLineCommand {
 		// Truncate label string if necessary
 		this.label = (lineLabel.Length > menu.LineColumns) ? lineLabel.Substring(0, menu.LineColumns) : lineLabel;
 
-		// Text, Quit, and Back can't have targets attached (well, can, but why bother?)
+		// Some can't have targets attached (well, can, but why bother?)
 		switch (lineType) {
 			case MenuLineType.Text:
 			case MenuLineType.Quit:
 			case MenuLineType.Restart:
 			case MenuLineType.Back:
+			case MenuLineType.ResetInput:
 				this.target = "";
 				break;
 			default:
@@ -227,39 +229,36 @@ public class MenuLineCommand {
 				break;
 		}
 
+		// Almost all get no left/right commands
+		this.cmdLeft = MenuCommandType.None;
+		this.cmdRight = MenuCommandType.None;
+
 		// Now commands - the big one
 		switch (lineType) {
 			case MenuLineType.Quit:
 				this.cmdLine = MenuCommandType.QuitApp;
-				this.cmdLeft = MenuCommandType.None;
-				this.cmdRight = MenuCommandType.None;
 				break;
 			case MenuLineType.Restart:
 				this.cmdLine = MenuCommandType.Restart;
-				this.cmdLeft = MenuCommandType.None;
-				this.cmdRight = MenuCommandType.None;
 				break;
 			case MenuLineType.Back:
 				this.cmdLine = MenuCommandType.NodeBack;
-				this.cmdLeft = MenuCommandType.None;
-				this.cmdRight = MenuCommandType.None;
 				break;
 			case MenuLineType.Goto:
 				this.cmdLine = MenuCommandType.NodeGoto;
-				this.cmdLeft = MenuCommandType.None;
-				this.cmdRight = MenuCommandType.None;
 				break;
 			case MenuLineType.Setting:
 				this.cmdLine = MenuCommandType.SettingToggle;
 				this.cmdLeft = MenuCommandType.SettingLower;
 				this.cmdRight = MenuCommandType.SettingHigher;
 				break;
+			case MenuLineType.ResetInput:
+				this.cmdLine = MenuCommandType.ResetInput;
+				break;
 			case MenuLineType.Text:
 			case MenuLineType.Score:
 			default:
 				this.cmdLine = MenuCommandType.None;
-				this.cmdLeft = MenuCommandType.None;
-				this.cmdRight = MenuCommandType.None;
 				break;
 		}
 	}
