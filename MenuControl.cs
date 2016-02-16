@@ -215,6 +215,40 @@ public class MenuControl : MonoBehaviour {
 		}
 	}
 
+	void MakeVisible () {
+		// Show ourselves
+		gameObject.layer = showLayer;
+
+		// Show title
+		titleMesh.gameObject.layer = showLayer;
+
+		// Show lines
+		foreach (MenuLine line in menuLines) {
+			line.SetLayer(showLayer);
+		}
+
+		// Show cursor
+		desiredCursorVisibility = true;
+		desiredCursorMode = CursorLockMode.None;
+	}
+
+	void MakeInvisible () {
+		// Hide lines
+		foreach (MenuLine line in menuLines) {
+			line.SetLayer(hideLayer);
+		}
+
+		// Hide title
+		titleMesh.gameObject.layer = hideLayer;
+
+		// Hide ourselves
+		gameObject.layer = hideLayer;
+
+		// Hide cursor
+		desiredCursorVisibility = false;
+		desiredCursorMode = CursorLockMode.Locked;
+	}
+
 	void ShowMenu (MenuNodePath node) {
 		// Exit menu if node is null/none (empty string)
 		if (node.Name == "") {
@@ -234,13 +268,8 @@ public class MenuControl : MonoBehaviour {
 			LoadNode(node.Name);
 
 			// Show ourselves
-			gameObject.layer = showLayer;
-			// Show title
-			titleMesh.gameObject.layer = showLayer;
-			// Show lines
-			foreach (MenuLine line in menuLines) {
-				line.SetLayer(showLayer);
-			}
+			MakeVisible();
+
 			// Select saved/first line
 			if (node.Line >= 0) {
 				SelectLine(node.Line);
@@ -252,10 +281,6 @@ public class MenuControl : MonoBehaviour {
 			// Grab and reset input
 			currentInput = InputMode.Menu;
 			ResetInput();
-
-			// Unhide cursor
-			desiredCursorVisibility = true;
-			desiredCursorMode = CursorLockMode.None;
 		}
 	}
 
@@ -492,20 +517,8 @@ public class MenuControl : MonoBehaviour {
 		// Deselect current line
 		DeselectLine(selectedLine);
 
-		// Hide lines
-		foreach (MenuLine line in menuLines) {
-			line.SetLayer(hideLayer);
-		}
-
-		// Hide title
-		titleMesh.gameObject.layer = hideLayer;
-
 		// Hide ourselves
-		gameObject.layer = hideLayer;
-
-		// Hide cursor
-		desiredCursorVisibility = false;
-		desiredCursorMode = CursorLockMode.Locked;
+		MakeInvisible();
 
 		// Release input
 		currentInput = InputMode.Game;
