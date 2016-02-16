@@ -97,10 +97,14 @@ public class BallMovement : MonoBehaviour {
 	void Update () {
 		// Check if bomb triggered
 		if ((hasBomb) && (scorer.InputTarget == InputMode.Game)) {
-			if (Input.GetButtonDown("BombButton")) {
+			if ((Input.GetKeyDown(KeyCode.Mouse1)) 
+				|| (Input.GetButtonDown("BombKey"))
+				|| (Input.GetButtonDown("BombButton"))) {
 				UseBomb();
 			}
-			if (Mathf.Abs(Input.GetAxis("BombTrigger")) > 0.05f) {
+			if ((Mathf.Abs(Input.GetAxis("BombTrigger")) > 0.05f) 
+				|| (Mathf.Abs(Input.GetAxis("BombTriggerL")) > 0.05f) 
+				|| (Mathf.Abs(Input.GetAxis("BombTriggerR")) > 0.05f)) {
 				if (!triggerDown) {
 					triggerDown = true;
 					UseBomb();
@@ -163,7 +167,7 @@ public class BallMovement : MonoBehaviour {
 				FireGun(new Vector3(dxr, 0, dzr).normalized);
 			}
 			// Otherwise, check if left mouse pressed and fire towards cursor
-			else if (Input.GetButton("Fire")) {
+			else if (Input.GetKey(KeyCode.Mouse0)) {
 				// Show mouse cursor
 				fireCursorControl.UnhideCursor();
 

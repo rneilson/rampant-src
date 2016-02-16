@@ -45,7 +45,11 @@ public class MenuControl : MonoBehaviour {
 	private InputAxisTracker moveHori = new InputAxisTracker("MoveHorizontal");
 	private InputAxisTracker fireVert = new InputAxisTracker("FireVertical");
 	private InputAxisTracker fireHori = new InputAxisTracker("FireHorizontal");
+	private InputAxisTracker selVert = new InputAxisTracker("SelectVertical");
+	private InputAxisTracker selHori = new InputAxisTracker("SelectHorizontal");
 	private InputAxisTracker bombTrig = new InputAxisTracker("BombTrigger");
+	private InputAxisTracker bombTrigL = new InputAxisTracker("BombTriggerL");
+	private InputAxisTracker bombTrigR = new InputAxisTracker("BombTriggerR");
 
 	// Visibility layers
 	int showLayer;
@@ -354,11 +358,16 @@ public class MenuControl : MonoBehaviour {
 		InputAxisTracker.Update(Time.unscaledDeltaTime);
 
 		// Grab current axis readings
+		float threshold = InputAxisTracker.Threshold;
 		float moveVertVal = moveVert.Read();
 		float moveHoriVal = moveHori.Read();
 		float fireVertVal = fireVert.Read();
 		float fireHoriVal = fireHori.Read();
+		float selVertVal = selVert.Read();
+		float selHoriVal = selHori.Read();
 		float bombTrigVal = bombTrig.Read();
+		float bombTrigLVal = bombTrigL.Read();
+		float bombTrigRVal = bombTrigR.Read();
 
 		// Screenshot first, because with the hiding/showing, we don't want to do anything else this frame
 		if (Input.GetButtonDown("Screenshot")) {
@@ -373,36 +382,43 @@ public class MenuControl : MonoBehaviour {
 			return ParseMouseClick();
 		}
 		// Triggers/spacebar/return
-		else if ((Input.GetButtonDown("BombButton")) 
-			|| (Input.GetButtonDown("Select"))
-			|| ((bombTrigVal > 0.05f) || (bombTrigVal < -0.05f))) {
+		else if ((Input.GetButtonDown("BombKey")) 
+			|| (Input.GetButtonDown("BombButton")) 
+			|| (Input.GetButtonDown("Select")) 
+			|| ((bombTrigVal > threshold) || (bombTrigVal < -threshold)) 
+			|| ((bombTrigLVal > threshold) || (bombTrigLVal < -threshold)) 
+			|| ((bombTrigRVal > threshold) || (bombTrigRVal < -threshold))) {
 			// Just run selected
 			return MenuCommand.RunCmdLine;
 		}
 		// Up next
-		else if ((moveVertVal > 0.05f) 
-			|| (fireVertVal > 0.05f)) {
+		else if ((moveVertVal > threshold) 
+			|| (fireVertVal > threshold) 
+			|| (selVertVal > threshold)) {
 		//else if ((Input.GetKeyDown(KeyCode.UpArrow))
 		//	|| (Input.GetKeyDown(KeyCode.W))) {
 			return MenuCommand.SelectUp;
 		}
 		// Then down
-		else if ((moveVertVal < -0.05f) 
-			|| (fireVertVal < -0.05f)) {
+		else if ((moveVertVal < -threshold) 
+			|| (fireVertVal < -threshold) 
+			|| (selVertVal < -threshold)) {
 		//else if ((Input.GetKeyDown(KeyCode.DownArrow))
 		//	|| (Input.GetKeyDown(KeyCode.S))) {
 			return MenuCommand.SelectDown;
 		}
 		// Now right
-		else if ((moveHoriVal > 0.05f) 
-			|| (fireHoriVal > 0.05f)) {
+		else if ((moveHoriVal > threshold) 
+			|| (fireHoriVal > threshold) 
+			|| (selHoriVal > threshold)) {
 		//else if ((Input.GetKeyDown(KeyCode.RightArrow))
 		//	|| (Input.GetKeyDown(KeyCode.D))) {
 			return MenuCommand.RunCmdRight;
 		}
 		// Then left
-		else if ((moveHoriVal < -0.05f) 
-			|| (fireHoriVal < -0.05f)) {
+		else if ((moveHoriVal < -threshold) 
+			|| (fireHoriVal < -threshold) 
+			|| (selHoriVal < -threshold)) {
 		//else if ((Input.GetKeyDown(KeyCode.LeftArrow))
 		//	|| (Input.GetKeyDown(KeyCode.A))) {
 			return MenuCommand.RunCmdLeft;
@@ -588,6 +604,10 @@ public class InputAxisTracker {
 	private bool wasRead = false;
 	private float axisValue;
 	private string axisName;
+
+	public static float Threshold {
+		get { return threshold; }
+	}
 
 	public InputAxisTracker (string axisName) {
 		this.axisName = axisName;
