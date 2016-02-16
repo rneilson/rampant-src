@@ -799,7 +799,7 @@ public class FullscreenSetting : MenuSetting {
 		get { return "Fullscreen"; }
 	}
 	public override bool Persistent {
-		get { return true; }
+		get { return false; }
 	}
 
 	public override string Value {
@@ -828,7 +828,16 @@ public class FullscreenSetting : MenuSetting {
 		Screen.fullScreen = currentSetting;
 	}
 
-	public override void Load (string settingValue) {}
+	public override void Load (string settingValue) {
+		if (settingValue == "On") {
+			currentSetting = true;
+			Screen.fullScreen = currentSetting;
+		}
+		else if (settingValue == "Off") {
+			currentSetting = false;
+			Screen.fullScreen = currentSetting;
+		}
+	}
 
 }
 
@@ -929,7 +938,7 @@ public class ResolutionSetting : MenuSetting {
 		get { return "Resolution"; }
 	}
 	public override bool Persistent {
-		get { return true; }
+		get { return false; }
 	}
 
 	public override string Value {
@@ -960,7 +969,12 @@ public class ResolutionSetting : MenuSetting {
 		Screen.SetResolution(currentWidth, currentHeight, Screen.fullScreen);
 	}
 
-	public override void Load (string settingValue) {}
+	public override void Load (string settingValue) {
+		string[] values = settingValue.Split('x');
+		currentWidth = Int32.Parse(values[0]);
+		currentHeight = Int32.Parse(values[1]);
+		Screen.SetResolution(currentWidth, currentHeight, Screen.fullScreen);
+	}
 
 }
 
