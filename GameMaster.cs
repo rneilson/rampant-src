@@ -51,7 +51,7 @@ public static class GameSettings {
 	private static int currentMode;
 	private static int selectedMode;
 	private static string settingsFilename = Application.persistentDataPath + "/settings.cfg";
-	private static string screenshotPath = Application.persistentDataPath + "/screenshots/" + Application.productName;
+	private static string screenshotPath = Application.persistentDataPath + "/screenshots";
 	private static string gameVersion;
 	private static bool restarted;
 	private static int numStarts = 0;
@@ -70,6 +70,11 @@ public static class GameSettings {
 		// Read version info
 		TextAsset versionString = Resources.Load("version") as TextAsset;
 		gameVersion = versionString.text.Trim();
+
+		// Check screenshot path
+		if (!System.IO.Directory.Exists(screenshotPath)) {
+			System.IO.Directory.CreateDirectory(screenshotPath);
+		}
 	}
 
 	static void AddSetting (MenuSetting setting) {
@@ -333,8 +338,12 @@ public static class GameSettings {
 	public static void ScreenCap () {
 		// Advance persistent screenshot counter
 		ToggleSetting("LastScreenshot");
+		// Get name
+		string filename = screenshotPath + "/" + Application.productName + GetSetting("LastScreenshot") + ".png";
+		// Log regardless of debug status
+		Debug.Log("Saving screenshot to " + filename);
 		// Take screenshot (at 2x)
-		Application.CaptureScreenshot(screenshotPath + GetSetting("LastScreenshot") + ".png", 2);
+		Application.CaptureScreenshot(filename, 2);
 	}
 
 }

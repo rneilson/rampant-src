@@ -495,9 +495,11 @@ public class MenuControl : MonoBehaviour {
 			MakeInvisible();
 		}
 
-		yield return new WaitForEndOfFrame();
+		yield return 0;
 
 		GameSettings.ScreenCap();
+
+		yield return 0;
 
 		// Might have to wait another frame if this doesn't keep the menu off the screencap
 		if (hideMenu) {
