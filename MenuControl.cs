@@ -503,12 +503,19 @@ public class MenuControl : MonoBehaviour {
 		moveHori.Read();
 		fireVert.Read();
 		fireHori.Read();
+		selVert.Read();
+		selHori.Read();
 		bombTrig.Read();
+		bombTrigL.Read();
+		bombTrigR.Read();
 	}
 
 	IEnumerator ScreenCapture (bool hideMenu) {
 		if (hideMenu) {
 			MakeInvisible();
+		}
+		else {
+			GameSettings.Pause();
 		}
 
 		yield return 0;
@@ -517,9 +524,11 @@ public class MenuControl : MonoBehaviour {
 
 		yield return 0;
 
-		// Might have to wait another frame if this doesn't keep the menu off the screencap
 		if (hideMenu) {
 			MakeVisible();
+		}
+		else {
+			GameSettings.Resume();
 		}
 	}
 

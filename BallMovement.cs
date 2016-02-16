@@ -124,8 +124,18 @@ public class BallMovement : MonoBehaviour {
 		// Only move/shoot if input directed to game
 		if (scorer.InputTarget == InputMode.Game) {
 			// Get movement
-			float dx=Input.GetAxis("MoveHorizontal");
-			float dz=Input.GetAxis("MoveVertical");
+			float dx = Input.GetAxis("MoveHorizontal");
+			if (Mathf.Abs(dx) < Mathf.Epsilon) {
+				// Try select axis instead
+				dx = Input.GetAxis("SelectHorizontal");
+			}
+			float dz = Input.GetAxis("MoveVertical");
+			if (Mathf.Abs(dz) < Mathf.Epsilon) {
+				// Try select axis instead
+				dz = Input.GetAxis("SelectVertical");
+			}
+
+			// Normalization
 			float ndx = 0.0f;
 			float ndz = 0.0f;
 			float normalFactor = Mathf.Sqrt(dx*dx + dz*dz); 
@@ -141,7 +151,7 @@ public class BallMovement : MonoBehaviour {
 				ndz = dz*movementScale;
 			}
 			
-			if(dx == 0 && dz == 0) {
+			if((Mathf.Abs(dx) < Mathf.Epsilon) && (Mathf.Abs(dz) < Mathf.Epsilon)) {
 				// Drag enabled
 				myRigidbody.drag = dragNoInput;
 			}
