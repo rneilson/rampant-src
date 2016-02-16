@@ -51,6 +51,8 @@ public static class GameSettings {
 	private static int currentMode;
 	private static int selectedMode;
 	private static string settingsFilename = Application.persistentDataPath + "/settings.cfg";
+	private static string screenshotPath = Application.persistentDataPath + "/screenshots/" + Application.productName;
+	private static string gameVersion;
 	private static bool restarted;
 	private static int numStarts = 0;
 	private static bool debugInfo;
@@ -64,6 +66,10 @@ public static class GameSettings {
 		// Initialize settings
 		settings = new Dictionary<string, MenuSetting>();
 		InitializeSettings();
+
+		// Read version info
+		TextAsset versionString = Resources.Load("version") as TextAsset;
+		gameVersion = versionString.text.Trim();
 	}
 
 	static void AddSetting (MenuSetting setting) {
@@ -155,6 +161,12 @@ public static class GameSettings {
 	public static bool DebugInfo {
 		get { return debugInfo; }
 		set { debugInfo = value; }
+	}
+	public static string GameName {
+		get { return Application.productName; }
+	}
+	public static string Version {
+		get { return "v" + gameVersion; }
 	}
 
 	public static void Quit () {
@@ -316,6 +328,13 @@ public static class GameSettings {
 		else {
 			throw new ArgumentOutOfRangeException("modeName", "No game mode named: " + modeName);
 		}
+	}
+
+	public static void ScreenCap () {
+		// Advance persistent screenshot counter
+		ToggleSetting("LastScreenshot");
+		// Take screenshot (at 2x)
+		Application.CaptureScreenshot(screenshotPath + GetSetting("LastScreenshot") + ".png", 2);
 	}
 
 }

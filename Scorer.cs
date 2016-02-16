@@ -20,7 +20,7 @@ public class Scorer : MonoBehaviour {
 
 	// Title/menu stuff
 	private MenuControl menu;
-	private string gameTitle = "_rampant";
+	//private string gameTitle = "_rampant";
 
 	// Unity 5 API changes
 	private AudioSource myAudioSource;
@@ -195,7 +195,7 @@ public class Scorer : MonoBehaviour {
 		respawnCountdown = startDelay;
 		myAudioSource = GetComponent<AudioSource>();
 
-		menu.SetTitle(gameTitle);
+		//menu.SetTitle(gameTitle);
 
 		// Get ground control
 		enemyControl = GetComponent<RedCubeGroundControl>();

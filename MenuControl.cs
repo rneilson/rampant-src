@@ -13,7 +13,7 @@ public class MenuControl : MonoBehaviour {
 
 	// Title text
 	private TextMesh titleMesh;
-	private string titleText;
+	private TextMesh versionMesh;
 
 	// Menu lines
 	private MenuLine[] menuLines;
@@ -88,8 +88,10 @@ public class MenuControl : MonoBehaviour {
 		// Get scorer
 		scorer = GameObject.Find("Scorekeeper").GetComponent<Scorer>();
 
-		// Title init (assumes child 0)
+		// Title init (assumes children 0 and 1)
 		titleMesh = transform.GetChild(0).GetComponent<TextMesh>();
+		versionMesh = transform.GetChild(1).GetComponent<TextMesh>();
+		SetTitle(GameSettings.GameName, GameSettings.Version);
 
 		// Line array init
 		menuLines = GetComponentsInChildren<MenuLine>();
@@ -136,8 +138,16 @@ public class MenuControl : MonoBehaviour {
 			Cursor.visible = desiredCursorVisibility;
 		}
 		
-		// Check for commands
-		if (currentInput == InputMode.Menu) {
+		// Check for input
+		if (currentInput == InputMode.Game) {
+			// Check for screenshot command
+			// Here instead of in Scorer because I'm consolidating the hide-menu-before-capping code with the 
+			// take-a-screenshot code
+			if (Input.GetButtonDown("Screenshot")) {
+				StartCoroutine(ScreenCapture(false));
+			}
+		}
+		else if (currentInput == InputMode.Menu) {
 			// Check commands
 			MenuCommand cmd = ParseInput();
 			if (cmd.cmdType != MenuCommandType.None) {
@@ -221,6 +231,7 @@ public class MenuControl : MonoBehaviour {
 
 		// Show title
 		titleMesh.gameObject.layer = showLayer;
+		versionMesh.gameObject.layer = showLayer;
 
 		// Show lines
 		foreach (MenuLine line in menuLines) {
@@ -240,6 +251,7 @@ public class MenuControl : MonoBehaviour {
 
 		// Hide title
 		titleMesh.gameObject.layer = hideLayer;
+		versionMesh.gameObject.layer = hideLayer;
 
 		// Hide ourselves
 		gameObject.layer = hideLayer;
@@ -348,49 +360,52 @@ public class MenuControl : MonoBehaviour {
 		float fireHoriVal = fireHori.Read();
 		float bombTrigVal = bombTrig.Read();
 
-		// Pause first
-		// TODO: change button "Back" to send back command (once linked list in place)
-		if (Input.GetButtonDown("Back")) {
-			return new MenuCommand(MenuCommandType.NodeBack, "");
+		// Screenshot first, because with the hiding/showing, we don't want to do anything else this frame
+		if (Input.GetButtonDown("Screenshot")) {
+			return MenuCommand.ScreenCap;
 		}
-		// Mouse button second
+		// Back button
+		else if (Input.GetButtonDown("Back")) {
+			return MenuCommand.Back;
+		}
+		// Mouse button
 		else if (Input.GetMouseButtonDown(0)) {
 			return ParseMouseClick();
 		}
-		// Triggers/spacebar/return third
+		// Triggers/spacebar/return
 		else if ((Input.GetButtonDown("BombButton")) 
 			|| (Input.GetButtonDown("Select"))
 			|| ((bombTrigVal > 0.05f) || (bombTrigVal < -0.05f))) {
 			// Just run selected
-			return new MenuCommand(MenuCommandType.RunCmdLine, "");
+			return MenuCommand.RunCmdLine;
 		}
 		// Up next
 		else if ((moveVertVal > 0.05f) 
 			|| (fireVertVal > 0.05f)) {
 		//else if ((Input.GetKeyDown(KeyCode.UpArrow))
 		//	|| (Input.GetKeyDown(KeyCode.W))) {
-			return new MenuCommand(MenuCommandType.SelectUp, "");
+			return MenuCommand.SelectUp;
 		}
 		// Then down
 		else if ((moveVertVal < -0.05f) 
 			|| (fireVertVal < -0.05f)) {
 		//else if ((Input.GetKeyDown(KeyCode.DownArrow))
 		//	|| (Input.GetKeyDown(KeyCode.S))) {
-			return new MenuCommand(MenuCommandType.SelectDown, "");
+			return MenuCommand.SelectDown;
 		}
 		// Now right
 		else if ((moveHoriVal > 0.05f) 
 			|| (fireHoriVal > 0.05f)) {
 		//else if ((Input.GetKeyDown(KeyCode.RightArrow))
 		//	|| (Input.GetKeyDown(KeyCode.D))) {
-			return new MenuCommand(MenuCommandType.RunCmdRight, "");
+			return MenuCommand.RunCmdRight;
 		}
 		// Then left
 		else if ((moveHoriVal < -0.05f) 
 			|| (fireHoriVal < -0.05f)) {
 		//else if ((Input.GetKeyDown(KeyCode.LeftArrow))
 		//	|| (Input.GetKeyDown(KeyCode.A))) {
-			return new MenuCommand(MenuCommandType.RunCmdLeft, "");
+			return MenuCommand.RunCmdLeft;
 		}
 		else {
 			return MenuCommand.None;
@@ -455,6 +470,9 @@ public class MenuControl : MonoBehaviour {
 					ExecuteCommand(menuLines[selectedLine].CommandRight());
 				}
 				break;
+			case MenuCommandType.ScreenCap:
+				StartCoroutine(ScreenCapture(true));
+				break;
 			case MenuCommandType.None:
 			default:
 				break;
@@ -470,6 +488,21 @@ public class MenuControl : MonoBehaviour {
 		fireVert.Read();
 		fireHori.Read();
 		bombTrig.Read();
+	}
+
+	IEnumerator ScreenCapture (bool hideMenu) {
+		if (hideMenu) {
+			MakeInvisible();
+		}
+
+		yield return new WaitForEndOfFrame();
+
+		GameSettings.ScreenCap();
+
+		// Might have to wait another frame if this doesn't keep the menu off the screencap
+		if (hideMenu) {
+			MakeVisible();
+		}
 	}
 
 	// External methods
@@ -494,9 +527,11 @@ public class MenuControl : MonoBehaviour {
 		// else do nothing
 	}
 
-	public void SetTitle (string title) {
-		titleText = title;
-		titleMesh.text = titleText;
+	public void SetTitle (string title, string version = "") {
+		titleMesh.text = title;
+		if (version != "") {
+			versionMesh.text = version;
+		}
 	}
 
 	public void ShowMenu (string nodeName) {
@@ -623,6 +658,7 @@ public enum MenuCommandType : byte {
 	RunCmdLine,
 	RunCmdLeft,
 	RunCmdRight,
+	ScreenCap
 }
 
 // To be returned from input queries
@@ -636,6 +672,13 @@ public struct MenuCommand {
 	}
 
 	public static MenuCommand None = new MenuCommand(MenuCommandType.None, "");
+	public static MenuCommand Back = new MenuCommand(MenuCommandType.NodeBack, "");
+	public static MenuCommand RunCmdLine = new MenuCommand(MenuCommandType.RunCmdLine, "");
+	public static MenuCommand SelectUp = new MenuCommand(MenuCommandType.SelectUp, "");
+	public static MenuCommand SelectDown = new MenuCommand(MenuCommandType.SelectDown, "");
+	public static MenuCommand RunCmdRight = new MenuCommand(MenuCommandType.RunCmdRight, "");
+	public static MenuCommand RunCmdLeft = new MenuCommand(MenuCommandType.RunCmdLeft, "");
+	public static MenuCommand ScreenCap = new MenuCommand(MenuCommandType.ScreenCap, "");
 }
 
 // For menu setup
