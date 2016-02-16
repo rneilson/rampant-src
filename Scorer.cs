@@ -540,10 +540,7 @@ public class Scorer : MonoBehaviour {
 
 	void PauseGame () {
 		isPaused = true;
-		Time.timeScale = 0;
-
-		// Reset input
-		Input.ResetInputAxes();
+		GameSettings.Pause();
 
 		// Show menu
 		menu.ShowMenu(menu.RootNode);
@@ -555,13 +552,11 @@ public class Scorer : MonoBehaviour {
 		if (!isStarted) {
 			StartGame();
 		}
-		Time.timeScale = 1;
 
 		// Hide menu
 		menu.HideMenu();
 
-		// Reset input
-		Input.ResetInputAxes();
+		// GameSettings.Resume() called by HideMenu
 	}
 
 	void ClearTargets () {

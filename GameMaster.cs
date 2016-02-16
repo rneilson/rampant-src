@@ -84,6 +84,7 @@ public static class GameSettings {
 		AddSetting(new AntialiasSetting());
 		AddSetting(new MusicVolumeSetting());
 		AddSetting(new MusicTrackSetting());
+		AddSetting(new ScreenshotSetting());
 	}
 
 	static void LoadSetting (string name, string val) {
@@ -177,6 +178,13 @@ public static class GameSettings {
 	public static void Resume () {
 		// Reset selected mode to current
 		selectedMode = currentMode;
+		// Unpause time
+		Time.timeScale = 1;
+	}
+
+	public static void Pause () {
+		// Stop time
+		Time.timeScale = 0;
 	}
 
 	public static void LoadSettings () {
@@ -959,6 +967,42 @@ public class GameModeSetting : MenuSetting {
 	public override void Load (string settingValue) {}
 }
 
+public class ScreenshotSetting : MenuSetting {
+	private int lastShotNum = 0;
+
+	public ScreenshotSetting () {}
+
+	public override string Name {
+		get { return "LastScreenshot"; }
+	}
+	public override bool Persistent {
+		get { return false; }
+	}
+
+	public override string Value {
+		get {
+			return String.Format("{0,4:D4}", lastShotNum);
+		}
+	}
+
+	public override void Toggle () {
+		Higher();
+	}
+
+	public override void Higher () {
+		// We're limiting to 9,999 screenshots
+		// Should be enough
+		if (++lastShotNum > 9999) {
+			lastShotNum = 0;
+		}
+	}
+
+	public override void Lower () {}
+
+	public override void Load (string settingValue) {
+		lastShotNum = Int32.Parse(settingValue);
+	}
+}
 
 [Serializable]
 public class GameModeSpec {

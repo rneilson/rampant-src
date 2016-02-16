@@ -251,7 +251,7 @@ public class MenuControl : MonoBehaviour {
 
 			// Grab and reset input
 			currentInput = InputMode.Menu;
-			Input.ResetInputAxes();
+			ResetInput();
 
 			// Unhide cursor
 			desiredCursorVisibility = true;
@@ -434,6 +434,17 @@ public class MenuControl : MonoBehaviour {
 			default:
 				break;
 		}
+	}
+
+	void ResetInput () {
+		// Reset Unity's input
+		Input.ResetInputAxes();
+		// Lock in zero values for our custom input for first fraction of a second
+		moveVert.Read();
+		moveHori.Read();
+		fireVert.Read();
+		fireHori.Read();
+		bombTrig.Read();
 	}
 
 	// External methods
