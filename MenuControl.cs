@@ -646,7 +646,7 @@ public class InputAxisTracker {
 
 	void Capture () {
 		// Get temp reading to check
-		float tempCap = Input.GetAxis(axisName);
+		float tempCap = Input.GetAxisRaw(axisName);
 		// If previously captured, test for axis return to 0 or reset time met
 		if (wasCaptured) {
 			resetCountdown -= deltaTime;
