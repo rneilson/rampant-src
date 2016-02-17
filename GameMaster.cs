@@ -288,7 +288,7 @@ public static class GameSettings {
 		// Iterate over modes and add in order as required
 		for (int index = 0; index < newModes.Length; index++) {
 			// Only add if mode not already present
-			if (!modeIndicies.ContainsKey(newModes[index].Name)) {
+			if ((!modeIndicies.ContainsKey(newModes[index].Name)) && (newModes[index].Enabled)) {
 				GameMode newMode = new GameMode(newModes[index]);
 				modeList.Add(newMode);
 				modeIndicies[newMode.Name] = modeList.Count - 1;
@@ -1057,6 +1057,7 @@ public class GameModeSpec {
 	public GameObject[] Phases;
 	public GameObject TerminalPhase;
 	public DifficultySpec Difficulty;
+	public bool Enabled;
 }
 
 [Serializable]
