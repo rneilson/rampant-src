@@ -197,7 +197,7 @@ public class MenuControl : MonoBehaviour {
 			backName = "Back";
 		}
 
-		if (backName != "") {
+		if ((node.autoCreateBack) && (backName != "")) {
 			menuLines[0].ConfigureLine(MenuLineType.Back, backName, "");
 			if (debugInfo) {
 				menuLines[0].DebugLineInfo();
@@ -291,7 +291,11 @@ public class MenuControl : MonoBehaviour {
 				SelectLine(node.Line);
 			}
 			else {
-				SelectLine(0);
+				int selected = 0;
+				while (!menuLines[selected].Selectable) {
+					selected++;
+				}
+				SelectLine(selected);
 			}
 
 			// Grab and reset input
@@ -566,7 +570,7 @@ public class MenuControl : MonoBehaviour {
 
 	public void ShowMenu (string nodeName) {
 		// Creates a new nodepath...
-		MenuNodePath newNode = new MenuNodePath(currNode, nodeName, 0);
+		MenuNodePath newNode = new MenuNodePath(currNode, nodeName, -1);
 		if (debugInfo) {
 			Debug.Log("New path node, target: " + newNode.Name 
 				+ ", previous: " + newNode.Prev.Name, gameObject);
@@ -727,6 +731,7 @@ public class MenuNodeLine {
 [System.Serializable]
 public class MenuNode {
 	public string name;
+	public bool autoCreateBack = true;
 	public MenuNodeLine[] lines;
 }
 public class MenuNodePath {
