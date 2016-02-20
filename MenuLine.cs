@@ -140,7 +140,8 @@ public enum MenuLineType {
 	Setting,
 	Restart,
 	Score,
-	ResetInput
+	ResetInput,
+	BackTo
 }
 
 // This is for setting up a line with the appropriate config
@@ -209,7 +210,6 @@ public class MenuLineCommand {
 			case MenuLineType.Quit:
 			case MenuLineType.Restart:
 			case MenuLineType.Back:
-			case MenuLineType.ResetInput:
 				this.target = "";
 				break;
 			default:
@@ -243,6 +243,9 @@ public class MenuLineCommand {
 				break;
 			case MenuLineType.Back:
 				this.cmdLine = MenuCommandType.NodeBack;
+				break;
+			case MenuLineType.BackTo:
+				this.cmdLine = MenuCommandType.NodeBackTo;
 				break;
 			case MenuLineType.Goto:
 				this.cmdLine = MenuCommandType.NodeGoto;

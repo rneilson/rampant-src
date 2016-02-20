@@ -311,6 +311,16 @@ public class MenuControl : MonoBehaviour {
 		ShowMenu(currNode.Prev);
 	}
 
+	void BackMenu (string backTo) {
+		MenuNodePath node = currNode;
+		// Walk back until we find our node or hit root node
+		while ((node.Name != backTo) && (node.Prev.Name != "")) {
+			node = node.Prev;
+		}
+		// Go there
+		ShowMenu(node);
+	}
+
 	void SelectUp (int index) {
 		int newLine = (index < 0) ? 0 : index;
 		do {
@@ -454,6 +464,9 @@ public class MenuControl : MonoBehaviour {
 			case MenuCommandType.NodeBack:
 				BackMenu();
 				break;
+			case MenuCommandType.NodeBackTo:
+				BackMenu(cmd.cmdTarget);
+				break;
 			case MenuCommandType.NodeGoto:
 				ShowMenu(cmd.cmdTarget);
 				break;
@@ -495,6 +508,7 @@ public class MenuControl : MonoBehaviour {
 				break;
 			case MenuCommandType.ResetInput:
 				GameSettings.ResetInputSettings();
+				ShowMenu(cmd.cmdTarget);
 				break;
 			case MenuCommandType.None:
 			default:
@@ -697,7 +711,8 @@ public enum MenuCommandType : byte {
 	RunCmdLeft,
 	RunCmdRight,
 	ScreenCap,
-	ResetInput
+	ResetInput,
+	NodeBackTo
 }
 
 // To be returned from input queries
@@ -718,7 +733,6 @@ public struct MenuCommand {
 	public static MenuCommand RunCmdRight = new MenuCommand(MenuCommandType.RunCmdRight, "");
 	public static MenuCommand RunCmdLeft = new MenuCommand(MenuCommandType.RunCmdLeft, "");
 	public static MenuCommand ScreenCap = new MenuCommand(MenuCommandType.ScreenCap, "");
-	public static MenuCommand ResetInput = new MenuCommand(MenuCommandType.ResetInput, "");
 }
 
 // For menu setup
